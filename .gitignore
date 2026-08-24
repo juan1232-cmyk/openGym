@@ -1,0 +1,19 @@
+# Runtime data — passkeys, per-user state, session secret, VAPID keys.
+# Generated on first run; never commit real instance data.
+/data/
+
+# Downloaded exercise media (~140 MB, pulled by the `media` compose service).
+/media/
+
+# Dependencies
+node_modules/
+
+# Build output
+frontend/dist/
+web/dist/
+
+# Env files (copy .env.example -> .env locally, never commit .env)
+.env
+
+# OS cruft
+.DS_Store
