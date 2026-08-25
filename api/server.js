@@ -218,7 +218,12 @@ setInterval(() => { for (const [k, v] of challenges) if (v.exp < Date.now()) cha
 /* ---------- helpers ---------- */
 function json(res, code, obj, extraHeaders) {
   const body = JSON.stringify(obj);
-  res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...(extraHeaders || {}) });
+  // X-Content-Type-Options here too (nginx sets the rest) so the API is still sane if it's
+  // ever reached directly -- e.g. hitting :3000 during local dev, or a deploy without nginx.
+  res.writeHead(code, {
+    'Content-Type': 'application/json', 'Cache-Control': 'no-store',
+    'X-Content-Type-Options': 'nosniff', ...(extraHeaders || {})
+  });
   res.end(body);
 }
 function readBody(req) {
