@@ -42,9 +42,13 @@ db.subs = db.subs || [];
 db.invites = db.invites || [];
 const isAdmin = user => !!user && (user.admin === true || ADMIN_UIDS.includes(user.id));
 function saveDb() { atomicWrite(dbFile, JSON.stringify(db, null, 2)); }
+// mode 0o600 (owner read/write only) -- db.json holds public passkey credentials plus every
+// user's id and name, and state-<uid>.json holds their workout/bodyweight history. secret and
+// vapid.json already got this; these two were left at the OS default (typically world-readable),
+// which only mattered if something else has shell access to the host -- worth closing anyway.
 function atomicWrite(file, content) {
   const tmp = file + '.tmp';
-  fs.writeFileSync(tmp, content);
+  fs.writeFileSync(tmp, content, { mode: 0o600 });
   fs.renameSync(tmp, file);
 }
 const stateFile = uid => path.join(DATA, 'state-' + uid.replace(/[^a-zA-Z0-9_-]/g, '') + '.json');
