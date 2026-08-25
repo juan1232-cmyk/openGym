@@ -285,7 +285,10 @@ const routes = {
       rpName: RP_NAME, rpID: RP_ID,
       userID: Buffer.from(uid), userName: name, userDisplayName: name,
       attestationType: 'none',
-      authenticatorSelection: { residentKey: 'required', userVerification: 'preferred' },
+      // 'required', not 'preferred': every current platform authenticator (Face ID, Touch ID,
+      // Windows Hello, Android biometric unlock) supports it, so this is "actually check the
+      // biometric/PIN" at zero real-world cost, not "tap to confirm" satisfying login on its own.
+      authenticatorSelection: { residentKey: 'required', userVerification: 'required' },
       excludeCredentials: []
     });
     const cid = putChallenge({ challenge: options.challenge, name, uid, code });
@@ -303,7 +306,7 @@ const routes = {
         expectedChallenge: c.challenge,
         expectedOrigin: ORIGIN,
         expectedRPID: RP_ID,
-        requireUserVerification: false
+        requireUserVerification: true
       });
     } catch (e) { return json(res, 400, { error: 'verification failed: ' + e.message }); }
     if (!verification.verified) return json(res, 400, { error: 'not verified' });
@@ -330,7 +333,7 @@ const routes = {
 
   'POST /api/login/options': async (req, res) => {
     const options = await generateAuthenticationOptions({
-      rpID: RP_ID, userVerification: 'preferred', allowCredentials: []
+      rpID: RP_ID, userVerification: 'required', allowCredentials: []
     });
     const cid = putChallenge({ challenge: options.challenge });
     json(res, 200, { cid, options });
@@ -349,7 +352,7 @@ const routes = {
         expectedChallenge: c.challenge,
         expectedOrigin: ORIGIN,
         expectedRPID: RP_ID,
-        requireUserVerification: false,
+        requireUserVerification: true,
         credential: {
           id: cred.id,
           publicKey: b64uToBuf(cred.publicKey),
