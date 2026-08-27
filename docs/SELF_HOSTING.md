@@ -118,6 +118,10 @@ tar czf opengym-backup-$(date +%F).tar.gz data/
 That archive contains all profiles, passkeys and workout history. Restore by unpacking it back
 into the project folder. (Individual users can also export their own data as JSON from Settings.)
 
+> **Permission denied writing to `./data`?** The API container runs as an unprivileged user, not
+> root. If `./data` already existed owned by root (e.g. Docker created it before this changed),
+> fix it once with `sudo chown -R 1000:1000 ./data` on the host.
+
 ## 6. Notifications
 
 openGym can push two kinds of alert to your phone/desktop, even when the app isn't open:

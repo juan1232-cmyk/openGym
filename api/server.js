@@ -27,6 +27,12 @@ const SESSION_DAYS = Math.max(1, +(process.env.SESSION_DAYS || 90) || 90);
 const MAX_BODY = 5 * 1024 * 1024;
 // Secure cookies require HTTPS; over plain http://localhost the flag would drop the cookie
 const SECURE = /^https:/i.test(ORIGIN) ? ' Secure;' : '';
+// __Host- is a browser-enforced guarantee, not just a naming convention: a cookie prefixed with
+// it is refused by the browser unless it also has Secure, Path=/ and no Domain attribute -- all
+// of which are already true here whenever SECURE is on. It stops the cookie ever being sent to
+// (or overwritten by) a different host, which plain SameSite doesn't. Falls back to a plain name
+// over http, since __Host- would just make the browser silently drop the cookie there.
+const COOKIE_NAME = SECURE ? '__Host-gymsid' : 'gymsid';
 
 fs.mkdirSync(DATA, { recursive: true });
 
@@ -42,9 +48,13 @@ db.subs = db.subs || [];
 db.invites = db.invites || [];
 const isAdmin = user => !!user && (user.admin === true || ADMIN_UIDS.includes(user.id));
 function saveDb() { atomicWrite(dbFile, JSON.stringify(db, null, 2)); }
+// mode 0o600 (owner read/write only) -- db.json holds public passkey credentials plus every
+// user's id and name, and state-<uid>.json holds their workout/bodyweight history. secret and
+// vapid.json already got this; these two were left at the OS default (typically world-readable),
+// which only mattered if something else has shell access to the host -- worth closing anyway.
 function atomicWrite(file, content) {
   const tmp = file + '.tmp';
-  fs.writeFileSync(tmp, content);
+  fs.writeFileSync(tmp, content, { mode: 0o600 });
   fs.renameSync(tmp, file);
 }
 const stateFile = uid => path.join(DATA, 'state-' + uid.replace(/[^a-zA-Z0-9_-]/g, '') + '.json');
@@ -144,6 +154,15 @@ setInterval(() => {
 // interval could sit on your target minute for up to 59s before noticing. 10s caps that at ~9s.
 }, 10000).unref();
 
+// Timing-safe string equality for invite codes. crypto.timingSafeEqual needs equal-length
+// buffers (it throws otherwise), which a raw code compare can't guarantee since the input is
+// whatever a caller typed -- HMACing both sides first fixes the length at 32 bytes regardless,
+// so a mismatched-length guess can't even be distinguished from a same-length wrong one by timing.
+function codeEquals(a, b) {
+  const mac = s => crypto.createHmac('sha256', SECRET).update(String(s)).digest();
+  return crypto.timingSafeEqual(mac(a), mac(b));
+}
+
 /* ---------- sessions (signed cookie) ---------- */
 function sign(payload) {
   const mac = crypto.createHmac('sha256', SECRET).update(payload).digest('base64url');
@@ -173,7 +192,7 @@ function readSession(req) {
   const cookies = Object.fromEntries((req.headers.cookie || '').split(';').map(c => {
     const i = c.indexOf('='); return i < 0 ? ['', ''] : [c.slice(0, i).trim(), c.slice(i + 1).trim()];
   }));
-  const tok = cookies.gymsid;
+  const tok = cookies[COOKIE_NAME];
   if (!tok) return null;
   const payload = verifySig(tok);
   if (!payload) return null;
@@ -196,9 +215,11 @@ function requireAdmin(req, res) {
   return user;
 }
 function sessionCookie(user) {
-  return `gymsid=${makeSession(user)}; Path=/; Max-Age=${SESSION_DAYS * 86400}; HttpOnly;${SECURE} SameSite=Lax`;
+  // Strict, not Lax: there's no legitimate cross-site entry point into this app (no OAuth-style
+  // redirect flow) that Lax's "allow top-level GET navigations" carve-out would need to cover.
+  return `${COOKIE_NAME}=${makeSession(user)}; Path=/; Max-Age=${SESSION_DAYS * 86400}; HttpOnly;${SECURE} SameSite=Strict`;
 }
-const clearCookie = `gymsid=; Path=/; Max-Age=0; HttpOnly;${SECURE} SameSite=Lax`;
+const clearCookie = `${COOKIE_NAME}=; Path=/; Max-Age=0; HttpOnly;${SECURE} SameSite=Strict`;
 
 /* ---------- challenge store (in-memory, 5 min TTL) ---------- */
 const challenges = new Map(); // cid -> {challenge, name?, uid?, exp}
@@ -218,7 +239,12 @@ setInterval(() => { for (const [k, v] of challenges) if (v.exp < Date.now()) cha
 /* ---------- helpers ---------- */
 function json(res, code, obj, extraHeaders) {
   const body = JSON.stringify(obj);
-  res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...(extraHeaders || {}) });
+  // X-Content-Type-Options here too (nginx sets the rest) so the API is still sane if it's
+  // ever reached directly -- e.g. hitting :3000 during local dev, or a deploy without nginx.
+  res.writeHead(code, {
+    'Content-Type': 'application/json', 'Cache-Control': 'no-store',
+    'X-Content-Type-Options': 'nosniff', ...(extraHeaders || {})
+  });
   res.end(body);
 }
 function readBody(req) {
@@ -253,7 +279,9 @@ setInterval(() => { for (const [k, v] of presence) if (Date.now() - v.updatedAt 
 
 /* ---------- routes ---------- */
 const routes = {
-  'GET /api/health': async (req, res) => json(res, 200, { ok: true, users: db.users.length }),
+  // No user count here -- it's unauthenticated by nature (a liveness probe has to be reachable
+  // before anyone's signed in), so it shouldn't hand out anything beyond "the process is up."
+  'GET /api/health': async (req, res) => json(res, 200, { ok: true }),
 
   // Public config the login screen needs before anyone is signed in.
   'GET /api/config': async (req, res) => json(res, 200, { invite_only: INVITE_ONLY }),
@@ -269,14 +297,17 @@ const routes = {
     const name = String(body.name || '').trim().slice(0, 40);
     if (!name) return json(res, 400, { error: 'name required' });
     const code = String(body.code || '').trim().toUpperCase();
-    if (INVITE_ONLY && !db.invites.some(i => i.code === code && !i.usedBy && !i.revoked))
+    if (INVITE_ONLY && !db.invites.some(i => codeEquals(i.code, code) && !i.usedBy && !i.revoked))
       return json(res, 403, { error: 'a valid invite code is required' });
     const uid = crypto.randomBytes(12).toString('base64url');
     const options = await generateRegistrationOptions({
       rpName: RP_NAME, rpID: RP_ID,
       userID: Buffer.from(uid), userName: name, userDisplayName: name,
       attestationType: 'none',
-      authenticatorSelection: { residentKey: 'required', userVerification: 'preferred' },
+      // 'required', not 'preferred': every current platform authenticator (Face ID, Touch ID,
+      // Windows Hello, Android biometric unlock) supports it, so this is "actually check the
+      // biometric/PIN" at zero real-world cost, not "tap to confirm" satisfying login on its own.
+      authenticatorSelection: { residentKey: 'required', userVerification: 'required' },
       excludeCredentials: []
     });
     const cid = putChallenge({ challenge: options.challenge, name, uid, code });
@@ -294,7 +325,7 @@ const routes = {
         expectedChallenge: c.challenge,
         expectedOrigin: ORIGIN,
         expectedRPID: RP_ID,
-        requireUserVerification: false
+        requireUserVerification: true
       });
     } catch (e) { return json(res, 400, { error: 'verification failed: ' + e.message }); }
     if (!verification.verified) return json(res, 400, { error: 'not verified' });
@@ -303,7 +334,7 @@ const routes = {
     // Re-check the invite at the last moment (it may have been used/revoked since options), then burn it.
     let invite = null;
     if (INVITE_ONLY) {
-      invite = db.invites.find(i => i.code === c.code && !i.usedBy && !i.revoked);
+      invite = db.invites.find(i => codeEquals(i.code, c.code) && !i.usedBy && !i.revoked);
       if (!invite) return json(res, 403, { error: 'invite code is no longer valid — ask for a new one' });
     }
     const user = { id: c.uid, name: c.name, created: new Date().toISOString() };
@@ -321,7 +352,7 @@ const routes = {
 
   'POST /api/login/options': async (req, res) => {
     const options = await generateAuthenticationOptions({
-      rpID: RP_ID, userVerification: 'preferred', allowCredentials: []
+      rpID: RP_ID, userVerification: 'required', allowCredentials: []
     });
     const cid = putChallenge({ challenge: options.challenge });
     json(res, 200, { cid, options });
@@ -340,7 +371,7 @@ const routes = {
         expectedChallenge: c.challenge,
         expectedOrigin: ORIGIN,
         expectedRPID: RP_ID,
-        requireUserVerification: false,
+        requireUserVerification: true,
         credential: {
           id: cred.id,
           publicKey: b64uToBuf(cred.publicKey),
@@ -532,7 +563,7 @@ const routes = {
   'POST /api/admin/invites/revoke': async (req, res) => {
     if (!requireAdmin(req, res)) return;
     const body = await readBody(req);
-    const inv = db.invites.find(i => i.code === String(body.code || '').toUpperCase());
+    const inv = db.invites.find(i => codeEquals(i.code, String(body.code || '').toUpperCase()));
     if (!inv) return json(res, 404, { error: 'no such code' });
     if (inv.usedBy) return json(res, 400, { error: 'already used — cannot revoke' });
     db.invites = db.invites.filter(i => i.code !== inv.code);
