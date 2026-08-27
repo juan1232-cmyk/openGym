@@ -46,14 +46,14 @@ list/text still works without it; only images/GIFs are missing.
 
 ## Architecture
 
-**Three build modes, gated by Vite env flags at build time** (the unused branches fold away —
-they don't ship in each other's bundles):
-- Normal (this fork's actual target): full backend, passkey auth, sync across devices.
-- `VITE_DEMO=1` (`frontend/src/lib/demo.js`) — the GitHub Pages demo. No backend at all; stays
-  in guest mode, seeds itself from `demoSeed.js` on first load.
-- `VITE_MOBILE=1` (`frontend/src/lib/mobile.js`) — Capacitor native shell. No backend either;
-  persists to a file in the app's private data dir instead of `PUT /api/data`, since (unlike
-  guest mode in a browser) it's the only copy of the user's data.
+**One build target, self-hosted only.** Upstream also had a `VITE_DEMO=1` GitHub Pages demo
+build and a `VITE_MOBILE=1` Capacitor native-app build (own persistence, no backend, no sync) —
+both stripped from this fork: the demo served a public audience this private repo doesn't have,
+and the mobile build's whole reason to exist (zero server, single device) works against the
+sync-across-devices goal this fork is actually for. The app is a PWA instead (`frontend/public/
+manifest.json` + `sw.js`, registered in `main.jsx`) — add-to-homescreen from your self-hosted
+instance, no separate build. Guest mode (no passkey, localStorage-only) still exists and is the
+fallback for a browser without WebAuthn support, not a dedicated build mode.
 
 **State is one Zustand store, one blob.** `frontend/src/store/useStore.js` holds the entire app
 state under a single key `S` — every mutation goes through `update(mut)`, which clones, mutates,
@@ -89,7 +89,7 @@ by compose (check before editing the wrong one).
   nothing else; `api/` has two deps total. A new dependency needs a real reason.
 - Comments explain *why*, not *what* — match that density rather than narrating obvious lines.
 - State mutations go through the store's `update()`, not ad-hoc `localStorage` writes, or the
-  debounced server push and the mobile file-mirror both silently stop firing.
+  debounced server push silently stops firing.
 - Any change to progression/1RM/session-reading logic needs a test in `frontend/src/lib/`
   alongside a manual click-through — tests catch what clicking can't, per `CONTRIBUTING.md`.
 - Since this fork isn't syncing back upstream: it's fine to rename/restructure things that
