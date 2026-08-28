@@ -917,3 +917,76 @@ h4.sec{
   .exmedia img{height:380px}
   .hm-wrap{display:flex;flex-direction:column;align-items:center}
 }
+
+/* ============================================================================
+   "Hairline" skin — a design trial from claude.ai/design, applied only on
+   Home, Workout and Login (toggled as :root[data-skin="hairline"] in App.jsx).
+   Everything else keeps the theme above untouched. Near-black surfaces, real
+   1px borders (this app's base sheet deliberately avoids those — see the file
+   header — so this is a genuine departure, not a tint), monochrome "inverted"
+   buttons that depress on press, and mono/tracked-uppercase numerals & labels
+   where the design leans on them.
+
+   Deliberately NOT pulled in: Geist/Geist Mono from Google Fonts, the way the
+   source design does. That's a network call to a third party on every load,
+   which sits badly next to this app's own "no telemetry" claim — the system
+   monospace stack reads close enough without it. Swap --mono below if you'd
+   rather have the real thing.
+   ========================================================================== */
+:root[data-skin="hairline"] {
+  --bg:#0a0a0a; --bg-el:#0a0a0a;
+  --surface:#111113; --surface-2:#1c1c1f; --surface-3:#242428;
+  --label:#fafafa; --label-2:rgba(250,250,250,.5); --label-3:rgba(250,250,250,.36); --label-4:rgba(250,250,250,.18);
+  --sep:rgba(255,255,255,.09); --sep-op:rgba(255,255,255,.09);
+  /* the accent goes monochrome here regardless of the profile's chosen colour —
+     this skin is specifically about trying a black/white treatment */
+  --acc:#fafafa; --acc-2:#e2e2e2; --on-acc:#0a0a0a;
+  --acc-soft:rgba(255,255,255,.08); --acc-line:rgba(255,255,255,.22);
+  --r-card:16px; --r:12px; --r-lg:16px;
+  --mono:ui-monospace,'SF Mono','Cascadia Mono','Roboto Mono',Menlo,Consolas,monospace;
+}
+
+/* cards: a real border, not a hairline separator between rows */
+:root[data-skin="hairline"] .card,
+:root[data-skin="hairline"] .sect-b,
+:root[data-skin="hairline"] .item,
+:root[data-skin="hairline"] .exmedia{ border:1px solid var(--sep) }
+
+/* icon buttons: rounded-square instead of circular, bordered like the design's */
+:root[data-skin="hairline"] .iconbtn{ border-radius:10px; border:1px solid var(--sep) }
+
+/* primary buttons: a pressable plate — offset shadow that collapses on press,
+   over the app's existing 220ms ease rather than the design's literal 400ms */
+:root[data-skin="hairline"] .btn.primary{
+  box-shadow:0 3px 0 0 #6b6b6b;
+  transition:transform var(--med) var(--ease),box-shadow var(--med) var(--ease),background var(--fast);
+}
+:root[data-skin="hairline"] .btn.primary:active{
+  transform:translateY(3px); box-shadow:0 0 0 0 #6b6b6b; background:#e2e2e2;
+}
+
+/* mono numerals + tracked uppercase labels, where the design actually uses them */
+:root[data-skin="hairline"] .wday .lbl, :root[data-skin="hairline"] .wday .num,
+:root[data-skin="hairline"] .today-row .lbl2,
+:root[data-skin="hairline"] .card .big,
+:root[data-skin="hairline"] #timer .t,
+:root[data-skin="hairline"] #tabbar button span,
+:root[data-skin="hairline"] .tag{ font-family:var(--mono) }
+:root[data-skin="hairline"] .today-row .lbl2,
+:root[data-skin="hairline"] #tabbar button span,
+:root[data-skin="hairline"] .tag{ text-transform:uppercase; letter-spacing:.06em }
+
+/* tab bar: darker and more opaque than the base translucent one */
+:root[data-skin="hairline"] #tabbar{ background:rgba(10,10,10,.86) }
+:root[data-skin="hairline"] #tabbar button.start .cir{ box-shadow:none }
+
+/* today's date: a glow under the number instead of a filled disc */
+:root[data-skin="hairline"] .wday.today .num{
+  background:none; color:var(--label); box-shadow:none;
+  text-shadow:0 0 12px rgba(255,255,255,.8);
+}
+
+/* the exercise demo goes monochrome to match, instead of clashing with it —
+   this only ever applies on /workout, so the library/exercise picker (out of
+   scope) never sees it even though .exmedia is shared markup */
+:root[data-skin="hairline"] .exmedia img{ filter:grayscale(1) invert(1) contrast(1.05); opacity:.92 }
