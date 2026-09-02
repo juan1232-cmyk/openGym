@@ -41,6 +41,7 @@ export default function RestTimer() {
   return (
     <div id="timer" className="rest">
       <div className="head">
+        <span className="lbl">{t('Rest')}</span>
         <div className="t">{clock(timer.left)}</div>
         <div className="bar"><i style={{ width: pct + '%' }} /></div>
       </div>
