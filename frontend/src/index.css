@@ -549,7 +549,11 @@ h4.sec{
 /* ------------------------------------------------------------- workout --- */
 /* Only ever rendered here, so it takes the design's own 2px/350ms numbers directly rather
    than the app's generic --med/--ease (220ms, a different curve) meant for everything else. */
-.wprog{height:2px;background:var(--sep);border-radius:99px;overflow:hidden;margin-bottom:16px}
+/* No margin-bottom here — it's .wk-topbar's own padding-bottom below. A trailing margin on
+   the last child of a sticky box collapses straight through the box's own bottom edge rather
+   than extending its painted background, which is exactly what let a scrolled card's image
+   show through in that strip once the header went sticky. */
+.wprog{height:2px;background:var(--sep);border-radius:99px;overflow:hidden}
 .wprog i{display:block;height:100%;background:var(--label);border-radius:99px;transition:width .35s cubic-bezier(.2,.8,.2,1)}
 .exmedia{position:relative;border-radius:var(--r-lg);overflow:hidden;background:#fff;margin-bottom:12px}
 .exmedia img{width:100%;height:320px;object-fit:contain;display:block}
@@ -588,16 +592,21 @@ h4.sec{
    under a notch, matching how the bottom-docked bars (#timer, .keybar) handle their own inset
    with padding rather than bleeding a background past it. Needs its own background+blur once
    sticky, since the card list now scrolls directly underneath it — the same translucent-blur
-   treatment those bottom bars already use, for the same reason. */
+   treatment those bottom bars already use, for the same reason.
+
+   padding-top/-bottom replace .hdr's own margin-top and .wprog's own margin-bottom: a block's
+   trailing/leading margin collapses straight through its parent's edge instead of extending
+   the parent's painted box, so with those left as margins the sticky background stopped dead
+   at .wprog's border box and a scrolled card's image was visibly the very next thing painted,
+   16px later, inside what still read as "the header". Padding has no such collapsing — the
+   background now genuinely covers the whole bar, corner to corner, the way a solid pinned
+   island should rather than one with a seam a few pixels past its visible content. */
 .wk-topbar{
   position:sticky;top:var(--sat);z-index:5;
-  padding-top:8px;
+  padding:8px 0 16px;
   background:color-mix(in srgb,var(--bg) 92%,transparent);
   backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
 }
-/* the 8px/16px gaps these already had are now this bar's own padding/margin above, so the
-   children stop doubling them — otherwise scrolling shows a sliver of unpainted gap at the
-   sticky edge, where margin doesn't get painted as part of the background. */
 .wk-topbar .hdr{margin-top:0}
 
 /* Set table — one CSS grid whose template is built per exercise in Workout.jsx and handed in
