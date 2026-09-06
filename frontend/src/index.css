@@ -582,6 +582,24 @@ h4.sec{
    and wins on the extra class. */
 .hdr .sub.wk-stats{font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:.2px;margin-top:2px}
 
+/* Pinned to the top of the viewport while the card list scrolls underneath — the clock,
+   volume and set count are what you check mid-set, so they shouldn't cost a scroll back up.
+   top:var(--sat) rather than 0 so it settles below the safe-area inset instead of creeping
+   under a notch, matching how the bottom-docked bars (#timer, .keybar) handle their own inset
+   with padding rather than bleeding a background past it. Needs its own background+blur once
+   sticky, since the card list now scrolls directly underneath it — the same translucent-blur
+   treatment those bottom bars already use, for the same reason. */
+.wk-topbar{
+  position:sticky;top:var(--sat);z-index:5;
+  padding-top:8px;
+  background:color-mix(in srgb,var(--bg) 92%,transparent);
+  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+}
+/* the 8px/16px gaps these already had are now this bar's own padding/margin above, so the
+   children stop doubling them — otherwise scrolling shows a sliver of unpainted gap at the
+   sticky edge, where margin doesn't get painted as part of the background. */
+.wk-topbar .hdr{margin-top:0}
+
 /* Set table — one CSS grid whose template is built per exercise in Workout.jsx and handed in
    as --sg, because the column count changes with the mode: a bodyweight set drops the load
    column, effort adds a third (a real feature of this app the design never modelled — its own
