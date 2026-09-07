@@ -175,6 +175,14 @@ body.resting #app{padding-bottom:calc(250px + var(--sab))}
 .hdr{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:8px 0 18px}
 .hdr h1{font-size:34px;line-height:1.06;font-weight:700;letter-spacing:-.028em}
 .hdr .sub{color:var(--label-2);font-size:15px;letter-spacing:-.006em;margin-top:4px}
+/* The workout header's volume figure counts up to a new total rather than snapping (see
+   VolumeReadout in Workout.jsx) and gets a brief scale-and-brighten while it moves — the one
+   piece of header feedback that says "that set counted", so it earns being seen changing. */
+.hdr .sub .vol{
+  display:inline-block;transform-origin:left center;font-variant-numeric:tabular-nums;
+  transition:transform .32s cubic-bezier(.2,.9,.25,1),color .5s ease;
+}
+.hdr .sub .vol.pulse{transform:scale(1.14);color:var(--label)}
 
 .iconbtn{
   width:36px;height:36px;border-radius:50%;flex:none;
@@ -188,12 +196,12 @@ body.resting #app{padding-bottom:calc(250px + var(--sab))}
 /* labelled Finish control (vs. a bare icon) — the one action on this screen that ends the
    session, so it reads as itself at a glance instead of needing the checkmark decoded */
 .hdr-finish{
-  height:36px;padding:0 14px;border-radius:18px;flex:none;
+  height:34px;padding:0 16px;border-radius:17px;flex:none;
   display:flex;align-items:center;gap:6px;
-  background:var(--acc);color:var(--on-acc);font-size:14px;font-weight:600;
-  transition:transform var(--fast),opacity var(--fast);
+  background:var(--acc);color:var(--on-acc);font-size:14px;font-weight:650;
+  transition:transform .11s cubic-bezier(.2,.8,.2,1),opacity var(--fast);
 }
-.hdr-finish:active{transform:scale(.94)}
+.hdr-finish:active{transform:scale(.962)}
 .hdr-finish .icn{font-size:16px;--icon-stroke:2.4}
 
 h4.sec{
@@ -539,8 +547,10 @@ h4.sec{
 .ck.on svg{stroke:var(--on-acc)}
 
 /* ------------------------------------------------------------- workout --- */
-.wprog{height:4px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin-bottom:16px}
-.wprog i{display:block;height:100%;background:var(--acc);border-radius:99px;transition:width var(--med) var(--ease)}
+/* Only ever rendered here, so it takes the design's own 2px/350ms numbers directly rather
+   than the app's generic --med/--ease (220ms, a different curve) meant for everything else. */
+.wprog{height:2px;background:var(--sep);border-radius:99px;overflow:hidden;margin-bottom:16px}
+.wprog i{display:block;height:100%;background:var(--label);border-radius:99px;transition:width .35s cubic-bezier(.2,.8,.2,1)}
 .exmedia{position:relative;border-radius:var(--r-lg);overflow:hidden;background:#fff;margin-bottom:12px}
 .exmedia img{width:100%;height:320px;object-fit:contain;display:block}
 .exmedia .gifhint,.exmedia .giftoggle{
@@ -557,42 +567,132 @@ h4.sec{
 .exmedia.compact img{height:120px}
 .exmedia.mini img{height:84px}
 
+/* ------------------------------------------------------- workout header -- */
+/* The design's top-light wash behind the whole screen — fixed to the viewport rather than
+   scrolling with the page, since it reads as light falling from the top of the device, not a
+   decoration on the content. Sits behind everything (.narrow itself has no z-index, so a
+   negative one here is enough) and never intercepts a tap. */
+.wk-aura{
+  position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(120% 60% at 50% -10%, rgba(255,255,255,.17) 0%, transparent 60%);
+}
+.wk-title{font-size:16px;font-weight:650;letter-spacing:-.2px}
+/* ".hdr .sub" (15px, the app-wide subtitle style) otherwise outweighs a bare .wk-stats on
+   specificity alone regardless of source order — qualifying it as .sub.wk-stats matches that
+   and wins on the extra class. */
+.hdr .sub.wk-stats{font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:.2px;margin-top:2px}
+
+/* Set table — one CSS grid whose template is built per exercise in Workout.jsx and handed in
+   as --sg, because the column count changes with the mode: a bodyweight set drops the load
+   column, effort adds a third (a real feature of this app the design never modelled — its own
+   README says the design's RPE column "was designed and then cut"; kept here since removing a
+   working feature to match a mock that never depicted it would be a regression, not fidelity),
+   a timed set gains a start button. The +/- that used to flank every value moved onto the bar
+   above the keyboard (.keybar below), and that is what paid for the PREV column. This screen
+   is always the "hairline" skin (App.jsx gates it on /workout unconditionally), so the
+   ring-style cells and mono numerals below are written straight into the base rule rather than
+   as a [data-skin] override — there is no other look for this table to fall back to.
+
+   Values below are pinned to the design handoff's own numbers (design_handoff_active_workout/
+   README.md in the claude.ai/design project), not approximated from the mock's markup:
+   30px/1.1fr/.88fr/40px column widths, 6px gap between rows, 2px 3px row padding, the ghost
+   placeholder at a flat 32% opacity, PREV at a flat 40% opacity — the README calls out that
+   restraint ("the only filled element in a pending row is the cell currently being edited...
+   this restraint is the point of the design") as the reason an earlier version reading as
+   "visual noise" got cut, which is also why there is no hairline rule between rows here: the
+   6px gap alone is the separator. */
+.settbl{display:flex;flex-direction:column}
 .sethead{
-  display:flex;align-items:center;gap:8px;padding:0 0 6px;
-  font-size:11px;color:var(--label-3);font-weight:500;text-transform:uppercase;letter-spacing:.045em;
+  display:grid;grid-template-columns:var(--sg);gap:8px;align-items:center;
+  padding:0 3px 6px;text-align:center;
+  font-size:10px;color:var(--label-2);font-weight:650;text-transform:uppercase;letter-spacing:1px;
 }
-.sethead .n-sp{width:24px;flex:none}
-.sethead .w-sp{flex:1.4;text-align:center}
-.sethead .r-sp{flex:1;text-align:center}
-.sethead .eff-sp{text-align:center}
-.sethead .ck-sp{width:30px;flex:none}
-.setrow{display:flex;align-items:center;gap:8px;padding:7px 0;position:relative}
-.setrow+.setrow::before{
-  content:'';position:absolute;left:32px;right:0;top:0;height:var(--hair);background:var(--sep);
+/* The rows animate in as one group when a card becomes active (see .settbl .setlist below and
+   ExerciseBlock in Workout.jsx) — grouping them here is what lets that stagger apply once
+   instead of per row, and is also where the design's 6px inter-row gap actually lives now
+   rather than living inside each row's own padding. */
+.setlist{display:flex;flex-direction:column;gap:6px}
+.setrow{
+  display:grid;grid-template-columns:var(--sg);gap:8px;align-items:center;
+  padding:2px 3px;position:relative;border-radius:12px;
+  transition:background .2s cubic-bezier(.2,.8,.2,1),color .2s cubic-bezier(.2,.8,.2,1),box-shadow .45s ease;
 }
-.setrow .n{
-  width:24px;height:24px;border-radius:50%;background:var(--surface-2);color:var(--label-2);
-  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex:none;
-  transition:background var(--fast),color var(--fast);
+.setrow .sn{
+  height:38px;border-radius:9px;background:transparent;color:var(--label-2);
+  box-shadow:inset 0 0 0 1px var(--sep);
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;
+  font-family:var(--mono);font-variant-numeric:tabular-nums;
+  transition:background .2s cubic-bezier(.2,.8,.2,1),color .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease;
 }
-.setrow .stp.w{flex:1.4;min-width:0}
-.setrow .stp.r{flex:1;min-width:0}
-.setrow .stp.eff{flex:1.1;min-width:0}
-.setrow .stp button{width:32px;height:40px}
-/* a 3rd stepper (RIR) needs narrower buttons and a tighter row gap to fit next to weight+reps
-   on narrow phones, same technique as the exercise-config sheet's three-steppers-in-a-row
-   (.cfgrow below) — RIR's own value is short ("1.5") so its buttons shrink the most, weight/reps
-   just enough to make room since their values ("82.5", "12") need more of what's left.
-   The header shares the numbers so its labels stay centred over the steppers they name. */
-.setrow.eff3,.sethead.eff3{gap:6px}
-.setrow.eff3 .stp.w,.sethead.eff3 .w-sp{flex:1.2}
-.setrow.eff3 .stp.r,.sethead.eff3 .r-sp{flex:1}
-.setrow.eff3 .stp.eff,.sethead.eff3 .eff-sp{flex:.85}
-.setrow.eff3 .stp button{width:23px}
-.setrow.eff3 .stp.eff button{width:20px}
-.setrow.eff3 .stp .num{font-size:14px}
-.setrow.done .n{background:var(--acc);color:var(--on-acc)}
-.setrow.done{opacity:.45}
+/* Last session's matching set — "the quietest thing in the row at opacity:.4" per the handoff,
+   so it rides the same ink colour as everything else here rather than a separately dimmed
+   token, which read a shade too quiet once measured against the spec's own number. */
+.setrow .sprev{
+  height:38px;display:flex;align-items:center;justify-content:center;
+  font-size:12.5px;color:var(--label);opacity:.4;letter-spacing:-.3px;font-family:var(--mono);
+  font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:color .2s cubic-bezier(.2,.8,.2,1);
+}
+/* A label, so the whole cell is the tap target rather than just the caret position in it —
+   this is the control you hit with one thumb, mid-set, with wet hands. Ringed rather than
+   filled: a filled cell is what "logged" means once the whole row inverts below. */
+.scell{
+  display:block;height:38px;border-radius:9px;background:transparent;
+  box-shadow:inset 0 0 0 1px var(--sep);
+  transition:background .16s ease,box-shadow .16s ease,transform .11s cubic-bezier(.2,.8,.2,1);
+}
+.scell:active{transform:scale(.962)}
+.scell .num{
+  width:100%;height:100%;padding:0;border:0;background:none;text-align:center;
+  font-family:var(--mono);font-size:17px;font-weight:600;letter-spacing:-.4px;color:var(--label);
+  font-variant-numeric:tabular-nums;
+}
+.scell .num:focus{outline:none}
+/* Empty cells show last session's value as a ghost at a flat 32% opacity (README, verbatim) —
+   the full ink colour, not a separately dimmed token, so this and PREV above read as the same
+   family of "not yours yet" rather than two different greys. */
+.scell .num::placeholder{color:var(--label);opacity:.32;font-weight:600}
+.scell .num::-webkit-inner-spin-button{display:none}
+.scell.on{background:var(--surface-2);box-shadow:inset 0 0 0 2px var(--label);transition:box-shadow .16s ease,background .16s ease}
+.setacts{display:flex;gap:8px;margin-top:10px}
+
+/* A logged set inverts the whole row to a fixed light-on-dark surface — never the profile's
+   accent colour (see --inv-bg/--inv-fg in the hairline block above and the README: "there is
+   no accent colour... do not add a green done state") — rather than fading it, so a finished
+   set stays exactly as legible as the one you're on; what marks "done" is which one is white,
+   not which one has gone dim. Cell rings drop out, since the row is now its own filled pill
+   instead of a line item in a ringed table. */
+.setrow.done{background:var(--inv-bg);color:var(--inv-fg)}
+.setrow.done .sn{background:transparent;color:inherit;box-shadow:none}
+.setrow.done .sprev{color:inherit;opacity:.55}
+.setrow.done .scell{background:transparent;box-shadow:none}
+.setrow.done .scell .num{color:inherit}
+.setrow.done .scell .num::placeholder{color:inherit;opacity:.35}
+/* Editing a field on a set you already logged still needs to show which one — the ring just
+   has to read against a white row instead of the table's usual dark one. */
+.setrow.done .scell.on{background:rgba(10,10,10,.08);box-shadow:inset 0 0 0 2px var(--inv-fg)}
+
+/* The instant a set is ticked: the row scales up, holds, and eases back — 5% to reach the
+   peak, held to 170ms (justPeak in the design's own state model), then a further 300ms back
+   to rest — while a soft halo blooms around it and fades over 450ms (justDone's 760ms window,
+   cleared from Workout.jsx rather than by the animation ending, so a second set logged before
+   the first glow fades restarts cleanly instead of racing it). No separate pop on the
+   checkmark: the shared .chk.on fill already reads as "changed", and the finished design
+   dropped the tick-specific animation the earlier mock had. */
+@keyframes wkRowPulse{0%{transform:scale(1)}5%{transform:scale(1.035)}36%{transform:scale(1.035)}100%{transform:scale(1)}}
+.setrow.justlogged{animation:wkRowPulse .47s cubic-bezier(.2,.85,.25,1) both;box-shadow:0 0 0 3px var(--wk-glow)}
+
+/* Card handoff: when the active exercise changes, its contents mount fresh — column headers,
+   then the set rows, then the add-set row — each sliding up 7px out of a slight blur and
+   scale, staggered 0/40/80ms so it reads as one downward gesture rather than three things
+   appearing at once. A plain @keyframes is safe here (unlike the prototype, which runs these
+   as transitions because its whole component re-renders every second for the clock and would
+   otherwise restart an inline animation on every tick) — Elapsed above is its own component
+   for exactly that reason, so this tree only re-renders on a real state change. */
+@keyframes wkExpand{from{opacity:0;transform:translateY(-7px) scale(.985);filter:blur(2px)}to{opacity:1;transform:none;filter:blur(0)}}
+.sethead{animation:wkExpand .42s cubic-bezier(.2,.85,.25,1) both}
+.setlist{animation:wkExpand .46s cubic-bezier(.2,.85,.25,1) .04s both}
+.setacts{animation:wkExpand .48s cubic-bezier(.2,.85,.25,1) .08s both}
 /* why the next target is what it is (issue #17) */
 .progline{
   display:flex;align-items:flex-start;gap:7px;margin:6px 0 2px;
@@ -605,7 +705,7 @@ h4.sec{
 .setrow .setgo{
   width:30px;height:30px;border-radius:50%;flex:none;
   display:flex;align-items:center;justify-content:center;
-  background:var(--surface-2);color:var(--acc);font-size:14px;
+  background:var(--surface-2);color:var(--label);font-size:14px;
   transition:background var(--fast),opacity var(--fast);
 }
 .setrow .setgo:disabled{opacity:.3;cursor:default}
@@ -641,10 +741,13 @@ h4.sec{
 #timer.rest .acts{display:flex;align-items:center;gap:8px}
 #timer.rest .acts .btn{padding-top:11px;padding-bottom:11px}   /* sweaty hands, mid-set */
 #timer.rest .acts .skip{margin-left:auto;min-width:84px}
-/* work timer (issue #16): the same bar doing the opposite job — outlined and tinted so a
-   glance tells "you are holding this" apart from "you are recovering". */
-#timer.working{border:var(--hair) solid var(--acc)}
-#timer.working .t{color:var(--acc)}
+/* work timer (issue #16): the same bar doing the opposite job — outlined so a glance tells
+   "you are holding this" apart from "you are recovering" (the rest bar's solid inverted fill).
+   Monochrome like the rest of this screen — see --inv-bg/--inv-fg above — rather than the
+   accent tint this used elsewhere, since a coloured outline sitting next to the rest bar's
+   fixed white/black inversion is exactly the clash the design's "no accent" rule is about. */
+#timer.working{border:var(--hair) solid var(--label)}
+#timer.working .t{color:var(--label)}
 #timer.working .grow{flex:1;min-width:0}
 #timer.working .lbl{
   font-size:12px;color:var(--label-2);margin-bottom:5px;text-transform:capitalize;
@@ -930,6 +1033,91 @@ h4.sec{
   .hm-wrap{display:flex;flex-direction:column;align-items:center}
 }
 
+/* ------------------------------------------------- workout exercise cards -- */
+/* Every exercise is on screen at once: the one in hand expanded, the rest collapsed to a
+   line. This is what replaced the old one-exercise-at-a-time screen and its Prev/Next pair —
+   a collapsed card is how you go back, and finishing a unit opens the next one on its own
+   (`advanceTo` in Workout.jsx). */
+.excard{
+  background:var(--surface-2);border-radius:22px;padding:9px 11px;margin-bottom:10px;
+  transition:background .34s cubic-bezier(.2,.85,.25,1),padding .34s cubic-bezier(.2,.85,.25,1),
+    box-shadow .34s ease,opacity var(--med) var(--ease);
+}
+/* The active card is the one that gets the mock's full treatment — a lit surface with a blurred
+   backdrop and an inset top highlight — everything else on the list stays a flat, quiet line so
+   there is exactly one place on screen that reads as "this is what's happening now". */
+.excard.now{
+  background:var(--surface);padding:11px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 1px 2px rgba(0,0,0,.45);
+}
+.excard.done:not(.now){opacity:.55}
+.exhd{
+  display:flex;align-items:center;gap:10px;min-height:28px;
+  transition:transform .11s cubic-bezier(.2,.8,.2,1);
+}
+.excard:not(.now) .exhd{cursor:pointer}
+.excard:not(.now) .exhd:active{transform:scale(.962)}
+.excard.now .exhd{margin-bottom:8px}
+.ext{flex:1;min-width:0}
+.exn{
+  font-size:15.5px;font-weight:600;letter-spacing:-.2px;line-height:1.25;text-transform:capitalize;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:color .3s ease,font-size .3s ease;
+}
+.excard:not(.now) .exn{font-size:14px;color:var(--label-2)}
+.exsum{font-size:11.5px;font-weight:400;letter-spacing:-.2px;color:var(--label-3);margin-top:2px;font-family:var(--mono)}
+/* NOW / UP NEXT / DONE. Says where you are in the session without a "3 / 7" counter having
+   to be read and mapped back onto the list. */
+.exbadge{
+  flex:none;height:20px;padding:0 8px;border-radius:10px;display:flex;align-items:center;
+  font-size:9px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;
+  background:transparent;color:var(--label-3);box-shadow:inset 0 0 0 var(--hair) var(--sep);
+}
+/* Fixed inversion, not the profile's accent — see --inv-bg/--inv-fg above. */
+.excard.now .exbadge{background:var(--inv-bg);color:var(--inv-fg);box-shadow:none}
+
+/* ---------------------------------------------------- keyboard input bar -- */
+/* Rides on top of the phone's own keyboard while a set field is open, carrying the +/- that
+   used to flank every cell plus last session's value. --kbi is the keyboard's height,
+   published by lib/keyboard.js from visualViewport: iOS never moves the layout viewport out
+   from under the keyboard, so a plain bottom:0 would put this bar behind it. With no keyboard
+   (a desktop browser) it falls back to sitting above the tab bar. */
+.keybar{
+  position:fixed;left:0;right:0;bottom:calc(88px + var(--sab));z-index:70;
+  display:flex;align-items:center;gap:8px;padding:7px 12px calc(7px + var(--sab));
+  background:color-mix(in srgb,var(--surface) 97%,transparent);
+  backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);
+  border-top:var(--hair) solid var(--sep);
+  animation:slideup var(--med) var(--ease);
+}
+/* The keyboard covers the home indicator itself, so the safe-area inset is only owed when
+   the keyboard is down. */
+:root.kb-open .keybar{bottom:var(--kbi,0px);padding-bottom:7px}
+.kb-l{
+  flex:0 1 auto;min-width:0;
+  font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--label-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.kb-sp{flex:1}
+.kb-b{
+  flex:none;height:32px;min-width:34px;padding:0 11px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  background:var(--surface-2);color:var(--label);font-size:13px;font-weight:600;
+  transition:background var(--fast),transform .11s cubic-bezier(.2,.8,.2,1);
+}
+.kb-b:active{background:var(--surface-3);transform:scale(.962)}
+.kb-b.prev b{font-variant-numeric:tabular-nums;color:var(--label-2)}
+/* Fixed inversion, not the profile's accent — see --inv-bg/--inv-fg above. */
+.kb-b.done{background:var(--inv-bg);color:var(--inv-fg)}
+/* The rest timer and this bar both dock to the bottom; whichever way round, the timer stacks
+   on top of the bar rather than under it. */
+body:has(.keybar) #timer{bottom:calc(140px + var(--sab))}
+:root.kb-open #timer{bottom:calc(var(--kbi,0px) + 52px)}
+/* The tab bar is behind the keyboard and cannot be seen through it — get it out of the way
+   rather than leave a strip of it peeking out at the seam. */
+:root.kb-open #tabbar{display:none}
+
 /* ============================================================================
    "Hairline" skin — a design trial from claude.ai/design, applied only on
    Home, Workout and Login (toggled as :root[data-skin="hairline"] in App.jsx).
@@ -946,14 +1134,23 @@ h4.sec{
    rather have the real thing.
    ========================================================================== */
 :root[data-skin="hairline"] {
-  --bg:#0a0a0a; --bg-el:#0a0a0a;
+  --bg:#08080A; --bg-el:#08080A;
   --surface:#111113; --surface-2:#1c1c1f; --surface-3:#242428;
-  --label:#fafafa; --label-2:rgba(250,250,250,.5); --label-3:rgba(250,250,250,.36); --label-4:rgba(250,250,250,.18);
-  --sep:rgba(255,255,255,.09); --sep-op:rgba(255,255,255,.09);
+  --label:#F2F2F5; --label-2:#87878F; --label-3:rgba(242,242,245,.36); --label-4:rgba(242,242,245,.18);
+  --sep:rgba(255,255,255,.10); --sep-op:rgba(255,255,255,.10);
   /* the accent goes monochrome here regardless of the profile's chosen colour —
      this skin is specifically about trying a black/white treatment */
   --acc:#fafafa; --acc-2:#e2e2e2; --on-acc:#0a0a0a;
   --acc-soft:rgba(255,255,255,.08); --acc-line:rgba(255,255,255,.22);
+  /* "Completed" on the workout screen is a fixed inversion, not the profile's accent — the
+     design-handoff README is explicit that this screen has no accent colour at all ("do not
+     add a green done state, a blue primary, or a branded tint"). Kept as its own pair rather
+     than reusing --acc/--on-acc above, which Home/Login still tint for their own buttons —
+     conflating "the accent, forced monochrome" with "this screen's completed-row inversion"
+     is exactly the kind of coupling that made the bug that token would otherwise invite. */
+  --inv-bg:#F2F2F5; --inv-fg:#08080A; --inv-chip:rgba(8,8,10,.10);
+  --chip:rgba(255,255,255,.085);
+  --wk-glow:rgba(242,242,245,.20);
   --r-card:16px; --r:12px; --r-lg:16px;
   --mono:ui-monospace,'SF Mono','Cascadia Mono','Roboto Mono',Menlo,Consolas,monospace;
 }
@@ -962,6 +1159,7 @@ h4.sec{
 :root[data-skin="hairline"] .card,
 :root[data-skin="hairline"] .sect-b,
 :root[data-skin="hairline"] .item,
+:root[data-skin="hairline"] .excard,
 :root[data-skin="hairline"] .exmedia{ border:1px solid var(--sep) }
 
 /* icon buttons: rounded-square instead of circular, bordered like the design's */
@@ -1022,20 +1220,73 @@ h4.sec{
 /* set table header reads as tracked mono labels, same treatment as the design's SET/KG/REPS row */
 :root[data-skin="hairline"] .sethead{ font-family:var(--mono) }
 
-/* rest bar: the design's floating pill is fully inverted (near-white on near-black), not just
-   accent-tinted like the base theme's translucent card — every child's color rides the
-   inherited on-acc rather than the app's usual (light-on-dark) label tokens, which would go
-   invisible on this one inverted surface */
+/* rest bar: the design's floating pill is fully inverted (near-white on near-black) — the
+   same fixed --inv-bg/--inv-fg the completed-set row uses, never the profile's accent (see
+   the hairline root block above and the README: "there is no accent colour, in either
+   theme") — so every child's colour rides the inherited inv-fg rather than the app's usual
+   (light-on-dark) label tokens, which would go invisible on this one inverted surface */
 :root[data-skin="hairline"] #timer.rest{
-  background:var(--acc); color:var(--on-acc);
+  background:var(--inv-bg); color:var(--inv-fg);
   backdrop-filter:none; -webkit-backdrop-filter:none;
 }
+:root[data-skin="hairline"] #timer.rest .t{ font-size:19px; letter-spacing:-.5px }
 :root[data-skin="hairline"] #timer.rest .head .lbl{
   color:inherit; opacity:.55; font-family:var(--mono); text-transform:uppercase; letter-spacing:.08em;
 }
 :root[data-skin="hairline"] #timer.rest .bar{ background:rgba(10,10,10,.18) }
-:root[data-skin="hairline"] #timer.rest .bar i{ background:var(--on-acc) }
+:root[data-skin="hairline"] #timer.rest .bar i{ background:var(--inv-fg) }
 /* both quick-adjust and Skip get the design's translucent-dark chip treatment (it doesn't
    give Skip extra emphasis either) — overrides .btn.plain/.btn.primary's own light-on-dark
    colors, which would otherwise disappear against this inverted background */
-:root[data-skin="hairline"] #timer.rest .acts .btn{ background:rgba(10,10,10,.1); color:var(--on-acc) }
+:root[data-skin="hairline"] #timer.rest .acts .btn{ background:var(--inv-chip); color:var(--inv-fg) }
+
+/* keyboard bar: the same near-opaque chrome the rest bar and tab bar use, and Done picks up
+   the skin's inverted primary treatment */
+:root[data-skin="hairline"] .keybar{ background:rgba(10,10,10,.92); border-top:1px solid var(--sep) }
+:root[data-skin="hairline"] .kb-l{ font-family:var(--mono) }
+:root[data-skin="hairline"] .kb-b{ border-radius:8px; background:transparent; box-shadow:inset 0 0 0 1px var(--sep) }
+:root[data-skin="hairline"] .kb-b.done{
+  background:var(--acc); color:var(--on-acc); box-shadow:none;
+  font-family:var(--mono); text-transform:uppercase; letter-spacing:.06em;
+}
+
+/* --------------------------------------------------- "Set logged" toast -- */
+/* The design's own feedback for completing a set — separate from the app's shared #toast
+   (Toast.jsx), which stays a plain translucent pill and is used for unrelated messages all
+   over the app. This one only ever appears on the workout screen, so it can commit fully to
+   the fixed --inv-bg/--inv-fg inversion (never the profile's accent — see the hairline root
+   block above), the same tokens the rest bar already picked up. Positioned like .keybar/
+   #timer: it has to clear whichever of those is currently docked, so it reuses their stacking
+   technique rather than a layout system neither of them has either.
+
+   Timings are the design handoff's own instants, not durations: fades/slides in over 240ms,
+   starts leaving at 1450ms, unmounts at 1760ms — Workout.jsx clears the text at 1760ms, which
+   is what actually removes this from the tree, so the keyframe below is written as those two
+   instants as percentages of that same 1760ms rather than a duration I chose myself. */
+.settoast{
+  position:fixed;left:50%;bottom:calc(96px + var(--sab));z-index:65;
+  display:flex;align-items:center;gap:9px;height:38px;padding:0 15px 0 12px;border-radius:19px;
+  background:var(--inv-bg);color:var(--inv-fg);
+  box-shadow:0 10px 30px -6px rgba(0,0,0,.4);
+  pointer-events:none;animation:settoastPop 1.76s cubic-bezier(.2,.85,.25,1) both;
+}
+.settoast .stk{
+  width:20px;height:20px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;
+  background:var(--inv-chip);
+}
+.settoast b{font-size:13.5px;font-weight:650;letter-spacing:-.1px;white-space:nowrap}
+.settoast .v{
+  font-family:var(--mono);font-size:13px;font-weight:500;opacity:.55;white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+@keyframes settoastPop{
+  0%{opacity:0;transform:translate(-50%,12px) scale(.94)}
+  13.64%{opacity:1;transform:translate(-50%,0) scale(1)}
+  82.39%{opacity:1;transform:translate(-50%,0) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-6px) scale(.99)}
+}
+body:has(.keybar) .settoast{bottom:calc(150px + var(--sab))}
+body:has(#timer) .settoast{bottom:calc(150px + var(--sab))}
+body:has(.keybar):has(#timer) .settoast{bottom:calc(198px + var(--sab))}
+:root.kb-open .settoast{bottom:calc(var(--kbi,0px) + 64px)}
+:root.kb-open:has(#timer) .settoast{bottom:calc(var(--kbi,0px) + 116px)}
