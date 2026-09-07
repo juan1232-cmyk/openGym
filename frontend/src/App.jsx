@@ -41,16 +41,23 @@ function Shell() {
   const { S, user, ready } = useStore()
   const isGuest = useStore(s => s.isGuest())
   const langV = useLang()   // re-renders the whole shell when the language (pack) changes
+  const authed = user || isGuest
   useEffect(() => { setNav(navigate) }, [navigate])
   useEffect(() => { applyPrefs(S.theme, S.accent) }, [S.theme, S.accent])
   useEffect(() => { setLang(S.lang || 'en') }, [S.lang])
   useEffect(() => { document.documentElement.lang = S.lang || 'en' }, [langV, S.lang])
   // every tab/route change starts at the top of the page
   useEffect(() => { window.scrollTo(0, 0) }, [loc.pathname])
+  // "Hairline" redesign trial (Home, Workout, Login only — see index.css) — an experiment,
+  // not yet the app's actual theme, so it's gated on route/auth rather than replacing --acc etc.
+  // in :root. Login has no route of its own (Shell renders it in place of <Routes> below), so
+  // it's covered by !authed instead of a pathname check.
+  useEffect(() => {
+    const cur = loc.pathname.split('/')[1] || 'home'
+    document.documentElement.dataset.skin = (!authed || cur === 'home' || cur === 'workout') ? 'hairline' : ''
+  }, [loc.pathname, authed])
   // bound to the workout, not to the route — checking Stats mid-session keeps the screen on
   useWakeLock(!!S.active && S.keepAwake !== false)
-
-  const authed = user || isGuest
   if (!ready && !authed) return (
     <div id="app">
       <div style={{ paddingTop: '44vh', display: 'flex', justifyContent: 'center', fontSize: 34, color: 'var(--label-3)' }}>
