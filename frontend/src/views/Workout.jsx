@@ -401,12 +401,20 @@ function ActiveWorkout() {
         this screen only: Home/Login's own Hairline pass never had this element and adding it
         there wasn't asked for. */}
     <div className="wk-aura" aria-hidden="true" />
-    <div className="hdr">
-      <button className="iconbtn" aria-label={t('Discard')} onClick={() => confirmSheet({ title: t('Discard workout?'), message: t('The sets you logged in this session will be lost.'), confirmText: t('Discard'), danger: true, onConfirm: () => { update(s => { s.active = null }); stopRest(); nav('/home') } })}><Icon name="xmark" /></button>
-      <div style={{ textAlign: 'center' }}><div className="wk-title">{A.name}</div><div className="sub wk-stats"><Elapsed start={A.start} /> · <VolumeReadout value={vol} unit={S.unit} /> · {t('{0} sets', done + '/' + total)}</div></div>
-      <button className="hdr-finish" onClick={finishWorkout}><Icon name="check" /><span>{t('Finish')}</span></button>
+    {/* Pinned to the top of the screen while the exercise list scrolls under it — the clock,
+        volume and set count are what you glance at mid-set, so they shouldn't require
+        scrolling back up. Sticky rather than fixed: it stays a normal in-flow sibling of the
+        card list, so it needs no extra scroll-padding hack to keep from covering the first
+        card. VolumeReadout/Elapsed are unaffected either way — their tween and tick run on
+        their own timers, independent of where the DOM node they render into ends up. */}
+    <div className="wk-topbar">
+      <div className="hdr">
+        <button className="iconbtn" aria-label={t('Discard')} onClick={() => confirmSheet({ title: t('Discard workout?'), message: t('The sets you logged in this session will be lost.'), confirmText: t('Discard'), danger: true, onConfirm: () => { update(s => { s.active = null }); stopRest(); nav('/home') } })}><Icon name="xmark" /></button>
+        <div style={{ textAlign: 'center' }}><div className="wk-title">{A.name}</div><div className="sub wk-stats"><Elapsed start={A.start} /> · <VolumeReadout value={vol} unit={S.unit} /> · {t('{0} sets', done + '/' + total)}</div></div>
+        <button className="hdr-finish" onClick={finishWorkout}><Icon name="check" /><span>{t('Finish')}</span></button>
+      </div>
+      <div className="wprog"><i style={{ width: (total ? done / total * 100 : 0) + '%' }} /></div>
     </div>
-    <div className="wprog"><i style={{ width: (total ? done / total * 100 : 0) + '%' }} /></div>
 
     {/* Every exercise is on screen at once now, the one in hand expanded and the rest collapsed
         to a line — which is what lets the Prev/Next buttons go: a collapsed card is the way
