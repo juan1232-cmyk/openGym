@@ -1132,14 +1132,30 @@ h4.sec{
 @keyframes pk-peek{0%{transform:translateY(-120px)}100%{transform:none}}
 @keyframes pk-up{0%{opacity:0;transform:translateY(14px)}100%{opacity:1;transform:none}}
 
-/* D1 — welcome: a 480px orb, mostly off-screen, looking down at the copy */
-.pk-welcome .orb-wrap{
+/* D1 welcome / D4 create account: one 480px orb, mostly off-screen, looking down at the
+   copy. Moving on to "create account" slides it further up to make room for the form. */
+.pk-onboard .orb-wrap{
   position:absolute;left:50%;top:-150px;margin-left:-240px;
   animation:pk-peek 1100ms var(--spring) both;
+  transition:top 700ms var(--spring);
 }
-.pk-welcome .orb{transform-origin:50% 0;animation-delay:1.1s}
+.pk-onboard .orb{transform-origin:50% 0;animation-delay:1.1s}
+.pk-onboard.create .orb-wrap{top:-290px}
 /* short phones: hang it higher so the copy never sits on top of it */
-@media (max-height:720px){ .pk-welcome .orb-wrap{top:-230px} }
+@media (max-height:720px){ .pk-onboard.welcome .orb-wrap{top:-230px} }
+.pk-step{flex:1;display:flex;flex-direction:column;animation:pk-up 320ms var(--spring) backwards}
+/* the entrance choreography is for arriving at the app, not for coming back from a step */
+.pk-onboard.seen .pk-hero,.pk-onboard.seen .pk-actions .btn,.pk-onboard.seen .pk-link{animation:none}
+.pk-nav{display:flex;justify-content:space-between;align-items:center;height:44px;font-size:13px;font-weight:500}
+.pk-nav.on-orb{color:#f3f2ee}
+.pk-back{width:44px;height:44px;margin-left:-12px;font-size:22px;color:inherit;display:flex;align-items:center;justify-content:center}
+.pk-back .icn{--icon-stroke:2}
+.pk-nav .steps{opacity:.8}
+.pk-nav:not(.on-orb) .steps{color:var(--label-2);opacity:1}
+/* clears the orb, which ends 190px down (480 - 290) whatever the safe area does */
+.pk-title{font-size:32px;line-height:1.05;font-weight:600;letter-spacing:-.045em;color:var(--label);margin-top:max(16px,calc(142px - var(--sat)))}
+.pk-fields{display:flex;flex-direction:column;gap:10px;margin-top:24px}
+.pk-full .input{height:56px;padding:0 16px;font-size:16px}
 .pk-hero{display:flex;flex-direction:column;gap:8px;padding:0 4px;animation:pk-up 600ms var(--spring) 1s both}
 .pk-hero h1{font-size:36px;line-height:1.05;font-weight:600;letter-spacing:-.045em;color:var(--label);text-wrap:balance;max-width:8em}
 .pk-hero p{font-size:16px;line-height:1.45;color:var(--label-2)}
@@ -1151,7 +1167,5 @@ h4.sec{
   font-size:14px;color:var(--label-2);text-decoration:underline;text-underline-offset:3px;
   animation:pk-up 600ms var(--spring) 1.35s backwards;
 }
-.pk-note{
-  background:var(--surface);border-radius:var(--r-lg);padding:14px 16px;
-  font-size:14px;line-height:1.4;color:var(--label-2);
-}
+/* plain text under the fields — a filled box here read as one more input */
+.pk-note{padding:4px 4px 0;font-size:14px;line-height:1.4;color:var(--label-2)}
