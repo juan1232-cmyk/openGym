@@ -46,8 +46,8 @@ function applyPrefs(theme, accent, skin) {
 // (Shell renders it in place of <Routes>), so it is keyed on !authed instead of a pathname;
 // the Goals onboarding step is the same kind of screen.
 function skinFor(cur, authed, onboarding) {
-  if (!authed || onboarding) return 'peek'
-  if (cur === 'home' || cur === 'workout') return 'hairline'
+  if (!authed || onboarding || cur === 'home') return 'peek'
+  if (cur === 'workout') return 'hairline'
   return ''
 }
 

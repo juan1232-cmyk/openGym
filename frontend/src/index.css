@@ -932,7 +932,7 @@ h4.sec{
 
 /* ============================================================================
    "Hairline" skin — a design trial from claude.ai/design, applied only on
-   Home and Workout (toggled as :root[data-skin="hairline"] in App.jsx; Login has moved
+   Workout only now (toggled as :root[data-skin="hairline"] in App.jsx; Login and Home have moved
    on to the Peek skin below, which is replacing this one screen by screen).
    Everything else keeps the theme above untouched. Near-black surfaces, real
    1px borders (this app's base sheet deliberately avoids those — see the file
@@ -1195,3 +1195,76 @@ h4.sec{
 .pk-seg button{height:44px;border-radius:11px;font-size:16px;font-weight:500;color:var(--label);transition:background var(--fast)}
 .pk-seg button:active{background:var(--surface-3)}
 .pk-seg button.on{background:var(--ink);color:var(--on-ink);font-weight:600}
+
+/* D3 — dashboard (Home) */
+.pk-top{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 8px 0}
+.pk-top .iconbtn{background:var(--surface-2)}
+.pk-greet{display:flex;flex-direction:column;gap:6px;padding:22px 8px 22px}
+.pk-greet span{font-size:14px;color:var(--label-2)}
+.pk-greet h1{font-size:32px;line-height:1.05;font-weight:600;letter-spacing:-.045em;color:var(--label)}
+.pk-home .card{border-radius:var(--r-card);padding:16px;margin-bottom:12px}
+.pk-today{display:flex;flex-direction:column;gap:14px}
+.pk-week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.pk-day{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:11px;font-weight:500;color:var(--label-3)}
+.pk-day.today span{color:var(--label);font-weight:600}
+.pk-day i{
+  width:32px;height:32px;border-radius:50%;background:var(--bg);position:relative;
+  transition:transform var(--fast) var(--ease);
+}
+.pk-day:active i{transform:scale(.9)}
+.pk-day i.done{background:var(--acc)}
+/* planned days carry a small dot — the design only draws done/today, but a week strip that
+   can't tell a training day from a rest day loses what this one was for */
+.pk-day i.plan::after{content:'';position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:var(--label-3)}
+.pk-day i.plan.moved::after{background:var(--orange)}
+.pk-day.today i{box-shadow:inset 0 0 0 2px var(--ink);background:transparent}
+.pk-day.today i.done{background:var(--acc)}
+.pk-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.pk-tile{
+  background:var(--surface);border-radius:var(--r-lg);padding:14px;text-align:left;
+  display:flex;flex-direction:column;gap:8px;min-width:0;
+}
+button.pk-tile:active{background:var(--surface-2)}
+.pk-tile span{font-size:12px;color:var(--label-2)}
+.pk-tile b,.pk-big{font-size:19px;font-weight:600;letter-spacing:-.03em;line-height:1;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk-big{font-size:30px}
+.pk-tile small,.pk-big small{font-size:12px;font-weight:500;color:var(--label-2);letter-spacing:0}
+.pk-big small{font-size:15px}
+.pk-card-h{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pk-card-h b{font-size:16px;font-weight:600;letter-spacing:-.02em;color:var(--label)}
+.pk-card-h span{font-size:12px;color:var(--label-3)}
+.pk-card-h button:not(.btn){font-size:13px;font-weight:500;color:var(--label-2);padding:6px 0 6px 10px}
+.pk-bars{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;align-items:end;height:92px;margin-top:14px}
+.pk-bars i{display:block;background:var(--surface-2);border-radius:8px;transition:height var(--med) var(--ease)}
+.pk-bars i.best{background:var(--ink)}
+.pk-bars i.cur{background:var(--acc)}
+.pk-list{padding-bottom:4px}
+.pk-list .pk-card-h{padding-bottom:6px}
+.pk-row{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;padding:14px 0;text-align:left}
+.pk-row+.pk-row{border-top:1px solid var(--sep)}
+.pk-row .l{display:flex;flex-direction:column;gap:6px;min-width:0}
+.pk-row b{font-size:15px;font-weight:600;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk-row .l span{font-size:13px;color:var(--label-2)}
+.pk-row .v{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--label);flex:none}
+
+/* tab bar: the design's floating black pill, labels only. The app keeps its own five
+   destinations (the design's four were Home/Train/History/Profile); Start stays in the
+   middle as the one green word, orange with a live dot while a session is running. */
+:root[data-skin="peek"] #tabbar{
+  left:16px;right:16px;bottom:calc(var(--sab) + 18px);max-width:528px;margin:0 auto;
+  height:56px;padding:0 8px;border-radius:99px;border:0;align-items:center;gap:2px;
+  background:var(--ink);backdrop-filter:none;-webkit-backdrop-filter:none;
+}
+:root[data-skin="peek"] #tabbar button{
+  height:40px;padding:0 4px;border-radius:99px;flex-direction:row;justify-content:center;
+  color:var(--on-ink-2);font-size:13px;font-weight:500;letter-spacing:-.005em;min-width:0;
+}
+:root[data-skin="peek"] #tabbar button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:root[data-skin="peek"] #tabbar button .icn,
+:root[data-skin="peek"] #tabbar button.start .cir{display:none}
+:root[data-skin="peek"] #tabbar button.on{background:var(--on-ink);color:var(--ink)}
+:root[data-skin="peek"] #tabbar button.start{margin-top:0}
+:root[data-skin="peek"] #tabbar button.start span{color:var(--acc);font-weight:600}
+:root[data-skin="peek"] #tabbar button.start.rec span:not(.cir){color:var(--orange);display:flex;align-items:center;gap:5px}
+:root[data-skin="peek"] #tabbar button.start.rec span:not(.cir)::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+:root[data-skin="peek"] #timer{bottom:calc(var(--sab) + 86px)}
