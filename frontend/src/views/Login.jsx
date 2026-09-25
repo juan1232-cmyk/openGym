@@ -38,6 +38,7 @@ function CreateAccount({ onBack }) {
   return <form className="pk-step" onSubmit={go}>
     <div className="pk-nav on-orb">
       <button type="button" className="pk-back" onClick={onBack} aria-label={t('Back')}><Icon name="chevronLeft" /></button>
+      <span className="steps">{t('{0} of {1}', 1, 2)}</span>
     </div>
     <h1 className="pk-title">{t("Let's make your account.")}</h1>
     <div className="pk-fields">

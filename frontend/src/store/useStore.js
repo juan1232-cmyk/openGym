@@ -13,7 +13,10 @@ export const DEF = {
   // that a profile which never chose (loaded state is overlaid on DEF, on every path: local,
   // server pull, backup import) still falls back to the `showRir` boolean this replaced and
   // keeps the column it had. See effortOf.
-  reminder: { on: false, time: '08:00', tz: null }, effort: null
+  reminder: { on: false, time: '08:00', tz: null }, effort: null,
+  // the onboarding answers (Goals screen): goal is one of lib/starter.js GOALS, or 'own' when
+  // the profile skipped it to build a plan by hand. null means never asked — see needsGoals.
+  goal: null, days: null
 }
 const clone = o => JSON.parse(JSON.stringify(o))
 
@@ -24,6 +27,10 @@ function loadState() {
   } catch (e) { /* ignore */ }
   return clone(DEF)
 }
+
+// Whether a profile should be walked through the Goals step: nothing planned, nothing logged,
+// never answered — and only once the server has had its say about that.
+const needsGoals = (st, ready, pulling) => ready && !pulling && !st.goal && !(st.routines || []).length && !(st.workouts || []).length
 
 const hasData = st => !!((st.workouts || []).length || (st.routines || []).length || (st.bodyweight || []).length)
 
@@ -89,7 +96,12 @@ export const useStore = create((set, get) => {
       try { await api('/api/data', { method: 'PUT', body: JSON.stringify({ state: get().S }) }); localStorage.removeItem('gym_dirty') }
       catch (e) { localStorage.setItem('gym_dirty', '1') }
     },
+    // true while a pull is in flight, so a screen that depends on "does this profile have any
+    // data yet" (the Goals onboarding step) doesn't flash up on a device that simply hasn't
+    // downloaded it yet
+    pulling: false,
     async pullState() {
+      set({ pulling: true })
       try {
         const { state } = await api('/api/data')
         const S = get().S
@@ -101,6 +113,7 @@ export const useStore = create((set, get) => {
           persist(next, false)
         } else if (hasData(S)) { await get().pushState() }
       } catch (e) { /* offline — keep local */ }
+      finally { set({ pulling: false }) }
     },
 
     async signOut() {
@@ -139,4 +152,4 @@ export const useStore = create((set, get) => {
   }
 })
 
-export { hasData }
+export { hasData, needsGoals }

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { HashRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { useStore } from './store/useStore.js'
+import { useStore, needsGoals } from './store/useStore.js'
 import { useUI } from './store/useUI.js'
 import { bindUI } from './components/ui.jsx'
 import { ACCENTS } from './lib/format.js'
@@ -15,6 +15,7 @@ import Modals from './components/Modals.jsx'
 import Toast from './components/Toast.jsx'
 import RestTimer from './components/RestTimer.jsx'
 import Login from './views/Login.jsx'
+import Goals from './views/Goals.jsx'
 import Home from './views/Home.jsx'
 import Plan from './views/Plan.jsx'
 import RoutineEdit from './views/RoutineEdit.jsx'
@@ -42,9 +43,10 @@ function applyPrefs(theme, accent, skin) {
 // Which design skin a screen wears. Both are scoped to the screens their design actually
 // covers rather than replacing the theme — "Peek" is taking over screen by screen (one PR
 // each), and Hairline keeps the ones Peek hasn't reached yet. Login has no route of its own
-// (Shell renders it in place of <Routes>), so it is keyed on !authed instead of a pathname.
-function skinFor(cur, authed) {
-  if (!authed) return 'peek'
+// (Shell renders it in place of <Routes>), so it is keyed on !authed instead of a pathname;
+// the Goals onboarding step is the same kind of screen.
+function skinFor(cur, authed, onboarding) {
+  if (!authed || onboarding) return 'peek'
   if (cur === 'home' || cur === 'workout') return 'hairline'
   return ''
 }
@@ -52,12 +54,13 @@ function skinFor(cur, authed) {
 function Shell() {
   const navigate = useNavigate()
   const loc = useLocation()
-  const { S, user, ready } = useStore()
+  const { S, user, ready, pulling } = useStore()
   const isGuest = useStore(s => s.isGuest())
   const langV = useLang()   // re-renders the whole shell when the language (pack) changes
   const authed = user || isGuest
   useEffect(() => { setNav(navigate) }, [navigate])
-  const skin = skinFor(loc.pathname.split('/')[1] || 'home', authed)
+  const onboarding = !!authed && needsGoals(S, ready, pulling)
+  const skin = skinFor(loc.pathname.split('/')[1] || 'home', authed, onboarding)
   useEffect(() => { applyPrefs(S.theme, S.accent, skin) }, [S.theme, S.accent, skin])
   useEffect(() => { setLang(S.lang || 'en') }, [S.lang])
   useEffect(() => { document.documentElement.lang = S.lang || 'en' }, [langV, S.lang])
@@ -79,7 +82,7 @@ function Shell() {
           re-mounts the boundary, so the tab bar is always a way out */}
       <div id="app" className="vfade" key={loc.pathname}>
         <ErrorBoundary>
-          {!authed ? <Login /> : (
+          {!authed ? <Login /> : onboarding ? <Goals /> : (
             <Routes>
               <Route path="/home" element={<Home />} />
               <Route path="/plan" element={<Plan />} />
@@ -95,7 +98,7 @@ function Shell() {
           )}
         </ErrorBoundary>
       </div>
-      <TabBar onStart={startFlow} />
+      {!onboarding && <TabBar onStart={startFlow} />}
       <RestTimer />
       <Modals />
       <Toast />

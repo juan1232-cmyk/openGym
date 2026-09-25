@@ -1160,12 +1160,38 @@ h4.sec{
 .pk-hero h1{font-size:36px;line-height:1.05;font-weight:600;letter-spacing:-.045em;color:var(--label);text-wrap:balance;max-width:8em}
 .pk-hero p{font-size:16px;line-height:1.45;color:var(--label-2)}
 .pk-actions{display:flex;flex-direction:column;gap:10px;margin-top:30px}
-.pk-actions .btn{animation:pk-up 600ms var(--spring) 1.15s backwards}   /* backwards, not both: a held transform would swallow the press scale */
-.pk-actions .btn+.btn{animation-delay:1.25s}
+.pk-onboard .pk-actions .btn{animation:pk-up 600ms var(--spring) 1.15s backwards}   /* backwards, not both: a held transform would swallow the press scale */
+.pk-onboard .pk-actions .btn+.btn{animation-delay:1.25s}
 .pk-link{
   align-self:center;margin-top:6px;padding:10px 12px;
   font-size:14px;color:var(--label-2);text-decoration:underline;text-underline-offset:3px;
-  animation:pk-up 600ms var(--spring) 1.35s backwards;
 }
+.pk-onboard .pk-link{animation:pk-up 600ms var(--spring) 1.35s backwards}
 /* plain text under the fields — a filled box here read as one more input */
 .pk-note{padding:4px 4px 0;font-size:14px;line-height:1.4;color:var(--label-2)}
+
+/* D5 — goals */
+.pk-goals{animation:pk-up 420ms var(--spring) backwards}
+.pk-ask{display:flex;align-items:center;gap:16px;margin-top:20px}
+.pk-ask h1{font-size:28px;line-height:1.05;font-weight:600;letter-spacing:-.045em;color:var(--label)}
+.pk-choices{display:flex;flex-direction:column;gap:8px;margin-top:28px}
+.pk-choice{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px;text-align:left;
+  border-radius:var(--r-lg);background:var(--surface);box-shadow:inset 0 0 0 1.5px transparent;
+  transition:box-shadow var(--fast),transform var(--fast) var(--ease);
+}
+.pk-choice:active{transform:scale(.985)}
+.pk-choice.on{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.pk-choice .txt{display:flex;flex-direction:column;gap:6px;min-width:0}
+.pk-choice b{font-size:16px;font-weight:600;line-height:1.1}
+.pk-choice .txt span{font-size:13px;color:var(--label-2);line-height:1.25}
+.pk-choice .tick{
+  width:24px;height:24px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 0 0 0 1.5px var(--line);font-size:13px;color:var(--on-acc);--icon-stroke:3;
+}
+.pk-choice.on .tick{background:var(--acc);box-shadow:none}
+.pk-label{margin-top:28px;font-size:15px;font-weight:600;color:var(--label)}
+.pk-seg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px;padding:4px;border-radius:var(--r);background:var(--surface-2)}
+.pk-seg button{height:44px;border-radius:11px;font-size:16px;font-weight:500;color:var(--label);transition:background var(--fast)}
+.pk-seg button:active{background:var(--surface-3)}
+.pk-seg button.on{background:var(--ink);color:var(--on-ink);font-weight:600}
