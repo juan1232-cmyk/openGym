@@ -932,7 +932,8 @@ h4.sec{
 
 /* ============================================================================
    "Hairline" skin — a design trial from claude.ai/design, applied only on
-   Home, Workout and Login (toggled as :root[data-skin="hairline"] in App.jsx).
+   Home and Workout (toggled as :root[data-skin="hairline"] in App.jsx; Login has moved
+   on to the Peek skin below, which is replacing this one screen by screen).
    Everything else keeps the theme above untouched. Near-black surfaces, real
    1px borders (this app's base sheet deliberately avoids those — see the file
    header — so this is a genuine departure, not a tint), monochrome "inverted"
@@ -1039,3 +1040,118 @@ h4.sec{
    give Skip extra emphasis either) — overrides .btn.plain/.btn.primary's own light-on-dark
    colors, which would otherwise disappear against this inverted background */
 :root[data-skin="hairline"] #timer.rest .acts .btn{ background:rgba(10,10,10,.1); color:var(--on-acc) }
+
+/* ============================================================================
+   "Peek" skin — from the claude.ai/design project's 'Peek App' (Peek App.dc.html),
+   toggled as :root[data-skin="peek"] in App.jsx on the screens that design covers.
+   A warm light stone page (#f3f2ee), white cards with no borders or shadows, a near-black
+   ink for text and the dark surfaces (tab bar, rest bar), one green for "go" — and the orb
+   mascot, a black sphere with eyes that peeks in from the top of the welcome screens.
+
+   It is a light skin regardless of the profile's theme setting, the same way Hairline was a
+   dark one: this is the design, not a recolour of it. The accent is fixed to the design's
+   green for the same reason. `:root:root` is there for specificity — the light-theme accent
+   rules (:root[data-theme][data-accent]) would otherwise win on --on-acc and paint white
+   labels onto the green.
+
+   Same call on fonts as Hairline: the design sets everything in Geist from Google Fonts;
+   that is a third-party request on every load, so the stack below uses Geist only if it is
+   installed locally and otherwise falls through to the system UI font.
+   ========================================================================== */
+:root:root[data-skin="peek"] {
+  --bg:#f3f2ee; --bg-el:#f3f2ee;
+  --surface:#ffffff; --surface-2:#e6e5e0; --surface-3:#dcdbd5;
+  --label:#0b0b0b; --label-2:#62615b; --label-3:#8a8982; --label-4:#cfcec8;
+  --sep:#efeee9; --sep-op:#e2e1db;
+  --blue:#007aff; --green:#34c759; --red:#e5372b; --orange:#e08600;
+  --yellow:#b88a00; --teal:#30b0c7; --indigo:#5856d6; --pink:#ff2d55;
+  --purple:#af52de; --mint:#00c7be; --brown:#a2845e; --grey:#8e8e93;
+  --acc:#12b76a; --acc-2:#10a560; --on-acc:#06140d;
+  --acc-soft:#e7f7ef; --acc-line:#9fdcbe;
+  /* green that is readable as text on the light page — #12b76a itself is ~2.4:1 there */
+  --acc-ink:#0e8f53;
+  /* the dark surfaces: tab bar, rest bar, coach note */
+  --ink:#0b0b0b; --ink-2:#232322; --on-ink:#f3f2ee; --on-ink-2:#a9a8a1;
+  --line:#d4d3cd;
+  --r-card:20px; --r:14px; --r-lg:16px; --r-sm:10px;
+  --font:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif;
+  --mono:'Geist Mono',ui-monospace,'SF Mono','Cascadia Mono','Roboto Mono',Menlo,Consolas,monospace;
+  --spring:cubic-bezier(.22,1,.36,1);
+}
+:root[data-skin="peek"] body{font-family:var(--font)}
+
+/* green as text reads through --acc-ink; green as a fill keeps --acc */
+:root[data-skin="peek"] a,
+:root[data-skin="peek"] .accent,
+:root[data-skin="peek"] .tag.acc,
+:root[data-skin="peek"] .btn.tinted,
+:root[data-skin="peek"] .btn.ghost,
+:root[data-skin="peek"] .btn.plain,
+:root[data-skin="peek"] .lrow-k{ color:var(--acc-ink) }
+
+/* buttons: the design's 56px, 14px-radius slabs */
+:root[data-skin="peek"] .btn{ padding:17px 18px; border-radius:var(--r); font-size:16px }
+:root[data-skin="peek"] .btn.sm{ padding:9px 14px; font-size:14px; border-radius:99px }
+:root[data-skin="peek"] .btn.primary:active{ background:var(--acc-2) }
+:root[data-skin="peek"] .sheet h3{ font-size:22px; letter-spacing:-.03em }
+:root[data-skin="peek"] .input,
+:root[data-skin="peek"] .field{ background:var(--surface); border-radius:var(--r); box-shadow:inset 0 0 0 1.5px transparent }
+:root[data-skin="peek"] .input:focus,
+:root[data-skin="peek"] .field:focus{ box-shadow:inset 0 0 0 1.5px var(--ink) }
+
+/* the secondary slab (grey fill, ink label) — .btn with no variant look of its own */
+.btn.soft{background:var(--surface-2);color:var(--label)}
+.btn.soft:active{background:var(--surface-3)}
+
+/* ---------------------------------------------------------------- orb -- */
+/* Colours are literal, not skin tokens: the orb is the same black sphere wherever it sits. */
+@keyframes ob-breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes ob-squish{0%{transform:scale(1)}25%{transform:scale(1.05,.93)}55%{transform:scale(.98,1.03)}100%{transform:scale(1)}}
+.orb-wrap{cursor:pointer;flex:none}
+.orb{
+  border-radius:50%;background:#0b0b0b;position:relative;overflow:hidden;
+  animation:ob-breathe 5s ease-in-out infinite;
+}
+.orb i{position:absolute;top:0;left:0;width:0;height:0;border-radius:999px;background:#f3f2ee}
+.orb.inv{background:#f3f2ee}
+.orb.inv i{background:#0b0b0b}
+.orb.poke{animation:ob-squish 480ms cubic-bezier(.34,1.3,.64,1)!important}
+
+/* ------------------------------------------------------- full-bleed screen -- */
+/* Cancels #app's own padding so an orb can hang off the top edge of the screen — the
+   onboarding screens are laid out edge to edge, not as a column of cards. */
+.pk-full{
+  position:relative;overflow:hidden;display:flex;flex-direction:column;
+  min-height:100vh;min-height:100dvh;
+  margin:calc(-1 * (var(--sat) + 8px)) calc(-1 * var(--pad)) calc(-1 * (128px + var(--sab)));
+  padding:calc(var(--sat) + 20px) 24px calc(var(--sab) + 20px);
+}
+.pk-full .grow{flex:1}
+.pk-full > :not(.orb-wrap){position:relative}
+
+@keyframes pk-peek{0%{transform:translateY(-120px)}100%{transform:none}}
+@keyframes pk-up{0%{opacity:0;transform:translateY(14px)}100%{opacity:1;transform:none}}
+
+/* D1 — welcome: a 480px orb, mostly off-screen, looking down at the copy */
+.pk-welcome .orb-wrap{
+  position:absolute;left:50%;top:-150px;margin-left:-240px;
+  animation:pk-peek 1100ms var(--spring) both;
+}
+.pk-welcome .orb{transform-origin:50% 0;animation-delay:1.1s}
+/* short phones: hang it higher so the copy never sits on top of it */
+@media (max-height:720px){ .pk-welcome .orb-wrap{top:-230px} }
+.pk-hero{display:flex;flex-direction:column;gap:8px;padding:0 4px;animation:pk-up 600ms var(--spring) 1s both}
+.pk-hero h1{font-size:36px;line-height:1.05;font-weight:600;letter-spacing:-.045em;color:var(--label);text-wrap:balance;max-width:8em}
+.pk-hero p{font-size:16px;line-height:1.45;color:var(--label-2)}
+.pk-actions{display:flex;flex-direction:column;gap:10px;margin-top:30px}
+.pk-actions .btn{animation:pk-up 600ms var(--spring) 1.15s backwards}   /* backwards, not both: a held transform would swallow the press scale */
+.pk-actions .btn+.btn{animation-delay:1.25s}
+.pk-link{
+  align-self:center;margin-top:6px;padding:10px 12px;
+  font-size:14px;color:var(--label-2);text-decoration:underline;text-underline-offset:3px;
+  animation:pk-up 600ms var(--spring) 1.35s backwards;
+}
+.pk-note{
+  background:var(--surface);border-radius:var(--r-lg);padding:14px 16px;
+  font-size:14px;line-height:1.4;color:var(--label-2);
+}
