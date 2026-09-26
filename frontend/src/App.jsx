@@ -16,6 +16,7 @@ import Toast from './components/Toast.jsx'
 import RestTimer from './components/RestTimer.jsx'
 import Login from './views/Login.jsx'
 import Goals from './views/Goals.jsx'
+import ExerciseProgress from './views/ExerciseProgress.jsx'
 import Home from './views/Home.jsx'
 import Plan from './views/Plan.jsx'
 import RoutineEdit from './views/RoutineEdit.jsx'
@@ -47,7 +48,7 @@ function applyPrefs(theme, accent, skin, focus) {
 // "Hairline" trial on the ones they shared). Login has no route of its own (Shell renders it
 // in place of <Routes>), so it is keyed on !authed instead of a pathname; the Goals
 // onboarding step is the same kind of screen.
-const PEEK_ROUTES = ['home', 'workout']
+const PEEK_ROUTES = ['home', 'workout', 'exercise']
 function skinFor(cur, authed, onboarding) {
   return !authed || onboarding || PEEK_ROUTES.includes(cur) ? 'peek' : ''
 }
@@ -65,7 +66,8 @@ function Shell() {
   const skin = skinFor(cur, authed, onboarding)
   // A running session is a focus screen, the way the design draws it: no tab bar, a ‹ back to
   // Home in its place (the session keeps running; Home and the Start tab both say Resume).
-  const hideTabs = onboarding || (cur === 'workout' && !!S.active)
+  // An exercise's progress page is a drill-down with its own ‹, drawn without one too.
+  const hideTabs = onboarding || (cur === 'workout' && !!S.active) || cur === 'exercise'
   useEffect(() => { applyPrefs(S.theme, S.accent, skin, hideTabs) }, [S.theme, S.accent, skin, hideTabs])
   useEffect(() => { setLang(S.lang || 'en') }, [S.lang])
   useEffect(() => { document.documentElement.lang = S.lang || 'en' }, [langV, S.lang])
@@ -96,6 +98,7 @@ function Shell() {
               <Route path="/stats" element={<Stats />} />
               <Route path="/history" element={<History />} />
               <Route path="/library" element={<Library />} />
+              <Route path="/exercise/:id" element={<ExerciseProgress />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/admin" element={user?.admin ? <Admin /> : <Navigate to="/home" replace />} />
               <Route path="*" element={<Navigate to="/home" replace />} />

@@ -1282,3 +1282,21 @@ button.pk-tile:active{background:var(--surface-2)}
 .pk-done-acts{display:flex;gap:10px;margin-top:24px}
 .pk-done-acts .btn:first-child{flex:2}
 .pk-done-acts .btn:last-child{flex:1}
+
+/* D7 — one exercise's progress */
+.pk-ptop{display:flex;align-items:center;gap:4px;padding:12px 0 0}
+.pk-ptop .pk-back{margin-left:-8px}
+.pk-ptop h1{font-size:17px;font-weight:600;letter-spacing:-.02em;color:var(--label);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-prog .card{border-radius:var(--r-card);margin-bottom:10px}
+.pk-pcard{margin-top:14px;padding:18px 16px 14px}
+.pk-pcard .lbl{font-size:13px;color:var(--label-2)}
+.pk-pcard .big{display:flex;align-items:baseline;flex-wrap:wrap;gap:10px;margin-top:10px}
+.pk-pcard .big b{font-size:48px;font-weight:600;letter-spacing:-.05em;line-height:1;color:var(--label)}
+.pk-pcard .pill{font-size:13px;font-weight:600;color:var(--label-2);background:var(--bg);padding:5px 8px;border-radius:99px}
+.pk-pcard .pill.up{color:var(--acc-ink);background:var(--acc-soft)}
+.pk-spark{display:block;width:100%;height:auto;margin-top:20px;overflow:visible}
+.pk-pcard .axis{display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--label-3)}
+.pk-coach{display:flex;align-items:center;gap:14px;margin-bottom:10px;padding:14px 16px;border-radius:var(--r-card);background:var(--ink);color:var(--on-ink)}
+.pk-coach .orb{animation:none}
+.pk-coach p{font-size:14px;line-height:1.4;text-wrap:pretty}
+.pk-prog > .btn{margin-top:2px}
