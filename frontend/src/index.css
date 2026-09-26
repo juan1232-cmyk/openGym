@@ -1251,3 +1251,34 @@ button.pk-tile:active{background:var(--surface-2)}
 :root[data-skin="peek"] #timer.rest .acts{grid-area:acts;gap:6px}
 :root[data-skin="peek"] #timer.rest .acts .btn{padding:10px 12px;font-size:13px;font-family:var(--mono);font-weight:500}
 :root[data-skin="peek"] #timer.rest .acts .skip{min-width:0;margin-left:0;font-family:var(--font);font-weight:600;padding:10px 14px}
+
+/* D6 — workout complete: a whole screen over the app (Modals kind 'full') */
+.fullsheet{
+  position:absolute;inset:0;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;padding:calc(var(--sat) + 16px) 24px calc(var(--sab) + 16px);
+  animation:pk-up 420ms var(--spring,cubic-bezier(.22,1,.36,1));
+}
+.pk-done{min-height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;color:var(--label)}
+.pk-done-orb{flex:1;min-height:250px;display:flex;align-items:center;justify-content:center}
+.pk-done-orb .orb{animation-duration:4s}
+.pk-done-h{text-align:center;display:flex;flex-direction:column;gap:8px}
+.pk-done-h h1{font-size:34px;line-height:1.05;font-weight:600;letter-spacing:-.045em}
+.pk-done-h p{font-size:16px;line-height:1.4;color:var(--label-2)}
+.pk-done-tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:26px}
+.pk-done-tiles .pk-tile{padding:16px}
+.pk-done-tiles .pk-tile b{font-size:22px}
+.pk-done-tiles .pk-tile b.up{color:var(--acc-ink)}
+.pk-done-tiles .pk-tile b.up small{color:inherit}
+.pk-best{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:8px;
+  padding:16px;border-radius:var(--r-lg);background:var(--acc-soft);
+}
+.pk-best .l{display:flex;flex-direction:column;gap:6px;min-width:0}
+.pk-best em{font-style:normal;font-size:12px;font-weight:500;color:var(--acc-ink)}
+.pk-best b{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk-best .v{font-family:var(--mono);font-size:15px;font-weight:500;flex:none}
+.pk-done-map{margin:8px 0 0}
+.pk-done-map .pk-card-h{margin-bottom:6px}
+.pk-done-acts{display:flex;gap:10px;margin-top:24px}
+.pk-done-acts .btn:first-child{flex:2}
+.pk-done-acts .btn:last-child{flex:1}

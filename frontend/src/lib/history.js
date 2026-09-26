@@ -220,6 +220,26 @@ export function setsDoneActive(A) {
   if (A) A.entries.forEach(e => e.sets.forEach(s => { if (s.done) n++ }))
   return n
 }
+// The session a finished workout is best measured against: the latest earlier workout of the
+// same routine — or, for freestyle and imported sessions, which have no routine, the same
+// name. null when this is the first of its kind. "Earlier" is by day, then start time, so an
+// imported history without clock times still orders correctly.
+export function previousSession(workouts, w) {
+  const same = x => x.id !== w.id && (w.routineId ? x.routineId === w.routineId : !x.routineId && x.name === w.name)
+  const before = (a, b) => a.d < b.d || (a.d === b.d && (a.start || 0) < (b.start || 0))
+  let best = null
+  for (const x of workouts || []) if (same(x) && before(x, w) && (!best || before(best, x))) best = x
+  return best
+}
+// The set a record is shown with: the heaviest one checked off, more reps breaking a tie.
+export function topSet(entry) {
+  let b = null
+  for (const s of (entry && entry.sets) || []) {
+    if (!s.done) continue
+    if (!b || (s.w || 0) > (b.w || 0) || ((s.w || 0) === (b.w || 0) && (s.r || 0) > (b.r || 0))) b = s
+  }
+  return b
+}
 export const lastBW = S => (S.bodyweight.length ? S.bodyweight[S.bodyweight.length - 1] : null)
 
 // Group consecutive items sharing a superset id (sg) into "units" of indices.

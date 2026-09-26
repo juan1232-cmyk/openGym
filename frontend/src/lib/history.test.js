@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { modeOf, isTimed, fmtSec, setLabel, defaultConfig, buildSets, exLine, workoutVolume, effortOf, stepEffort, capEffort, isBw, isPerSide, sideReps, repStep, nextUp, nextSetLabel } from './history.js'
+import { modeOf, isTimed, fmtSec, setLabel, defaultConfig, buildSets, exLine, workoutVolume, effortOf, stepEffort, capEffort, isBw, isPerSide, sideReps, repStep, nextUp, nextSetLabel, previousSession, topSet } from './history.js'
 import { EXDB } from './exercises.js'
 
 // Real ids out of the shipped catalogue, so the body-part fallback is exercised for real.
@@ -443,5 +443,44 @@ describe('nextSetLabel', () => {
   it('falls back to the set summary for bodyweight and timed work', () => {
     expect(nextSetLabel({ id: BW, target: { bodyweight: true } }, { w: 0, r: 12 }, 'kg')).toBe('12')
     expect(nextSetLabel({ id: LIFT, target: { mode: 'time' } }, { sec: 45 }, 'kg')).toBe('0:45')
+  })
+})
+
+describe('previousSession', () => {
+  const W = (id, d, extra) => ({ id, d, start: new Date(d + 'T10:00:00').getTime(), ...extra })
+
+  it('finds the latest earlier workout of the same routine', () => {
+    const ws = [W('a', '2026-09-10', { routineId: 'p' }), W('b', '2026-09-15', { routineId: 'p' }), W('c', '2026-09-17', { routineId: 'l' })]
+    const now = W('n', '2026-09-23', { routineId: 'p' })
+    expect(previousSession([...ws, now], now).id).toBe('b')
+  })
+
+  it('never compares a workout with itself or with a later one', () => {
+    const now = W('n', '2026-09-23', { routineId: 'p' })
+    expect(previousSession([now, W('z', '2026-09-30', { routineId: 'p' })], now)).toBeNull()
+  })
+
+  it('matches freestyle and imported sessions by name, not with routine sessions of that name', () => {
+    const ws = [W('a', '2026-09-10', { name: 'Freestyle' }), W('b', '2026-09-12', { name: 'Freestyle', routineId: 'x' })]
+    const now = W('n', '2026-09-23', { name: 'Freestyle' })
+    expect(previousSession([...ws, now], now).id).toBe('a')
+  })
+
+  it('orders two sessions on the same day by start time', () => {
+    const a = { id: 'a', d: '2026-09-23', start: 1, routineId: 'p' }
+    const b = { id: 'b', d: '2026-09-23', start: 2, routineId: 'p' }
+    const now = { id: 'n', d: '2026-09-23', start: 3, routineId: 'p' }
+    expect(previousSession([b, a, now], now).id).toBe('b')
+  })
+})
+
+describe('topSet', () => {
+  it('picks the heaviest checked set, more reps breaking a tie, and ignores unchecked ones', () => {
+    const e = { sets: [{ w: 60, r: 8, done: true }, { w: 62.5, r: 6, done: true }, { w: 62.5, r: 8, done: true }, { w: 70, r: 3, done: false }] }
+    expect(topSet(e)).toEqual({ w: 62.5, r: 8, done: true })
+  })
+  it('is null when nothing was checked', () => {
+    expect(topSet({ sets: [{ w: 60, r: 8, done: false }] })).toBeNull()
+    expect(topSet(null)).toBeNull()
   })
 })

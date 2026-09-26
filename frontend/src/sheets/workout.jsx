@@ -6,7 +6,7 @@ import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { EXIDX } from '../lib/exercises.js'
 import { fmtDate, fmtNum, fmtVol, fmtDur, durPart, todayISO, uid, MONTHS_LONG } from '../lib/format.js'
-import { bestWeightFor, buildSets, effectiveRoutineId, workoutVolume, setsDone, setsDoneActive, supersetUnits, unitOf, setLabel, effortOf } from '../lib/history.js'
+import { bestWeightFor, buildSets, effectiveRoutineId, workoutVolume, setsDone, setsDoneActive, supersetUnits, unitOf, setLabel, effortOf, previousSession, topSet, nextSetLabel } from '../lib/history.js'
 import { beep } from '../lib/sound.js'
 import { t } from '../lib/i18n.js'
 import { nav } from '../lib/nav.js'
@@ -14,6 +14,7 @@ import { glyphOf } from '../lib/glyphs.js'
 import Icon from '../components/Icon.jsx'
 import { Thumb } from '../components/Media.jsx'
 import BodyMap from '../components/BodyMap.jsx'
+import Orb from '../components/Orb.jsx'
 import { Button } from '../components/ui.jsx'
 import { loadOfWorkouts } from '../lib/muscles.js'
 import { parseImport, mergeImport } from '../lib/import-csv.js'
@@ -274,25 +275,62 @@ function WorkoutComplete({ close }) {
 }
 export const workoutCompleteSheet = () => ui().openSheet(close => <WorkoutComplete close={close} />, { kind: 'center' })
 
+// D6 from the Peek design: the finished workout as a whole screen — the orb, the headline
+// numbers, how it compares with the last time this routine was done, and any records. The
+// muscle map ("what you just trained") stays: the design has no room drawn for it, but it is
+// the one part of this screen that says something the numbers don't.
+const CHEER = ['joyful-wide', 'small-attentive', 'joyful-wide', 'neutral']
 function FinishSummary({ w, prs, e1prs = [], close }) {
   const st = useStore(s => s.S)
-  return <div style={{ textAlign: 'center', padding: '8px 0' }}>
-    <div style={{ fontSize: 44, display: 'flex', justifyContent: 'center', color: 'var(--acc)' }}><Icon name="trophy" /></div>
-    <h3 style={{ margin: '8px 0' }}>{t('Workout complete!')}</h3>
-    <div className="tiles" style={{ textAlign: 'left' }}>
-      <div className="tile"><div className="l">{t('Duration')}</div><div className="v" style={{ fontSize: '1.1rem' }}>{fmtDur(w.end - w.start)}</div></div>
-      <div className="tile"><div className="l">{t('Volume')}</div><div className="v" style={{ fontSize: '1.1rem' }}>{fmtVol(w.vol, st.unit)}</div></div>
-      <div className="tile"><div className="l">{t('Sets')}</div><div className="v" style={{ fontSize: '1.1rem' }}>{setsDone(w)}</div></div>
-      <div className="tile"><div className="l">{t('PRs')}</div><div className="v" style={{ fontSize: 20 }}>{prs.length || '—'}</div></div>
+  const user = useStore(s => s.user)
+  const unit = st.unit
+  const prev = previousSession(st.workouts, w)
+  const diff = prev ? (w.vol || 0) - (prev.vol || 0) : null
+  const entryOf = id => w.entries.find(e => e.id === id)
+  const nameOf = id => (EXIDX[id] || {}).n || id
+  const line = [w.name, ...durPart(w.end - w.start), t('{0} sets', setsDone(w))].join(' · ')
+  const done = () => { close(); nav('/home') }
+  // the system share sheet where there is one, the clipboard where there isn't
+  const share = async () => {
+    const text = line + ' · ' + fmtVol(w.vol, unit)
+    try {
+      if (navigator.share) await navigator.share({ text })
+      else { await navigator.clipboard.writeText(text); toast(t('Copied to clipboard')) }
+    } catch (e) { if (e.name !== 'AbortError') toast(t('Could not share')) }
+  }
+  return <div className="pk-done">
+    <div className="pk-done-orb"><Orb size={180} pool={CHEER} poke="joyful-wide" /></div>
+    <div className="pk-done-h">
+      <h1>{user ? t('Nice work, {0}.', user.name) : t('Nice work.')}</h1>
+      <p>{line}</p>
     </div>
-    {(prs.length > 0 || e1prs.length > 0) && <div style={{ textAlign: 'left', marginBottom: 12 }}>
-      {prs.map(id => <div key={id} className="small accent capitalize row" style={{ gap: 5 }}><Icon name="trophy" style={{ fontSize: 13 }} />{t('New PR:')} {(EXIDX[id] || {}).n || id}</div>)}
-      {e1prs.map(p => <div key={p.id} className="small accent capitalize row" style={{ gap: 5 }}><Icon name="chartLine" style={{ fontSize: 13 }} />{t('Best estimated 1RM:')} {(EXIDX[p.id] || {}).n || p.id} · {fmtNum(p.est)} {st.unit}</div>)}
-    </div>}
-    <h4 className="sec" style={{ textAlign: 'left' }}>{t('What you just trained')}</h4>
-    <BodyMap load={loadOfWorkouts([w])} body={st.body} />
-    <div style={{ height: 14 }} />
-    <Button variant="primary" onClick={() => { close(); nav('/home') }}>{t('Nice!')}</Button>
+    <div className="pk-done-tiles">
+      <div className="pk-tile"><span>{t('Volume')}</span><b>{fmtNum(w.vol || 0)}<small> {unit}</small></b></div>
+      {prev
+        ? <div className="pk-tile"><span>{t('vs last {0}', w.name)}</span><b className={diff > 0 ? 'up' : ''}>{diff > 0 ? '+' : diff < 0 ? '−' : ''}{fmtNum(Math.abs(diff))}<small> {unit}</small></b></div>
+        : <div className="pk-tile"><span>{t('Duration')}</span><b>{w.end - w.start >= 60000 ? fmtDur(w.end - w.start) : '—'}</b></div>}
+    </div>
+    {prs.map(id => {
+      const top = topSet(entryOf(id))
+      return <div key={id} className="pk-best">
+        <span className="l"><em>{t('New best')}</em><b className="capitalize">{nameOf(id)}</b></span>
+        {top && <span className="v">{nextSetLabel(entryOf(id), top, unit)}</span>}
+      </div>
+    })}
+    {/* a heavier estimate without a heavier top set is its own kind of progress — same weight
+        for more reps — so it is labelled as that, never as a load record */}
+    {e1prs.map(p => <div key={p.id} className="pk-best">
+      <span className="l"><em>{t('Best estimated 1RM')}</em><b className="capitalize">{nameOf(p.id)}</b></span>
+      <span className="v">{fmtNum(p.est)} {unit}</span>
+    </div>)}
+    <div className="card pk-done-map">
+      <div className="pk-card-h"><b>{t('What you just trained')}</b></div>
+      <BodyMap load={loadOfWorkouts([w])} body={st.body} />
+    </div>
+    <div className="pk-done-acts">
+      <Button variant="primary" onClick={done}>{t('Done')}</Button>
+      <Button variant="soft" onClick={share}>{t('Share')}</Button>
+    </div>
   </div>
 }
 export function finishWorkout() {
@@ -337,5 +375,5 @@ function doFinishWorkout() {
   })
   useUI.getState().stopRest()
   beep(snd(), 880, 0.15); beep(snd(), 1100, 0.15, 0.18); beep(snd(), 1320, 0.3, 0.36)
-  ui().openSheet(close => <FinishSummary w={w} prs={prs} e1prs={e1prs} close={close} />, { kind: 'center', locked: true })
+  ui().openSheet(close => <FinishSummary w={w} prs={prs} e1prs={e1prs} close={close} />, { kind: 'full', locked: true })
 }
