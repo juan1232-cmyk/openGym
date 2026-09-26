@@ -235,6 +235,30 @@ export function supersetUnits(items) {
 }
 export function unitOf(units, idx) { return units.find(u => u.includes(idx)) || [idx] }
 
+// The set to do next in a running session: { entry, set } indices, or null once every set is
+// checked. The unit you are on comes first, so checking off exercises out of order doesn't
+// send you back up the list; after that, list order. Inside a superset it alternates — set 1
+// of each partner before set 2 of either — because that is how a superset is performed.
+export function nextUp(A) {
+  if (!A || !A.entries.length) return null
+  const units = supersetUnits(A.entries)
+  const cur = unitOf(units, Math.min(A.cur || 0, A.entries.length - 1))
+  const inUnit = u => {
+    const n = Math.max(...u.map(i => A.entries[i].sets.length))
+    for (let k = 0; k < n; k++) for (const i of u) { const st = A.entries[i].sets[k]; if (st && !st.done) return { entry: i, set: k } }
+    return null
+  }
+  if (inUnit(cur)) return inUnit(cur)
+  for (const u of units) { const f = u !== cur && inUnit(u); if (f) return f }
+  return null
+}
+// The next set as the rest bar and the workout dock announce it: "62.5 kg × 8" for a loaded
+// lift, and the usual set summary for everything else (bodyweight, holds, cardio).
+export function nextSetLabel(entry, s, unit) {
+  const cfg = { ...(entry.target || {}), id: entry.id }
+  return modeOf(cfg) === 'reps' && !isBw(cfg) ? `${fmtNum(s.w || 0)} ${unit} × ${s.r || 0}` : setLabel(entry.id, s, cfg)
+}
+
 export function streakWeeks(S) {
   if (!S.workouts.length) return 0
   const weeks = new Set(S.workouts.map(w => weekKey(w.d)))

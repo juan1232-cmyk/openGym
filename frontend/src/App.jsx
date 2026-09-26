@@ -30,25 +30,26 @@ bindUI(useUI)   // lets the shared controls open sheets without importing the st
 
 // The skin sits on top of the theme (see index.css), so the status-bar colour follows the
 // skin when there is one — a light Peek page under a black status bar reads as a gap.
-const SKIN_BAR = { peek: '#f3f2ee', hairline: '#0a0a0a' }
-function applyPrefs(theme, accent, skin) {
+const SKIN_BAR = { peek: '#f3f2ee' }
+function applyPrefs(theme, accent, skin, focus) {
   const de = document.documentElement
   de.dataset.theme = theme === 'light' ? 'light' : 'dark'
   de.dataset.accent = ACCENTS[accent] ? accent : 'lime'
   de.dataset.skin = skin
+  // "focus" = no tab bar on screen (onboarding, a running workout); fixed bars sit lower then
+  de.dataset.chrome = focus ? 'focus' : ''
   const meta = document.querySelector('meta[name="theme-color"]')
   if (meta) meta.content = SKIN_BAR[skin] || (de.dataset.theme === 'light' ? '#f2f2f7' : '#000000')
 }
 
-// Which design skin a screen wears. Both are scoped to the screens their design actually
-// covers rather than replacing the theme — "Peek" is taking over screen by screen (one PR
-// each), and Hairline keeps the ones Peek hasn't reached yet. Login has no route of its own
-// (Shell renders it in place of <Routes>), so it is keyed on !authed instead of a pathname;
-// the Goals onboarding step is the same kind of screen.
+// Which screens wear the "Peek" design skin. Scoped to the screens that design covers rather
+// than replacing the theme — it takes over one screen per PR (and has replaced the earlier
+// "Hairline" trial on the ones they shared). Login has no route of its own (Shell renders it
+// in place of <Routes>), so it is keyed on !authed instead of a pathname; the Goals
+// onboarding step is the same kind of screen.
+const PEEK_ROUTES = ['home', 'workout']
 function skinFor(cur, authed, onboarding) {
-  if (!authed || onboarding || cur === 'home') return 'peek'
-  if (cur === 'workout') return 'hairline'
-  return ''
+  return !authed || onboarding || PEEK_ROUTES.includes(cur) ? 'peek' : ''
 }
 
 function Shell() {
@@ -60,8 +61,12 @@ function Shell() {
   const authed = user || isGuest
   useEffect(() => { setNav(navigate) }, [navigate])
   const onboarding = !!authed && needsGoals(S, ready, pulling)
-  const skin = skinFor(loc.pathname.split('/')[1] || 'home', authed, onboarding)
-  useEffect(() => { applyPrefs(S.theme, S.accent, skin) }, [S.theme, S.accent, skin])
+  const cur = loc.pathname.split('/')[1] || 'home'
+  const skin = skinFor(cur, authed, onboarding)
+  // A running session is a focus screen, the way the design draws it: no tab bar, a ‹ back to
+  // Home in its place (the session keeps running; Home and the Start tab both say Resume).
+  const hideTabs = onboarding || (cur === 'workout' && !!S.active)
+  useEffect(() => { applyPrefs(S.theme, S.accent, skin, hideTabs) }, [S.theme, S.accent, skin, hideTabs])
   useEffect(() => { setLang(S.lang || 'en') }, [S.lang])
   useEffect(() => { document.documentElement.lang = S.lang || 'en' }, [langV, S.lang])
   // every tab/route change starts at the top of the page
@@ -98,7 +103,7 @@ function Shell() {
           )}
         </ErrorBoundary>
       </div>
-      {!onboarding && <TabBar onStart={startFlow} />}
+      {!hideTabs && <TabBar onStart={startFlow} />}
       <RestTimer />
       <Modals />
       <Toast />
