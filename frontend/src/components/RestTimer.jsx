@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
 import { useUI } from '../store/useUI.js'
+import { useStore } from '../store/useStore.js'
+import { nextUp, nextSetLabel } from '../lib/history.js'
 import { t } from '../lib/i18n.js'
 import { Button } from './ui.jsx'
 
@@ -13,6 +15,8 @@ export default function RestTimer() {
   const timer = useUI(s => s.timer)
   const work = useUI(s => s.work)
   const { addRest, stopRest, finishWorkEarly, stopWork } = useUI()
+  const A = useStore(s => s.S.active)
+  const unit = useStore(s => s.S.unit)
   const on = work || timer
   // The bar is fixed above the tab bar and floats over whatever is beneath it — during a
   // rest that was the next set's row. Extra bottom padding lets the page scroll clear.
@@ -21,6 +25,9 @@ export default function RestTimer() {
     return () => document.body.classList.remove('resting')
   }, [!!on])
   if (!on) return null
+  // what the rest is for — only drawn by skins that have room for it (Peek's dark rest bar)
+  const nx = timer && nextUp(A)
+  const next = nx ? nextSetLabel(A.entries[nx.entry], A.entries[nx.entry].sets[nx.set], unit) : ''
   const pct = (on.left / on.total) * 100
 
   if (work) return (
@@ -41,7 +48,7 @@ export default function RestTimer() {
   return (
     <div id="timer" className="rest">
       <div className="head">
-        <span className="lbl">{t('Rest')}</span>
+        <span className="lbl">{t('Rest')}{next && <span className="nx"> · {t('next {0}', next)}</span>}</span>
         <div className="t">{clock(timer.left)}</div>
         <div className="bar"><i style={{ width: pct + '%' }} /></div>
       </div>

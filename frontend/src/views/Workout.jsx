@@ -1,16 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { exOr } from '../lib/exercises.js'
-import { effectiveRoutine, lastEntryFor, bestWeightFor, buildSets, setsDoneActive, workoutVolume, supersetUnits, unitOf, setLabel, modeOf, isBw, isPerSide, sideReps, repStep, EFFORT, effortOf, stepEffort, capEffort } from '../lib/history.js'
-import { fmtNum, fmtVol, fmtDate, todayISO, exCount, DAYN } from '../lib/format.js'
+import { effectiveRoutine, lastEntryFor, buildSets, setsDoneActive, supersetUnits, unitOf, setLabel, modeOf, isBw, isPerSide, sideReps, EFFORT, effortOf, capEffort, fmtSec, nextUp, nextSetLabel } from '../lib/history.js'
+import { fmtNum, todayISO, exCount, DAYN } from '../lib/format.js'
 import { beep, vibrate } from '../lib/sound.js'
 import { t } from '../lib/i18n.js'
 import { api } from '../lib/api.js'
 import Media from '../components/Media.jsx'
 import { startFlow, exercisePicker, exConfigSheet, exerciseDetailSheet, topWeightSheet, finishWorkout, workoutCompleteSheet, confirmSheet } from '../sheets.jsx'
 import Icon from '../components/Icon.jsx'
+import Orb from '../components/Orb.jsx'
 import { Button, Check, NumberField } from '../components/ui.jsx'
 import { nextPrescription, applyPrescription } from '../lib/progression.js'
 import { glyphOf } from '../lib/glyphs.js'
@@ -53,122 +54,114 @@ function Elapsed({ start }) {
   return <span>{t}</span>
 }
 
-/* ---------- one exercise block (reps: weight×reps · time: a held duration · cardio: duration+speed) ---------- */
-function ExerciseBlock({ entryIdx, compact, onToggle, onField, onAddSet, onRemoveSet, onStartTimed }) {
+/* ---------- one exercise's sets (reps: weight×reps · time: a held duration · cardio: duration+speed) ---------- */
+// The Peek design's set table: Set | Last time | the numbers | ✓. Done rows turn green and
+// read back as text; open rows are plain inputs, the way the design draws them, instead of
+// the +/- steppers the old layout used — with "last time" beside every set there is no room
+// for three buttons a column, and the prescription already fills the numbers in.
+function SetGrid({ entryIdx, onToggle, onField, onStartTimed }) {
   const S = useStore(s => s.S)
   const working = useUI(s => s.work)
   const entry = S.active.entries[entryIdx]
-  const ex = exOr(entry.id)
   const mode = modeOf({ ...(entry.target || {}), id: entry.id })
   const cardio = mode === 'cardio'
   const timed = mode === 'time'
   const last = lastEntryFor(S, entry.id)
-  // The same number the "confirm your working weight" sheet calls your best, so the two
-  // never disagree inside one session: heaviest logged set, or the working weight you kept.
-  const best = cardio ? 0 : Math.max(bestWeightFor(S, entry.id), (S.exWeights[entry.id] || {}).w || 0)
-  // What the progression policy decided for this session, and why (issue #17). Computed when
-  // the session was built so the reason matches the numbers already in the rows.
-  const plan = entry.plan
-  // A bodyweight set has no weight to type, so the column is not there (issue #32) — one
-  // stepper instead of two, which is the whole point of the flag. Adding a belt weight in the
-  // config brings it back, now labelled as the addition it is.
+  // A bodyweight set has no weight to type, so the column is not there (issue #32) — adding a
+  // belt weight in the config brings it back, now labelled as the addition it is.
   const cfg = { ...(entry.target || {}), id: entry.id }
   const bw = !cardio && isBw(cfg)
   const added = bw && entry.sets.some(s => s.w > 0)
-  const loadCol = { f: 'w', step: 2.5, dec: true, hd: bw ? t('Added ({0})', S.unit) : t('Weight ({0})', S.unit) }
-  // The reps column is the total in every mode, unilateral included — the stepper walks in
-  // twos there so the number you land on is one you can actually split evenly.
-  const repCol = { f: 'r', step: repStep(cfg), dec: false, hd: t('Reps') }
-  const col1 = cardio ? { f: 'min', step: 1, dec: false, hd: t('Duration (min)') }
-    : timed ? { f: 'sec', step: 5, dec: false, hd: t('Seconds') }
-      : (bw && !added) ? repCol : loadCol
-  const col2 = cardio ? { f: 'speed', step: 0.5, dec: true, hd: t('Speed (km/h)') }
-    : timed ? ((bw && !added) ? null : loadCol)
-      : (bw && !added) ? null : repCol
-  // Effort (RIR or RPE, whichever the profile logs) only makes sense for weighted rep sets,
-  // not cardio/timed holds, and is opt-in since it adds a third stepper to every row. `opt`
-  // because an unlogged effort is not the same as 0 — RIR 0 says the set went to failure.
+  const loadCol = { f: 'w', dec: true, hd: bw ? '+' + S.unit : S.unit, w: '64px' }
+  const repCol = { f: 'r', dec: false, hd: t('Reps'), w: '54px' }
+  const cols = cardio ? [{ f: 'min', dec: false, hd: t('Min'), w: '54px' }, { f: 'speed', dec: true, hd: 'km/h', w: '58px' }]
+    : timed ? [{ f: 'sec', dec: false, hd: t('Sec'), w: '54px' }, ...((bw && !added) ? [] : [loadCol])]
+      : (bw && !added) ? [repCol] : [loadCol, repCol]
+  // Effort (RIR or RPE, whichever the profile logs) only for weighted rep sets, and opt-in.
+  // `opt` because an unlogged effort is not the same as 0 — RIR 0 says the set went to failure.
   const kind = effortOf(S)
   const eff = EFFORT[kind]
-  const col3 = mode === 'reps' && eff ? { ...eff, eff: kind, dec: true, opt: true, hd: t(eff.hd) } : null
-  // The effort column walks its own scale — see stepEffort. Weight and reps step up from 0
-  // with no ceiling, as they always did.
-  const bump = (s, i, col, dir) => {
-    if (col.eff) return onField(i, col.f, stepEffort(col.eff, s[col.f], dir))
-    onField(i, col.f, Math.max(0, Math.round(((s[col.f] || 0) + dir * col.step) * 100) / 100))
-  }
-  // Uses the shared stepper markup so a set row picks up the same control styling
-  // as every other +/- field in the app.
-  const cell = (s, i, col, cls) => (
-    <div className={'stp ' + cls}>
-      <button aria-label="Decrease" onClick={() => bump(s, i, col, -1)}><Icon name="minus" /></button>
-      {/* a typed effort is capped — there is no RPE 12, and 12 reps in reserve is a warm-up */}
-      <span className="val"><NumberField decimal={col.dec} nullable={col.opt} value={s[col.f] ?? ''}
-        onChange={v => onField(i, col.f, col.eff ? capEffort(col.eff, v) : v)} /></span>
-      <button aria-label="Increase" onClick={() => bump(s, i, col, 1)}><Icon name="plus" /></button>
-    </div>
-  )
-  return <>
-    <Media ex={ex} key={entry.id} compact={compact} minimizable />
-    <div className="row between" style={{ marginBottom: 6 }}>
-      <div style={{ fontSize: compact ? 17 : 20, fontWeight: 600, letterSpacing: '-.02em', textTransform: 'capitalize', lineHeight: 1.2 }}>{ex.n}</div>
-      <button className="iconbtn" aria-label={t('Details')} onClick={() => exerciseDetailSheet(ex)}><Icon name="info" /></button>
-    </div>
-    <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-      {cardio && <span className="tag acc"><Icon name="figureRun" />{t('Cardio')}</span>}
-      {/* You log the total; this is the split, so the set in front of you is unambiguous
-          without the rep count having to mean two different things (issue #31). */}
-      {!cardio && !timed && isPerSide(cfg) && <span className="tag acc nocap"><Icon name="shuffle" />{t('{0} per side', fmtNum(sideReps(entry.sets.find(s => !s.done)?.r ?? entry.sets[0]?.r)))}</span>}
-      {(ex.tg || ex.bp) && <span className="tag">{t(ex.tg || ex.bp)}</span>}
-      {ex.eq && <span className="tag">{t(ex.eq)}</span>}
-      {best > 0 && <span className="tag nocap">{t('Best:')} {fmtNum(best)} {S.unit}</span>}
-    </div>
-    {last && <div className="small dim" style={{ marginBottom: 4 }}>{t('Last time')} ({fmtDate(last.d)}): {last.sets.map(s => setLabel(entry.id, s, last.target)).join(', ')}</div>}
-    {plan && plan.why && plan.kind !== 'off' && <div className={'progline' + (plan.kind === 'deload' ? ' warn' : '')}>
-      <Icon name={plan.kind === 'up' ? 'arrowUp' : plan.kind === 'deload' ? 'arrowDown' : 'lightbulb'} />
-      <span>{t(...plan.why)}</span>
-    </div>}
-    <div className="card" style={{ marginTop: 10, marginBottom: 0 }}>
-      {/* the header carries the same eff3 sizing as the rows, or the labels drift off their columns */}
-      <div className={'sethead' + (col3 ? ' eff3' : '')}><span className="n-sp" /><span className="w-sp">{col1.hd}</span>{col2 && <span className="r-sp">{col2.hd}</span>}{col3 && <span className="eff-sp">{col3.hd}</span>}{timed && <span className="ck-sp" />}<span className="ck-sp" /></div>
-      {entry.sets.map((s, i) => <div key={i} className={'setrow' + (s.done ? ' done' : '') + (col3 ? ' eff3' : '')}>
-        <div className="n">{i + 1}</div>
-        {cell(s, i, col1, 'w')}
-        {col2 && cell(s, i, col2, 'r')}
-        {col3 && cell(s, i, col3, 'eff')}
+  if (mode === 'reps' && eff) cols.push({ f: eff.f, eff: kind, dec: true, opt: true, hd: eff.hd, w: '46px' })
+  const grid = { gridTemplateColumns: ['26px', 'minmax(0,1fr)', ...cols.map(c => c.w), ...(timed ? ['36px'] : []), '36px'].join(' ') }
+  const shown = (c, v) => (v == null || v === '' ? '—' : c.f === 'sec' ? fmtSec(v) : fmtNum(v))
+
+  return <div className="pk-sets">
+    <div className="pk-set hd" style={grid}><span>{t('Set')}</span><span>{t('Last time')}</span>{cols.map(c => <span key={c.f}>{c.hd}</span>)}{timed && <span />}<span /></div>
+    {entry.sets.map((s, i) => {
+      const prev = last && last.sets[i] ? setLabel(entry.id, last.sets[i], last.target) : '—'
+      return <div key={i} className={'pk-set' + (s.done ? ' done' : '')} style={grid}>
+        <span className="n">{i + 1}</span>
+        <span className="prev">{prev}</span>
+        {cols.map(c => s.done
+          ? <span key={c.f} className="v">{shown(c, s[c.f])}</span>
+          : <NumberField key={c.f} decimal={c.dec} nullable={c.opt} value={s[c.f] ?? ''} aria-label={c.hd}
+            // a typed effort is capped — there is no RPE 12, and 12 reps in reserve is a warm-up
+            onChange={v => onField(i, c.f, c.eff ? capEffort(c.eff, v) : v)} />)}
         {/* A timed set is started, not typed: the timer counts the hold down and checks the
             set off itself. The checkbox stays for anyone who timed it on their own watch. */}
         {timed && <button className="setgo" aria-label={t('Start set')} disabled={s.done || !!working}
           onClick={() => onStartTimed(i)}><Icon name="play" /></button>}
         <Check checked={s.done} onChange={() => onToggle(i)} />
-      </div>)}
-      <div style={{ height: 8 }} />
-      <div className="row">
-        <Button size="sm" icon="minus" disabled={entry.sets.length <= 1} onClick={onRemoveSet}>{t('Remove set')}</Button>
-        <Button size="sm" icon="plus" onClick={onAddSet}>{t('Add set')}</Button>
       </div>
+    })}
+  </div>
+}
+
+/* ---------- one exercise inside an open card ---------- */
+function ExerciseBody({ entryIdx, inSuperset, onToggle, onField, onAddSet, onRemoveSet, onStartTimed }) {
+  const S = useStore(s => s.S)
+  const entry = S.active.entries[entryIdx]
+  const ex = exOr(entry.id)
+  const cfg = { ...(entry.target || {}), id: entry.id }
+  const mode = modeOf(cfg)
+  // What the progression policy decided for this session, and why (issue #17). Computed when
+  // the session was built so the reason matches the numbers already in the rows.
+  const plan = entry.plan
+  return <div className="pk-ex-part">
+    {inSuperset && <div className="pk-ex-sub">{ex.n}</div>}
+    <Media ex={ex} key={entry.id} compact minimizable />
+    <div className="pk-ex-meta">
+      {mode === 'cardio' && <span className="tag acc"><Icon name="figureRun" />{t('Cardio')}</span>}
+      {/* You log the total; this is the split, so the set in front of you is unambiguous
+          without the rep count having to mean two different things (issue #31). */}
+      {mode === 'reps' && isPerSide(cfg) && <span className="tag acc nocap"><Icon name="shuffle" />{t('{0} per side', fmtNum(sideReps(entry.sets.find(s => !s.done)?.r ?? entry.sets[0]?.r)))}</span>}
+      <button className="pk-info" onClick={() => exerciseDetailSheet(ex)}><Icon name="info" />{t('Details')}</button>
     </div>
-  </>
+    {plan && plan.why && plan.kind !== 'off' && <div className={'progline' + (plan.kind === 'deload' ? ' warn' : '')}>
+      <Icon name={plan.kind === 'up' ? 'arrowUp' : plan.kind === 'deload' ? 'arrowDown' : 'lightbulb'} />
+      <span>{t(...plan.why)}</span>
+    </div>}
+    <SetGrid entryIdx={entryIdx} onToggle={onToggle} onField={onField} onStartTimed={onStartTimed} />
+    <div className="pk-ex-acts">
+      <Button size="sm" variant="soft" icon="minus" disabled={entry.sets.length <= 1} onClick={onRemoveSet}>{t('Remove set')}</Button>
+      <Button size="sm" variant="soft" icon="plus" onClick={onAddSet}>{t('Add set')}</Button>
+    </div>
+  </div>
 }
 
 /* ---------- active workout ---------- */
+// D2 from the Peek design: every exercise as a card in one list (the open one is the unit
+// you're on — a superset is one card), the orb cheering each checked set, and a dark dock at
+// the bottom saying what's next, which the rest bar takes the place of while you recover.
+// The tab bar is hidden for the session (App.jsx); ‹ goes Home and the session keeps running.
 function ActiveWorkout() {
   const nav = useNavigate()
   const S = useStore(s => s.S)
   const update = useStore(s => s.update)
   const { startRest, stopRest } = useUI()
+  const resting = useUI(s => !!(s.timer || s.work))
+  const orb = useRef(null)
+  const [collapsed, setCollapsed] = useState(false)
   const A = S.active
   const units = supersetUnits(A.entries)
   const cur = Math.min(A.cur, Math.max(0, A.entries.length - 1))
   const unit = A.entries.length ? unitOf(units, cur) : []
   const unitIdx = units.findIndex(u => u === unit)
-  const isSuperset = unit.length > 1
 
   const total = A.entries.reduce((n, e) => n + e.sets.length, 0)
   const done = setsDoneActive(A)
-  // Same helper the finished-workout history screens use for this number, so what you see
-  // mid-session and what gets saved to that workout's record never disagree.
-  const vol = workoutVolume(A)
+  const nx = nextUp(A)
+  const nxEntry = nx && A.entries[nx.entry]
 
   const mutEntry = (idx, fn) => update(s => { fn(s.active.entries[idx]) }, true)
   // Clearing an optional field drops the key rather than storing null, so a set only carries
@@ -202,15 +195,17 @@ function ActiveWorkout() {
     const m = modeAt(idx)
     const cardioEntry = m === 'cardio'
     const isLastUnit = unitIdx >= units.length - 1
-    let askTop = false, exJustDone = false, workoutDone = false
+    let askTop = false, exJustDone = false, workoutDone = false, unitJustDone = false
     mutEntry(idx, e => {
       e.sets[i].done = !e.sets[i].done
       if (e.sets[i].done) {
         beep(S.sound, 1040, 0.12); vibrate(30)
+        orb.current?.react('joyful-wide', 1100)
         const isLastExInUnit = idx === unit[unit.length - 1]
         const unitDone = unit.every(ui => (ui === idx ? e : A.entries[ui]).sets.every(x => x.done))
         if (isLastExInUnit && !unitDone) startRest(S.restSec)
         else if (unitDone) stopRest()
+        unitJustDone = unitDone
         if (unitDone && isLastUnit) workoutDone = true      // last exercise's last set → done
         // Only loaded reps training has a "working weight" worth confirming — a bodyweight
         // plank has nothing to put in that slider, and neither does a set of push-ups
@@ -219,13 +214,28 @@ function ActiveWorkout() {
         if (e.sets.every(x => x.done)) { exJustDone = true; if (loaded && !e.asked) { e.asked = true; askTop = true } }
       }
     })
-    // reps: topWeight first (it chains into the finish/continue prompt on the last unit).
-    // cardio/timed or already-confirmed: go straight to the prompt.
+    // reps: topWeight first (it chains into the finish/continue prompt on the last unit, and
+    // opens the next card itself). cardio/timed or already-confirmed: go straight on — the
+    // next unfinished card opens, as it does in the design.
     if (askTop) topWeightSheet(idx)
     else if (workoutDone) workoutCompleteSheet()
-    else if (exJustDone && cardioEntry) useUI.getState().toast(t('Cardio logged'))
-    else if (exJustDone && m === 'time') useUI.getState().toast(t('Hold logged'))
+    else {
+      if (unitJustDone) update(s => { const n = nextUp(s.active); if (n) s.active.cur = n.entry })
+      if (exJustDone && cardioEntry) useUI.getState().toast(t('Cardio logged'))
+      else if (exJustDone && m === 'time') useUI.getState().toast(t('Hold logged'))
+    }
   }
+
+  const openUnit = k => {
+    if (k === unitIdx) { setCollapsed(c => !c); return }
+    setCollapsed(false)
+    update(s => { s.active.cur = units[k][0] })
+  }
+
+  const discard = () => confirmSheet({
+    title: t('Discard workout?'), message: t('The sets you logged in this session will be lost.'), confirmText: t('Discard'), danger: true,
+    onConfirm: () => { update(s => { s.active = null }); stopRest(); nav('/home') }
+  })
 
   // Live-presence heartbeat so the admin dashboard can show who's training now. Signed-in only —
   // guests have no server session. Reads fresh state each tick so progress stays current.
@@ -254,51 +264,57 @@ function ActiveWorkout() {
     }
   }, [])
 
-  return <div className="narrow">
-    <div className="hdr">
-      <button className="iconbtn" aria-label={t('Discard')} onClick={() => confirmSheet({ title: t('Discard workout?'), message: t('The sets you logged in this session will be lost.'), confirmText: t('Discard'), danger: true, onConfirm: () => { update(s => { s.active = null }); stopRest(); nav('/home') } })}><Icon name="xmark" /></button>
-      <div style={{ textAlign: 'center' }}><div style={{ fontWeight: 600 }}>{A.name}</div><div className="sub"><Elapsed start={A.start} /> · {fmtVol(vol, S.unit)} · {t('{0} sets', done + '/' + total)}</div></div>
-      <button className="hdr-finish" onClick={finishWorkout}><Icon name="check" /><span>{t('Finish')}</span></button>
+  return <div className="narrow pk-workout">
+    <div className="pk-wtop">
+      <button className="iconbtn" aria-label={t('Home')} onClick={() => nav('/home')}><Icon name="chevronLeft" /></button>
     </div>
-    <div className="wprog"><i style={{ width: (total ? done / total * 100 : 0) + '%' }} /></div>
+    <div className="pk-whead">
+      <div className="pk-wtitle"><span className="el"><Elapsed start={A.start} /></span><h1>{A.name}</h1></div>
+      <Orb ref={orb} size={60} poke="joyful-wide" />
+    </div>
+    <div className="pk-wprog">
+      <div className="bar"><i style={{ width: (total ? done / total * 100 : 0) + '%' }} /></div>
+      <span>{done}/{total}</span>
+    </div>
 
-    {A.entries.length ? <>
-      <div className="muted small" style={{ marginBottom: 6 }}>{isSuperset ? t('Superset {0} / {1}', unitIdx + 1, units.length) : t('Exercise {0} / {1}', unitIdx + 1, units.length)}</div>
-      {isSuperset ? (
-        <div className="ss-card">
-          <div className="ss-hd"><Icon name="link" />{t('Superset · do these back-to-back, rest after both')}</div>
-          {unit.map((idx, k) => <div key={idx} className="ss-ex">
-            {k > 0 && <div className="ss-amp">+</div>}
-            <ExerciseBlock entryIdx={idx} compact
-              onToggle={i => toggle(idx, i)} onField={(i, f, v) => setField(idx, i, f, v)} onAddSet={() => addSet(idx)} onRemoveSet={() => removeSet(idx)} onStartTimed={i => startTimed(idx, i)} />
-          </div>)}
+    {A.entries.length ? <div className="pk-exlist">
+      {units.map((u, k) => {
+        const open = k === unitIdx && !collapsed
+        const es = u.map(i => A.entries[i])
+        const d = es.reduce((n, e) => n + e.sets.filter(s => s.done).length, 0)
+        const n = es.reduce((n, e) => n + e.sets.length, 0)
+        return <div key={u.join('-')} className={'pk-ex' + (open ? ' open' : '') + (d === n ? ' finished' : '')}>
+          <button className="pk-ex-h" onClick={() => openUnit(k)} aria-expanded={open}>
+            <span className="nm">{u.length > 1 && <em><Icon name="link" />{t('Superset')}</em>}{es.map(e => exOr(e.id).n).join(' + ')}</span>
+            <span className="ct">{d}/{n}</span>
+          </button>
+          {open && <div className="pk-ex-b">
+            {u.map(idx => <ExerciseBody key={idx} entryIdx={idx} inSuperset={u.length > 1}
+              onToggle={i => toggle(idx, i)} onField={(i, f, v) => setField(idx, i, f, v)}
+              onAddSet={() => addSet(idx)} onRemoveSet={() => removeSet(idx)} onStartTimed={i => startTimed(idx, i)} />)}
+          </div>}
         </div>
-      ) : (
-        <ExerciseBlock entryIdx={cur} onToggle={i => toggle(cur, i)} onField={(i, f, v) => setField(cur, i, f, v)} onAddSet={() => addSet(cur)} onRemoveSet={() => removeSet(cur)} onStartTimed={i => startTimed(cur, i)} />
-      )}
-    </> : <div className="empty"><div className="ico"><Icon name="shuffle" /></div>{t('Freestyle workout — add your first exercise.')}</div>}
+      })}
+    </div> : <div className="empty"><div className="ico"><Icon name="shuffle" /></div>{t('Freestyle workout — add your first exercise.')}</div>}
 
     <div style={{ height: 12 }} />
-    <div className="row">
-      <Button icon="chevronLeft" disabled={unitIdx <= 0} onClick={() => update(s => { s.active.cur = units[unitIdx - 1][0] })}>{t('Prev')}</Button>
-      <Button trailingIcon="chevronRight" disabled={unitIdx < 0 || unitIdx >= units.length - 1} onClick={() => update(s => { s.active.cur = units[unitIdx + 1][0] })}>{t('Next')}</Button>
-    </div>
-    <div style={{ height: 10 }} />
-    <Button onClick={() => exercisePicker(ex => exConfigSheet(ex, null, cfg => update(s => {
+    <Button variant="soft" icon="plus" onClick={() => exercisePicker(ex => exConfigSheet(ex, null, cfg => update(s => {
       const full = { ...cfg, id: ex.id }
       const plan = nextPrescription(s, full, s.routines.find(r => r.id === s.active.routineId))
       s.active.entries.push({ id: ex.id, target: { ...cfg }, plan, sets: applyPrescription(buildSets(s, full), plan) })
       s.active.cur = s.active.entries.length - 1
-    }), null, S.routines.find(r => r.id === A.routineId)))} icon="plus">{t('Add exercise')}</Button>
-    <div style={{ height: 10 }} />
-    {(() => {
-      const exDone = A.entries.filter(e => e.sets.length && e.sets.every(s => s.done)).length
-      const allDone = A.entries.length > 0 && exDone === A.entries.length
-      return <button className={allDone ? 'btn primary' : 'btn ghost dim'} onClick={finishWorkout}>
-        {allDone ? t('Finish workout') : t('Finish workout early · {0} exercises', exDone + '/' + A.entries.length)}
-      </button>
-    })()}
-    <div style={{ height: 40 }} />
+    }), null, S.routines.find(r => r.id === A.routineId)))}>{t('Add exercise')}</Button>
+    <button className="pk-link pk-discard" onClick={discard}>{t('Discard workout')}</button>
+
+    {/* while a rest or a timed set runs, the timer bar (RestTimer) sits exactly here instead */}
+    {!resting && <div className="pk-dock">
+      <div className="txt">
+        {/* exercise names arrive lowercase from the dataset — capitalised on their own, not the whole line */}
+        <span>{nx ? <>{t('Up next')} · <i className="capitalize">{exOr(nxEntry.id).n}</i>, {t('set {0}', nx.set + 1)}</> : t('Up next · finish when ready')}</span>
+        <b>{nx ? nextSetLabel(nxEntry, nxEntry.sets[nx.set], S.unit) : t('All sets done')}</b>
+      </div>
+      <button className="go" onClick={finishWorkout}>{t('Finish')}</button>
+    </div>}
   </div>
 }
 

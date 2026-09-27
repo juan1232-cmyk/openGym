@@ -49,6 +49,7 @@ function ExerciseDetail({ ex, close }) {
   const st = useStore(s => s.S)
   const last = lastEntryFor(st, ex.id)
   const best = bestWeightFor(st, ex.id)
+  const logged = st.workouts.some(w => w.entries.some(e => e.id === ex.id && e.sets.some(s => s.done)))
   return <>
     <h3 className="capitalize">{ex.n}</h3>
     <Media ex={ex} />
@@ -60,6 +61,8 @@ function ExerciseDetail({ ex, close }) {
     </div>
     {ex.desc && <div className="exnote">{ex.desc}</div>}
     {best > 0 && <div className="small row" style={{ marginBottom: 6, gap: 5 }}><Icon name="trophy" style={{ fontSize: 14, color: 'var(--yellow)' }} />{t('Best:')} <b className="accent">{fmtNum(best)} {st.unit}</b>{last ? ` · ${t('last')} ${fmtDate(last.d)}: ${last.sets.map(s => setLabel(ex.id, s, last.target)).join(', ')}` : ''}</div>}
+    {/* the progress page, unless that's where this sheet was opened from */}
+    {logged && !location.hash.startsWith('#/exercise/') && <Button variant="soft" icon="chartLine" style={{ marginTop: 10 }} onClick={() => { close(); nav('/exercise/' + ex.id) }}>{t('Progress')}</Button>}
     <Button variant="primary" icon="plus" style={{ margin: '10px 0 4px' }} onClick={() => addToRoutineSheet(ex)}>{t('Add to my plan')}</Button>
     {ex.custom && <div className="row" style={{ gap: 8, marginTop: 8 }}>
       <Button icon="pencil" style={{ flex: 1 }} onClick={() => { close(); customExSheet(ex) }}>{t('Edit')}</Button>

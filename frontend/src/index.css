@@ -931,130 +931,19 @@ h4.sec{
 }
 
 /* ============================================================================
-   "Hairline" skin — a design trial from claude.ai/design, applied only on
-   Home and Workout (toggled as :root[data-skin="hairline"] in App.jsx; Login has moved
-   on to the Peek skin below, which is replacing this one screen by screen).
-   Everything else keeps the theme above untouched. Near-black surfaces, real
-   1px borders (this app's base sheet deliberately avoids those — see the file
-   header — so this is a genuine departure, not a tint), monochrome "inverted"
-   buttons that depress on press, and mono/tracked-uppercase numerals & labels
-   where the design leans on them.
-
-   Deliberately NOT pulled in: Geist/Geist Mono from Google Fonts, the way the
-   source design does. That's a network call to a third party on every load,
-   which sits badly next to this app's own "no telemetry" claim — the system
-   monospace stack reads close enough without it. Swap --mono below if you'd
-   rather have the real thing.
-   ========================================================================== */
-:root[data-skin="hairline"] {
-  --bg:#0a0a0a; --bg-el:#0a0a0a;
-  --surface:#111113; --surface-2:#1c1c1f; --surface-3:#242428;
-  --label:#fafafa; --label-2:rgba(250,250,250,.5); --label-3:rgba(250,250,250,.36); --label-4:rgba(250,250,250,.18);
-  --sep:rgba(255,255,255,.09); --sep-op:rgba(255,255,255,.09);
-  /* the accent goes monochrome here regardless of the profile's chosen colour —
-     this skin is specifically about trying a black/white treatment */
-  --acc:#fafafa; --acc-2:#e2e2e2; --on-acc:#0a0a0a;
-  --acc-soft:rgba(255,255,255,.08); --acc-line:rgba(255,255,255,.22);
-  --r-card:16px; --r:12px; --r-lg:16px;
-  --mono:ui-monospace,'SF Mono','Cascadia Mono','Roboto Mono',Menlo,Consolas,monospace;
-}
-
-/* cards: a real border, not a hairline separator between rows */
-:root[data-skin="hairline"] .card,
-:root[data-skin="hairline"] .sect-b,
-:root[data-skin="hairline"] .item,
-:root[data-skin="hairline"] .exmedia{ border:1px solid var(--sep) }
-
-/* icon buttons: rounded-square instead of circular, bordered like the design's */
-:root[data-skin="hairline"] .iconbtn{ border-radius:10px; border:1px solid var(--sep) }
-
-/* primary buttons: a pressable plate — offset shadow that collapses on press,
-   over the app's existing 220ms ease rather than the design's literal 400ms */
-:root[data-skin="hairline"] .btn.primary{
-  box-shadow:0 3px 0 0 #6b6b6b;
-  transition:transform var(--med) var(--ease),box-shadow var(--med) var(--ease),background var(--fast);
-}
-:root[data-skin="hairline"] .btn.primary:active{
-  transform:translateY(3px); box-shadow:0 0 0 0 #6b6b6b; background:#e2e2e2;
-}
-
-/* mono numerals + tracked uppercase labels, where the design actually uses them */
-:root[data-skin="hairline"] .wday .lbl, :root[data-skin="hairline"] .wday .num,
-:root[data-skin="hairline"] .today-row .lbl2,
-:root[data-skin="hairline"] .card .big,
-:root[data-skin="hairline"] #timer .t,
-:root[data-skin="hairline"] #tabbar button span,
-:root[data-skin="hairline"] .tag{ font-family:var(--mono) }
-:root[data-skin="hairline"] .today-row .lbl2,
-:root[data-skin="hairline"] #tabbar button span,
-:root[data-skin="hairline"] .tag{ text-transform:uppercase; letter-spacing:.06em }
-
-/* tab bar: darker and more opaque than the base translucent one */
-:root[data-skin="hairline"] #tabbar{ background:rgba(10,10,10,.86) }
-:root[data-skin="hairline"] #tabbar button.start .cir{ box-shadow:none }
-
-/* today's date: a glow under the number instead of a filled disc */
-:root[data-skin="hairline"] .wday.today .num{
-  background:none; color:var(--label); box-shadow:none;
-  text-shadow:0 0 12px rgba(255,255,255,.8);
-}
-
-/* the exercise demo goes monochrome to match, instead of clashing with it —
-   this only ever applies on /workout, so the library/exercise picker (out of
-   scope) never sees it even though .exmedia is shared markup */
-:root[data-skin="hairline"] .exmedia img{ filter:grayscale(1) invert(1) contrast(1.05); opacity:.92 }
-
-/* ----------------------------------------------------------------------------
-   Active-workout screen — pulled from a second claude.ai/design source,
-   'Workout Tracking App Design' (Workout.dc.html), via DesignSync. That mock
-   is its own simplified one-exercise placeholder (static seed data, no
-   supersets/cardio/bodyweight/effort, a custom on-screen number pad in place
-   of this app's native-keyboard NumberField) so — same call as the Hairline
-   import above — only its visual language carries over onto the real
-   ExerciseBlock/RestTimer markup, not its markup or its input model.
-   ---------------------------------------------------------------------------- */
-
-/* Finish reads as a tracked mono label, like the rest of this skin's chrome */
-:root[data-skin="hairline"] .hdr-finish{ text-transform:uppercase; letter-spacing:.06em; font-family:var(--mono) }
-
-/* exercise card: a hint of the design's inset highlight + drop shadow instead of a flat fill */
-:root[data-skin="hairline"] .card{ box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 1px 2px rgba(0,0,0,.4) }
-
-/* set table header reads as tracked mono labels, same treatment as the design's SET/KG/REPS row */
-:root[data-skin="hairline"] .sethead{ font-family:var(--mono) }
-
-/* rest bar: the design's floating pill is fully inverted (near-white on near-black), not just
-   accent-tinted like the base theme's translucent card — every child's color rides the
-   inherited on-acc rather than the app's usual (light-on-dark) label tokens, which would go
-   invisible on this one inverted surface */
-:root[data-skin="hairline"] #timer.rest{
-  background:var(--acc); color:var(--on-acc);
-  backdrop-filter:none; -webkit-backdrop-filter:none;
-}
-:root[data-skin="hairline"] #timer.rest .head .lbl{
-  color:inherit; opacity:.55; font-family:var(--mono); text-transform:uppercase; letter-spacing:.08em;
-}
-:root[data-skin="hairline"] #timer.rest .bar{ background:rgba(10,10,10,.18) }
-:root[data-skin="hairline"] #timer.rest .bar i{ background:var(--on-acc) }
-/* both quick-adjust and Skip get the design's translucent-dark chip treatment (it doesn't
-   give Skip extra emphasis either) — overrides .btn.plain/.btn.primary's own light-on-dark
-   colors, which would otherwise disappear against this inverted background */
-:root[data-skin="hairline"] #timer.rest .acts .btn{ background:rgba(10,10,10,.1); color:var(--on-acc) }
-
-/* ============================================================================
    "Peek" skin — from the claude.ai/design project's 'Peek App' (Peek App.dc.html),
    toggled as :root[data-skin="peek"] in App.jsx on the screens that design covers.
    A warm light stone page (#f3f2ee), white cards with no borders or shadows, a near-black
    ink for text and the dark surfaces (tab bar, rest bar), one green for "go" — and the orb
    mascot, a black sphere with eyes that peeks in from the top of the welcome screens.
 
-   It is a light skin regardless of the profile's theme setting, the same way Hairline was a
-   dark one: this is the design, not a recolour of it. The accent is fixed to the design's
+   It is a light skin regardless of the profile's theme setting (the "Hairline" trial it
+   replaced was likewise a fixed dark one): this is the design, not a recolour of it. The accent is fixed to the design's
    green for the same reason. `:root:root` is there for specificity — the light-theme accent
    rules (:root[data-theme][data-accent]) would otherwise win on --on-acc and paint white
    labels onto the green.
 
-   Same call on fonts as Hairline: the design sets everything in Geist from Google Fonts;
+   Fonts: the design sets everything in Geist from Google Fonts;
    that is a third-party request on every load, so the stack below uses Geist only if it is
    installed locally and otherwise falls through to the system UI font.
    ========================================================================== */
@@ -1160,12 +1049,254 @@ h4.sec{
 .pk-hero h1{font-size:36px;line-height:1.05;font-weight:600;letter-spacing:-.045em;color:var(--label);text-wrap:balance;max-width:8em}
 .pk-hero p{font-size:16px;line-height:1.45;color:var(--label-2)}
 .pk-actions{display:flex;flex-direction:column;gap:10px;margin-top:30px}
-.pk-actions .btn{animation:pk-up 600ms var(--spring) 1.15s backwards}   /* backwards, not both: a held transform would swallow the press scale */
-.pk-actions .btn+.btn{animation-delay:1.25s}
+.pk-onboard .pk-actions .btn{animation:pk-up 600ms var(--spring) 1.15s backwards}   /* backwards, not both: a held transform would swallow the press scale */
+.pk-onboard .pk-actions .btn+.btn{animation-delay:1.25s}
 .pk-link{
   align-self:center;margin-top:6px;padding:10px 12px;
   font-size:14px;color:var(--label-2);text-decoration:underline;text-underline-offset:3px;
-  animation:pk-up 600ms var(--spring) 1.35s backwards;
 }
+.pk-onboard .pk-link{animation:pk-up 600ms var(--spring) 1.35s backwards}
 /* plain text under the fields — a filled box here read as one more input */
 .pk-note{padding:4px 4px 0;font-size:14px;line-height:1.4;color:var(--label-2)}
+
+/* D5 — goals */
+.pk-goals{animation:pk-up 420ms var(--spring) backwards}
+.pk-ask{display:flex;align-items:center;gap:16px;margin-top:20px}
+.pk-ask h1{font-size:28px;line-height:1.05;font-weight:600;letter-spacing:-.045em;color:var(--label)}
+.pk-choices{display:flex;flex-direction:column;gap:8px;margin-top:28px}
+.pk-choice{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px;text-align:left;
+  border-radius:var(--r-lg);background:var(--surface);box-shadow:inset 0 0 0 1.5px transparent;
+  transition:box-shadow var(--fast),transform var(--fast) var(--ease);
+}
+.pk-choice:active{transform:scale(.985)}
+.pk-choice.on{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.pk-choice .txt{display:flex;flex-direction:column;gap:6px;min-width:0}
+.pk-choice b{font-size:16px;font-weight:600;line-height:1.1}
+.pk-choice .txt span{font-size:13px;color:var(--label-2);line-height:1.25}
+.pk-choice .tick{
+  width:24px;height:24px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 0 0 0 1.5px var(--line);font-size:13px;color:var(--on-acc);--icon-stroke:3;
+}
+.pk-choice.on .tick{background:var(--acc);box-shadow:none}
+.pk-label{margin-top:28px;font-size:15px;font-weight:600;color:var(--label)}
+.pk-seg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px;padding:4px;border-radius:var(--r);background:var(--surface-2)}
+.pk-seg button{height:44px;border-radius:11px;font-size:16px;font-weight:500;color:var(--label);transition:background var(--fast)}
+.pk-seg button:active{background:var(--surface-3)}
+.pk-seg button.on{background:var(--ink);color:var(--on-ink);font-weight:600}
+
+/* D3 — dashboard (Home) */
+.pk-top{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 8px 0}
+.pk-top .iconbtn{background:var(--surface-2)}
+.pk-greet{display:flex;flex-direction:column;gap:6px;padding:22px 8px 22px}
+.pk-greet span{font-size:14px;color:var(--label-2)}
+.pk-greet h1{font-size:32px;line-height:1.05;font-weight:600;letter-spacing:-.045em;color:var(--label)}
+.pk-home .card{border-radius:var(--r-card);padding:16px;margin-bottom:12px}
+.pk-today{display:flex;flex-direction:column;gap:14px}
+.pk-week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.pk-day{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:11px;font-weight:500;color:var(--label-3)}
+.pk-day.today span{color:var(--label);font-weight:600}
+.pk-day i{
+  width:32px;height:32px;border-radius:50%;background:var(--bg);position:relative;
+  transition:transform var(--fast) var(--ease);
+}
+.pk-day:active i{transform:scale(.9)}
+.pk-day i.done{background:var(--acc)}
+/* planned days carry a small dot — the design only draws done/today, but a week strip that
+   can't tell a training day from a rest day loses what this one was for */
+.pk-day i.plan::after{content:'';position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:var(--label-3)}
+.pk-day i.plan.moved::after{background:var(--orange)}
+.pk-day.today i{box-shadow:inset 0 0 0 2px var(--ink);background:transparent}
+.pk-day.today i.done{background:var(--acc)}
+.pk-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.pk-tile{
+  background:var(--surface);border-radius:var(--r-lg);padding:14px;text-align:left;
+  display:flex;flex-direction:column;gap:8px;min-width:0;
+}
+button.pk-tile:active{background:var(--surface-2)}
+.pk-tile span{font-size:12px;color:var(--label-2)}
+.pk-tile b,.pk-big{font-size:19px;font-weight:600;letter-spacing:-.03em;line-height:1;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk-big{font-size:30px}
+.pk-tile small,.pk-big small{font-size:12px;font-weight:500;color:var(--label-2);letter-spacing:0}
+.pk-big small{font-size:15px}
+.pk-card-h{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pk-card-h b{font-size:16px;font-weight:600;letter-spacing:-.02em;color:var(--label)}
+.pk-card-h span{font-size:12px;color:var(--label-3)}
+.pk-card-h button:not(.btn){font-size:13px;font-weight:500;color:var(--label-2);padding:6px 0 6px 10px}
+.pk-bars{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;align-items:end;height:92px;margin-top:14px}
+.pk-bars i{display:block;background:var(--surface-2);border-radius:8px;transition:height var(--med) var(--ease)}
+.pk-bars i.best{background:var(--ink)}
+.pk-bars i.cur{background:var(--acc)}
+.pk-list{padding-bottom:4px}
+.pk-list .pk-card-h{padding-bottom:6px}
+.pk-row{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;padding:14px 0;text-align:left}
+.pk-row+.pk-row{border-top:1px solid var(--sep)}
+.pk-row .l{display:flex;flex-direction:column;gap:6px;min-width:0}
+.pk-row b{font-size:15px;font-weight:600;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk-row .l span{font-size:13px;color:var(--label-2)}
+.pk-row .v{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--label);flex:none}
+
+/* tab bar: the design's floating black pill, labels only. The app keeps its own five
+   destinations (the design's four were Home/Train/History/Profile); Start stays in the
+   middle as the one green word, orange with a live dot while a session is running. */
+:root[data-skin="peek"] #tabbar{
+  left:16px;right:16px;bottom:calc(var(--sab) + 18px);max-width:528px;margin:0 auto;
+  height:56px;padding:0 8px;border-radius:99px;border:0;align-items:center;gap:2px;
+  background:var(--ink);backdrop-filter:none;-webkit-backdrop-filter:none;
+}
+:root[data-skin="peek"] #tabbar button{
+  height:40px;padding:0 4px;border-radius:99px;flex-direction:row;justify-content:center;
+  color:var(--on-ink-2);font-size:13px;font-weight:500;letter-spacing:-.005em;min-width:0;
+}
+:root[data-skin="peek"] #tabbar button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:root[data-skin="peek"] #tabbar button .icn,
+:root[data-skin="peek"] #tabbar button.start .cir{display:none}
+:root[data-skin="peek"] #tabbar button.on{background:var(--on-ink);color:var(--ink)}
+:root[data-skin="peek"] #tabbar button.start{margin-top:0}
+:root[data-skin="peek"] #tabbar button.start span{color:var(--acc);font-weight:600}
+:root[data-skin="peek"] #tabbar button.start.rec span:not(.cir){color:var(--orange);display:flex;align-items:center;gap:5px}
+:root[data-skin="peek"] #tabbar button.start.rec span:not(.cir)::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+:root[data-skin="peek"] #timer{bottom:calc(var(--sab) + 86px)}
+
+/* D2 — active workout */
+.pk-wtop{padding:8px 0 0}
+.pk-wtop .iconbtn{background:var(--surface-2)}
+.pk-whead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:16px 8px 0}
+.pk-wtitle{display:flex;flex-direction:column;gap:6px;min-width:0}
+.pk-wtitle .el{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--label-2)}
+.pk-wtitle h1{font-size:36px;line-height:1;font-weight:600;letter-spacing:-.045em;color:var(--label);overflow-wrap:anywhere}
+.pk-wprog{display:flex;align-items:center;gap:12px;padding:18px 8px 0}
+.pk-wprog .bar{flex:1;height:6px;border-radius:99px;background:var(--surface-3)}
+.pk-wprog .bar i{display:block;height:6px;border-radius:99px;background:var(--acc);transition:width .4s ease}
+.pk-wprog span{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--label-2)}
+.pk-exlist{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.pk-ex{border-radius:18px;background:var(--surface)}
+.pk-ex-h{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;padding:18px 16px;text-align:left}
+.pk-ex-h .nm{font-size:16px;font-weight:600;line-height:1.2;letter-spacing:-.015em;color:var(--label);text-transform:capitalize;min-width:0}
+.pk-ex-h em{display:flex;align-items:center;gap:4px;font-style:normal;font-size:11px;font-weight:500;color:var(--label-2);text-transform:none;margin-bottom:4px}
+.pk-ex-h .ct{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--label-2);background:var(--bg);padding:6px 9px;border-radius:99px;flex:none}
+.pk-ex.finished .ct{background:var(--acc-soft);color:var(--acc-ink)}
+.pk-ex-b{padding:0 10px 12px}
+.pk-ex-part+.pk-ex-part{margin-top:18px;padding-top:14px;border-top:1px solid var(--sep)}
+.pk-ex-sub{font-size:15px;font-weight:600;text-transform:capitalize;padding:0 6px 10px}
+.pk-ex-b .exmedia{background:#fff;margin-bottom:8px}
+.pk-ex-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:0 6px 6px}
+.pk-info{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:13px;color:var(--label-2);padding:6px 0 6px 8px}
+.pk-info .icn{font-size:15px}
+.pk-ex-b .progline{padding:0 6px 8px}
+.pk-ex-b .progline:not(.warn){color:var(--acc-ink)}
+.pk-sets{display:flex;flex-direction:column;gap:4px}
+.pk-set{display:grid;gap:6px;align-items:center;height:46px;padding:0 6px;border-radius:12px;font-family:var(--mono);font-size:14px;font-weight:500;color:var(--label)}
+.pk-set.hd{height:auto;padding:0 6px 4px;font-family:var(--font);font-size:11px;color:var(--label-3)}
+.pk-set.hd span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk-set.done{background:var(--acc-soft)}
+.pk-set .prev{color:var(--label-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk-set.done .prev{color:var(--label-2)}
+.pk-set .v{padding-left:10px}
+.pk-set input.num{
+  width:100%;height:36px;border:none;border-radius:10px;background:var(--bg);padding:0 10px;
+  font-family:var(--mono);font-size:14px;font-weight:500;color:var(--label);
+  box-shadow:inset 0 0 0 1.5px transparent;transition:box-shadow var(--fast);
+}
+.pk-set input.num:focus{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.pk-set .chk{width:36px;height:36px;box-shadow:inset 0 0 0 1.5px var(--line)}
+.pk-set .chk.on{box-shadow:none}
+.pk-set .chk .icn{font-size:17px;--icon-stroke:2.8}
+.pk-set .setgo{
+  width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:var(--bg);color:var(--acc-ink);font-size:14px;
+}
+.pk-set .setgo:disabled{opacity:.3}
+.pk-ex-acts{display:flex;gap:8px;padding:10px 6px 0}
+.pk-discard{display:block;margin:10px auto 0;color:var(--red)}
+
+/* the dock: what's next, and Finish — a dark slab floating over the list */
+.pk-dock{
+  position:fixed;left:14px;right:14px;bottom:calc(var(--sab) + 18px);z-index:55;max-width:532px;margin:0 auto;
+  background:var(--ink);color:var(--on-ink);border-radius:22px;padding:16px 16px 16px 20px;
+  display:flex;align-items:center;gap:14px;animation:slideup var(--med) var(--ease);
+}
+.pk-dock .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.pk-dock .txt span{font-size:13px;color:var(--on-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk-dock .txt i{font-style:normal}
+.pk-dock .txt b{font-size:19px;font-weight:600;line-height:1.1;letter-spacing:-.02em}
+.pk-dock .go{height:40px;padding:0 16px;border-radius:99px;background:var(--acc);color:var(--on-acc);font-size:13px;font-weight:600;flex:none}
+.pk-dock .go:active{transform:scale(.95)}
+
+/* the rest/work timer becomes the same dark slab in the dock's place. The "next" line is
+   drawn only here — the default bar has no room for it on a phone. */
+#timer .nx{display:none}
+:root[data-skin="peek"] #timer{
+  left:14px;right:14px;max-width:532px;margin:0 auto;
+  background:var(--ink);color:var(--on-ink);border-radius:22px;padding:14px 14px 14px 20px;
+  backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:0 12px 34px -12px rgba(0,0,0,.45);border:0;
+}
+:root[data-skin="peek"][data-chrome="focus"] #timer{bottom:calc(var(--sab) + 18px)}
+:root[data-skin="peek"] #timer .t{font-family:var(--mono);color:var(--acc);letter-spacing:-.02em}
+:root[data-skin="peek"] #timer .bar{background:var(--ink-2)}
+:root[data-skin="peek"] #timer .lbl{color:var(--on-ink-2)}
+:root[data-skin="peek"] #timer .btn{background:var(--ink-2);color:var(--on-ink);border-radius:99px}
+:root[data-skin="peek"] #timer .btn.primary{background:var(--on-ink);color:var(--ink)}
+:root[data-skin="peek"] #timer.working .btn.primary{background:var(--acc);color:var(--on-acc)}
+/* rest: label (with what's next) across the top, then the big clock and the controls */
+:root[data-skin="peek"] #timer.rest{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"lbl lbl" "t acts";
+  row-gap:6px;column-gap:10px;align-items:center;
+}
+:root[data-skin="peek"] #timer.rest .head{display:contents}
+:root[data-skin="peek"] #timer.rest .head .lbl{grid-area:lbl;font-size:13px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:root[data-skin="peek"] #timer.rest .nx{display:inline}
+:root[data-skin="peek"] #timer.rest .t{grid-area:t;font-size:28px;min-width:0}
+:root[data-skin="peek"] #timer.rest .bar{display:none}
+:root[data-skin="peek"] #timer.rest .acts{grid-area:acts;gap:6px}
+:root[data-skin="peek"] #timer.rest .acts .btn{padding:10px 12px;font-size:13px;font-family:var(--mono);font-weight:500}
+:root[data-skin="peek"] #timer.rest .acts .skip{min-width:0;margin-left:0;font-family:var(--font);font-weight:600;padding:10px 14px}
+
+/* D6 — workout complete: a whole screen over the app (Modals kind 'full') */
+.fullsheet{
+  position:absolute;inset:0;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;padding:calc(var(--sat) + 16px) 24px calc(var(--sab) + 16px);
+  animation:pk-up 420ms var(--spring,cubic-bezier(.22,1,.36,1));
+}
+.pk-done{min-height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;color:var(--label)}
+.pk-done-orb{flex:1;min-height:250px;display:flex;align-items:center;justify-content:center}
+.pk-done-orb .orb{animation-duration:4s}
+.pk-done-h{text-align:center;display:flex;flex-direction:column;gap:8px}
+.pk-done-h h1{font-size:34px;line-height:1.05;font-weight:600;letter-spacing:-.045em}
+.pk-done-h p{font-size:16px;line-height:1.4;color:var(--label-2)}
+.pk-done-tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:26px}
+.pk-done-tiles .pk-tile{padding:16px}
+.pk-done-tiles .pk-tile b{font-size:22px}
+.pk-done-tiles .pk-tile b.up{color:var(--acc-ink)}
+.pk-done-tiles .pk-tile b.up small{color:inherit}
+.pk-best{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:8px;
+  padding:16px;border-radius:var(--r-lg);background:var(--acc-soft);
+}
+.pk-best .l{display:flex;flex-direction:column;gap:6px;min-width:0}
+.pk-best em{font-style:normal;font-size:12px;font-weight:500;color:var(--acc-ink)}
+.pk-best b{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk-best .v{font-family:var(--mono);font-size:15px;font-weight:500;flex:none}
+.pk-done-map{margin:8px 0 0}
+.pk-done-map .pk-card-h{margin-bottom:6px}
+.pk-done-acts{display:flex;gap:10px;margin-top:24px}
+.pk-done-acts .btn:first-child{flex:2}
+.pk-done-acts .btn:last-child{flex:1}
+
+/* D7 — one exercise's progress */
+.pk-ptop{display:flex;align-items:center;gap:4px;padding:12px 0 0}
+.pk-ptop .pk-back{margin-left:-8px}
+.pk-ptop h1{font-size:17px;font-weight:600;letter-spacing:-.02em;color:var(--label);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-prog .card{border-radius:var(--r-card);margin-bottom:10px}
+.pk-pcard{margin-top:14px;padding:18px 16px 14px}
+.pk-pcard .lbl{font-size:13px;color:var(--label-2)}
+.pk-pcard .big{display:flex;align-items:baseline;flex-wrap:wrap;gap:10px;margin-top:10px}
+.pk-pcard .big b{font-size:48px;font-weight:600;letter-spacing:-.05em;line-height:1;color:var(--label)}
+.pk-pcard .pill{font-size:13px;font-weight:600;color:var(--label-2);background:var(--bg);padding:5px 8px;border-radius:99px}
+.pk-pcard .pill.up{color:var(--acc-ink);background:var(--acc-soft)}
+.pk-spark{display:block;width:100%;height:auto;margin-top:20px;overflow:visible}
+.pk-pcard .axis{display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--label-3)}
+.pk-coach{display:flex;align-items:center;gap:14px;margin-bottom:10px;padding:14px 16px;border-radius:var(--r-card);background:var(--ink);color:var(--on-ink)}
+.pk-coach .orb{animation:none}
+.pk-coach p{font-size:14px;line-height:1.4;text-wrap:pretty}
+.pk-prog > .btn{margin-top:2px}

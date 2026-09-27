@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { HashRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { useStore } from './store/useStore.js'
+import { useStore, needsGoals } from './store/useStore.js'
 import { useUI } from './store/useUI.js'
 import { bindUI } from './components/ui.jsx'
 import { ACCENTS } from './lib/format.js'
@@ -15,6 +15,8 @@ import Modals from './components/Modals.jsx'
 import Toast from './components/Toast.jsx'
 import RestTimer from './components/RestTimer.jsx'
 import Login from './views/Login.jsx'
+import Goals from './views/Goals.jsx'
+import ExerciseProgress from './views/ExerciseProgress.jsx'
 import Home from './views/Home.jsx'
 import Plan from './views/Plan.jsx'
 import RoutineEdit from './views/RoutineEdit.jsx'
@@ -29,36 +31,44 @@ bindUI(useUI)   // lets the shared controls open sheets without importing the st
 
 // The skin sits on top of the theme (see index.css), so the status-bar colour follows the
 // skin when there is one — a light Peek page under a black status bar reads as a gap.
-const SKIN_BAR = { peek: '#f3f2ee', hairline: '#0a0a0a' }
-function applyPrefs(theme, accent, skin) {
+const SKIN_BAR = { peek: '#f3f2ee' }
+function applyPrefs(theme, accent, skin, focus) {
   const de = document.documentElement
   de.dataset.theme = theme === 'light' ? 'light' : 'dark'
   de.dataset.accent = ACCENTS[accent] ? accent : 'lime'
   de.dataset.skin = skin
+  // "focus" = no tab bar on screen (onboarding, a running workout); fixed bars sit lower then
+  de.dataset.chrome = focus ? 'focus' : ''
   const meta = document.querySelector('meta[name="theme-color"]')
   if (meta) meta.content = SKIN_BAR[skin] || (de.dataset.theme === 'light' ? '#f2f2f7' : '#000000')
 }
 
-// Which design skin a screen wears. Both are scoped to the screens their design actually
-// covers rather than replacing the theme — "Peek" is taking over screen by screen (one PR
-// each), and Hairline keeps the ones Peek hasn't reached yet. Login has no route of its own
-// (Shell renders it in place of <Routes>), so it is keyed on !authed instead of a pathname.
-function skinFor(cur, authed) {
-  if (!authed) return 'peek'
-  if (cur === 'home' || cur === 'workout') return 'hairline'
-  return ''
+// Which screens wear the "Peek" design skin. Scoped to the screens that design covers rather
+// than replacing the theme — it takes over one screen per PR (and has replaced the earlier
+// "Hairline" trial on the ones they shared). Login has no route of its own (Shell renders it
+// in place of <Routes>), so it is keyed on !authed instead of a pathname; the Goals
+// onboarding step is the same kind of screen.
+const PEEK_ROUTES = ['home', 'workout', 'exercise']
+function skinFor(cur, authed, onboarding) {
+  return !authed || onboarding || PEEK_ROUTES.includes(cur) ? 'peek' : ''
 }
 
 function Shell() {
   const navigate = useNavigate()
   const loc = useLocation()
-  const { S, user, ready } = useStore()
+  const { S, user, ready, pulling } = useStore()
   const isGuest = useStore(s => s.isGuest())
   const langV = useLang()   // re-renders the whole shell when the language (pack) changes
   const authed = user || isGuest
   useEffect(() => { setNav(navigate) }, [navigate])
-  const skin = skinFor(loc.pathname.split('/')[1] || 'home', authed)
-  useEffect(() => { applyPrefs(S.theme, S.accent, skin) }, [S.theme, S.accent, skin])
+  const onboarding = !!authed && needsGoals(S, ready, pulling)
+  const cur = loc.pathname.split('/')[1] || 'home'
+  const skin = skinFor(cur, authed, onboarding)
+  // A running session is a focus screen, the way the design draws it: no tab bar, a ‹ back to
+  // Home in its place (the session keeps running; Home and the Start tab both say Resume).
+  // An exercise's progress page is a drill-down with its own ‹, drawn without one too.
+  const hideTabs = onboarding || (cur === 'workout' && !!S.active) || cur === 'exercise'
+  useEffect(() => { applyPrefs(S.theme, S.accent, skin, hideTabs) }, [S.theme, S.accent, skin, hideTabs])
   useEffect(() => { setLang(S.lang || 'en') }, [S.lang])
   useEffect(() => { document.documentElement.lang = S.lang || 'en' }, [langV, S.lang])
   // every tab/route change starts at the top of the page
@@ -79,7 +89,7 @@ function Shell() {
           re-mounts the boundary, so the tab bar is always a way out */}
       <div id="app" className="vfade" key={loc.pathname}>
         <ErrorBoundary>
-          {!authed ? <Login /> : (
+          {!authed ? <Login /> : onboarding ? <Goals /> : (
             <Routes>
               <Route path="/home" element={<Home />} />
               <Route path="/plan" element={<Plan />} />
@@ -88,6 +98,7 @@ function Shell() {
               <Route path="/stats" element={<Stats />} />
               <Route path="/history" element={<History />} />
               <Route path="/library" element={<Library />} />
+              <Route path="/exercise/:id" element={<ExerciseProgress />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/admin" element={user?.admin ? <Admin /> : <Navigate to="/home" replace />} />
               <Route path="*" element={<Navigate to="/home" replace />} />
@@ -95,7 +106,7 @@ function Shell() {
           )}
         </ErrorBoundary>
       </div>
-      <TabBar onStart={startFlow} />
+      {!hideTabs && <TabBar onStart={startFlow} />}
       <RestTimer />
       <Modals />
       <Toast />

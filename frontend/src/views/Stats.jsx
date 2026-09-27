@@ -228,7 +228,10 @@ export default function Stats() {
       </div>
 
       <div className="card">
-        <h2>{t('Exercise progress')}</h2>
+        <div className="row between" style={{ marginBottom: 12 }}>
+          <h2 style={{ margin: 0 }}>{t('Exercise progress')}</h2>
+          {curEx && <Button size="sm" variant="ghost" trailingIcon="chevronRight" onClick={() => nav('/exercise/' + curEx)}>{t('Open')}</Button>}
+        </div>
         {exHist.length ? <>
           <div className="sect-b" style={{ marginBottom: 10 }}>
             <SelectRow title={t('Exercise')} sheetTitle={t('Exercise progress')} value={curEx} onChange={setExId}

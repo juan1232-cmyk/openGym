@@ -45,6 +45,9 @@ function Sheet({ sheet }) {
   }, [])
 
   const close = () => closeSheet(sheet.id)
+  // a whole screen over the app (the finished-workout summary): no backdrop, no swipe — it
+  // is left through its own buttons
+  if (sheet.kind === 'full') return <div className="fullsheet">{sheet.render(close)}</div>
   if (sheet.kind === 'center') {
     return (
       <div>
