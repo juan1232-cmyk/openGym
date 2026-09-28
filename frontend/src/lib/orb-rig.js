@@ -19,11 +19,51 @@ export const EX = {
   'far-right-glance':     { h: [0.32, 35.31, -10.9],    l: [22.46, 39.82, 0, 0],     r: [22.46, 39.82, 0, 0],      sp: 53.9 },
   'surprised-left':       { h: [2.95, -16.05, -20.92],  l: [51.68, 51.74, 0, 0],     r: [51.68, 51.74, 0, 0],      sp: 70.9 },
   'joyful-wide':          { h: [-2.09, -15.9, -14.47],  l: [34.2, 85.33, 0, 0],      r: [34.2, 83.18, 0, 0],       sp: 59.41 },
-  'eyes-closed':          { h: [-8.75, -8.74, -10.77],  l: [56.13, 15.5, 0, 0],      r: [56.13, 15.16, 0, 0],      sp: 69.28 }
+  'eyes-closed':          { h: [-8.75, -8.74, -10.77],  l: [56.13, 15.5, 0, 0],      r: [56.13, 15.16, 0, 0],      sp: 69.28 },
+  // the rest of grok-bot.avatar.json, for the coach's moods
+  'skeptical-right':       { h: [-16.53, -3.77, -13.73], l: [23.09, 57.68, 0, 0],       r: [49.92, 12.43, 0, 0],      sp: 56.3 },
+  'skeptical-left':        { h: [3.53, -7.08, 9.83],     l: [24.31, 59.28, 0, 0],       r: [48.92, 13.41, 0, 0],      sp: 62.22 },
+  'suspicious-right':      { h: [-17.8, 10, -10.89],     l: [23.97, 55.89, -9.8, 0],    r: [53.56, 13.33, -9.8, 0],   sp: 59.94 },
+  'wide-downward-gaze':    { h: [-19.21, 15.2, 11.8],    l: [52.08, 51.47, 0, 0],       r: [53.11, 52.19, 0, 0],      sp: 69.5 },
+  'wide-down-left':        { h: [-17.13, 18.07, 13.89],  l: [35.45, 79.1, 0, 0],        r: [35.45, 79.1, 0, 0],       sp: 70.8 },
+  'surprised-wide-left':   { h: [-5.43, -11.71, -13.47], l: [51.4, 50.1, 0, 0],         r: [50.5, 49.4, 0, 0],        sp: 69 },
+  'asymmetric-down-right': { h: [-20.06, 12.61, -12.7],  l: [42.5, 41.8, 0, 0],         r: [22.1, 22.2, 0, 0],        sp: 61.7 },
+  'asymmetric-up-left':    { h: [6.59, 4.74, 12.84],     l: [42.1, 41.7, 0, 0],         r: [22.2, 22.1, 0, 0],        sp: 60.4 },
+  'joyful-down-right':     { h: [-15.29, 15.01, 12.79],  l: [31.25, 76.72, 0, 0],       r: [31.25, 76.72, 0, 0],      sp: 68.7 },
+  'playful-right':         { h: [-4.4, 14.07, -16.13],   l: [19.05, 43.37, 0, 26.29],   r: [19.05, 43.37, 0, -20.25], sp: 51.73 },
+  'sleepy-squint':         { h: [3.4, 13.23, 8.98],      l: [51.78, 13.03, 0, 0],       r: [51.78, 13.03, 0, 0],      sp: 63.87 },
+  'drowsy-closed':         { h: [10.29, 3.4, 7.58],      l: [55.67, 14.62, 0, 0],       r: [55.67, 14.62, 0, 0],      sp: 68.42 },
+  'shy-downward':          { h: [7.13, 7.78, 3.94],      l: [21.5, 32, 40, 0],          r: [23.2, 33.5, 40, 0],       sp: 51.2 },
+  'angry-right':           { h: [8.06, 17.63, -11.12],   l: [20.91, 40.4, 0, -30.87],   r: [20.91, 40.4, 0, 28.78],   sp: 52.06 },
+  'angry-left':            { h: [-14.75, -19.35, 5.63],  l: [19.6, 48.64, 0, -27.61],   r: [19.6, 48.64, 0, 26.15],   sp: 55.1 },
+  // the two with a look of their own: `c` recolours the sphere, `m` moves the whole body
+  'angry-brows':           { h: [10.47, 5.09, 4.7],      l: [27.13, 63.03, 0, -36.24],  r: [27.13, 63.03, 0, 27.73],  sp: 68.7,
+                             c: { body: '#ba3636', eyes: '#610000' }, m: 'shake' },
+  'uneasy-left':           { h: [-12.3, -17.6, 5.91],    l: [20.61, 47.77, 0, 23.52],   r: [20.61, 47.77, 0, -24.04], sp: 54.9,
+                             c: { body: '#adc3ff' }, m: 'drift' }
 }
 export const POOL = ['upward-side-glance', 'curious-left', 'attentive-left', 'downward-gaze', 'gentle-downward-gaze', 'small-attentive', 'far-right-glance', 'neutral']
 // for an orb hanging above the content (the welcome screens): it looks down at what you read
 export const DOWN = ['downward-gaze', 'gentle-downward-gaze', 'curious-left', 'small-attentive', 'neutral', 'attentive-left']
+// A mood is a pool the orb wanders through, how long it holds each look, and how often it
+// blinks — the JSON's named animations, with a few pools widened so a mood doesn't loop
+// visibly. `angry` is the only way into angry-brows (the red one), and it only lands there
+// on some of its turns, which is the point: it shouldn't be predictable.
+const IDLE_BLINK = [3400, 6200], BUSY_BLINK = [2800, 5000], FAST_BLINK = [1800, 3600], SLOW_BLINK = [6500, 9500]
+export const MOODS = {
+  idle:         { pool: POOL, hold: [3400, 5600], blink: IDLE_BLINK },
+  curious:      { pool: ['surprised-left', 'surprised-wide-left', 'upward-side-glance', 'far-right-glance', 'curious-left'], hold: [2300, 3600], blink: BUSY_BLINK },
+  happy:        { pool: ['joyful-down-right', 'joyful-wide', 'playful-right', 'gentle-downward-gaze'], hold: [2300, 3400], blink: BUSY_BLINK },
+  proud:        { pool: ['far-right-glance', 'curious-left', 'joyful-down-right', 'joyful-wide'], hold: [2300, 3400], blink: BUSY_BLINK },
+  playful:      { pool: ['joyful-down-right', 'playful-right', 'joyful-wide', 'curious-left'], hold: [1800, 3000], blink: BUSY_BLINK },
+  celebrate:    { pool: ['joyful-down-right', 'playful-right', 'joyful-wide', 'surprised-wide-left'], hold: [1400, 2300], blink: FAST_BLINK },
+  excited:      { pool: ['joyful-down-right', 'playful-right', 'surprised-wide-left', 'surprised-left', 'joyful-wide'], hold: [1400, 2300], blink: FAST_BLINK },
+  suspicious:   { pool: ['skeptical-left', 'skeptical-right', 'suspicious-right'], hold: [2300, 3600], blink: BUSY_BLINK },
+  disappointed: { pool: ['downward-gaze', 'shy-downward', 'uneasy-left', 'gentle-downward-gaze'], hold: [3000, 4600], blink: IDLE_BLINK },
+  angry:        { pool: ['angry-right', 'angry-left', 'angry-brows'], hold: [1800, 3000], blink: BUSY_BLINK },
+  bored:        { pool: ['sleepy-squint', 'drowsy-closed', 'upward-side-glance'], hold: [3600, 5200], blink: SLOW_BLINK },
+  drowsy:       { pool: ['sleepy-squint', 'drowsy-closed', 'eyes-closed'], hold: [3600, 5200], blink: SLOW_BLINK }
+}
 const CLOSED = EX['eyes-closed']
 const lerp = (a, b, t) => a + (b - a) * t
 const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
@@ -34,25 +74,34 @@ const rotX = t => { const c = Math.cos(t), s = Math.sin(t); return [[1, 0, 0], [
 const rotZ = t => { const c = Math.cos(t), s = Math.sin(t); return [[c, -s, 0], [s, c, 0], [0, 0, 1]] }
 const col = (M, i) => [M[0][i], M[1][i], M[2][i]]
 
-// opts: { size, left: [els], right: [els], bias: [pitch, yaw, roll], pool, still }
+const between = ([a, b]) => a + Math.random() * (b - a)
+
+// opts: { size, left: [els], right: [els], bias: [pitch, yaw, roll], pool, still,
+//         onLook(colors|null, motion|null) — told whenever the sphere's own look changes }
 export function createOrbRig(opts) {
   const size = opts.size, S = size / (R * 2)
   const bias = opts.bias || [0, 0, 0]
-  const pool = opts.pool || POOL
-  let cur = 'neutral', from = EX.neutral, to = EX.neutral, frame = null
+  let pool = opts.pool || POOL, holdR = MOODS.idle.hold, blinkR = MOODS.idle.blink
+  let cur = 'neutral', from = EX.neutral, to = EX.neutral, frame = null, look = null
   let tStart = 0, trans = 500, hold = 1800, blinkAt = 2600, raf = 0, stopped = false
   const t0 = performance.now()
 
-  const go = (name, now, tr, hd) => { from = frame || to; to = EX[name]; cur = name; tStart = now; trans = tr; hold = hd }
-  const next = now => {
-    const o = pool.filter(n => n !== cur)
-    go(o[Math.floor(Math.random() * o.length)], now, 500, 3400 + Math.random() * 2200)
+  const go = (name, now, tr, hd) => {
+    from = frame || to; to = EX[name]; cur = name; tStart = now; trans = tr; hold = hd
+    // body colour/motion is motion too, so a still orb keeps its plain black
+    const nl = opts.still ? null : (to.c || to.m ? to : null)
+    if (nl !== look) { look = nl; opts.onLook && opts.onLook(nl && nl.c || null, nl && nl.m || null) }
   }
+  const pick = () => {
+    const o = pool.filter(n => n !== cur)
+    return o[Math.floor(Math.random() * o.length)] || cur
+  }
+  const next = now => go(pick(), now, 500, between(holdR))
   const blink = now => {
     const d = now - blinkAt
     if (d < 0) return 0
     const c = 95, h = 40, o = 145
-    if (d > c + h + o) { blinkAt = now + 3400 + Math.random() * 2800; if (Math.random() < 0.15) blinkAt = now + 220; return 0 }
+    if (d > c + h + o) { blinkAt = now + between(blinkR); if (Math.random() < 0.15) blinkAt = now + 220; return 0 }
     if (d < c) return 1 - Math.pow(1 - d / c, 2)
     if (d < c + h) return 1
     return 1 - ease((d - c - h) / o)
@@ -94,6 +143,16 @@ export function createOrbRig(opts) {
   return {
     // a still orb doesn't react either — the change of expression is itself motion
     react(name = 'surprised-left', ms = 900) { if (!opts.still) go(name, performance.now() - t0, 180, ms) },
+    // Swap what it wanders through, starting now. A still orb just shows the mood's first
+    // face, placed once — a face is information, not motion.
+    setMood(name) {
+      const m = MOODS[name] || MOODS.idle
+      pool = m.pool; holdR = m.hold; blinkR = m.blink
+      const now = performance.now() - t0
+      if (!opts.still) return go(pick(), now, 500, between(holdR))
+      from = to = EX[pool[0]]; frame = null; cur = pool[0]; tStart = now - 1; trans = 1
+      tick(performance.now())
+    },
     stop() { stopped = true; cancelAnimationFrame(raf) }
   }
 }

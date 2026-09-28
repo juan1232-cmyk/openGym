@@ -996,12 +996,18 @@ h4.sec{
 /* Colours are literal, not skin tokens: the orb is the same black sphere wherever it sits. */
 @keyframes ob-breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 @keyframes ob-squish{0%{transform:scale(1)}25%{transform:scale(1.05,.93)}55%{transform:scale(.98,1.03)}100%{transform:scale(1)}}
+/* the body motion two coach expressions carry (orb-rig EX `m`): a tremble, a slow sway */
+@keyframes ob-shake{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-2px,1px) rotate(-1.5deg)}75%{transform:translate(2px,-1px) rotate(1.5deg)}}
+@keyframes ob-drift{0%,100%{transform:translate(0,0)}33%{transform:translate(-4px,-3px)}66%{transform:translate(3px,-5px)}}
 .orb-wrap{cursor:pointer;flex:none}
 .orb{
   border-radius:50%;background:#0b0b0b;position:relative;overflow:hidden;
   animation:ob-breathe 5s ease-in-out infinite;
+  transition:background-color .5s ease;
 }
-.orb i{position:absolute;top:0;left:0;width:0;height:0;border-radius:999px;background:#f3f2ee}
+.orb.shake{animation:ob-shake 160ms linear infinite}
+.orb.drift{animation:ob-drift 4.5s ease-in-out infinite}
+.orb i{position:absolute;top:0;left:0;width:0;height:0;border-radius:999px;background:#f3f2ee;transition:background-color .5s ease}
 .orb.inv{background:#f3f2ee}
 .orb.inv i{background:#0b0b0b}
 .orb.poke{animation:ob-squish 480ms cubic-bezier(.34,1.3,.64,1)!important}
@@ -1088,6 +1094,15 @@ h4.sec{
 /* D3 — dashboard (Home) */
 .pk-top{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 8px 0}
 .pk-top .iconbtn{background:var(--surface-2)}
+/* the orb and what it says: a white bubble whose tail points back at it */
+@keyframes pk-say-in{from{opacity:0;transform:translateY(4px) scale(.96)}to{opacity:1;transform:none}}
+.pk-coachtop{display:flex;align-items:flex-start;gap:12px;flex:1;min-width:0;margin-right:12px}
+.pk-say{
+  position:relative;margin-top:22px;max-width:230px;padding:10px 14px;border-radius:16px 16px 16px 4px;
+  background:var(--surface);color:var(--label);font-size:14px;line-height:1.35;text-wrap:pretty;
+  transform-origin:0 50%;animation:pk-say-in 260ms var(--spring) both;
+}
+.pk-say::before{content:'';position:absolute;left:-6px;bottom:0;width:12px;height:12px;background:var(--surface);clip-path:polygon(100% 0,100% 100%,0 100%)}
 .pk-greet{display:flex;flex-direction:column;gap:6px;padding:22px 8px 22px}
 .pk-greet span{font-size:14px;color:var(--label-2)}
 .pk-greet h1{font-size:32px;line-height:1.05;font-weight:600;letter-spacing:-.045em;color:var(--label)}
