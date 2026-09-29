@@ -1,14 +1,59 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
 import { effectiveRoutine, effectiveRoutineId, streakWeeks, lastBW } from '../lib/history.js'
 import { fmtNum, fmtDate, todayISO, isoOf, durPart } from '../lib/format.js'
 import { t, dateLocale } from '../lib/i18n.js'
 import { weeklyVolumes, volumeBars, partOfDay } from '../lib/dashboard.js'
+import { coach, coachLine, pokeReaction } from '../lib/coach.js'
+import { EXIDX } from '../lib/exercises.js'
 import { bwSheet, goalSheet, dayOverrideSheet, calendarSheet, startFlow, loadStarterPlan, bwDeltaColor, workoutDetailSheet } from '../sheets.jsx'
 import LineChart from '../components/LineChart.jsx'
 import Icon from '../components/Icon.jsx'
 import Orb from '../components/Orb.jsx'
 import { Button } from '../components/ui.jsx'
+
+const nameOf = id => (EXIDX[id] || {}).n || id
+const TAPS = ['joyful-wide', 'surprised-left', 'small-attentive', 'curious-left']
+
+// The orb as coach: a mood and maybe a line from lib/coach.js, a bubble that takes a moment to
+// show up (it's reacting, not a tooltip), and a temper if you keep poking it. A tap's mood and
+// line only last a few seconds before it goes back to what it thinks of your training.
+function Coach({ S }) {
+  const base = useMemo(() => coach(S, new Date(), nameOf), [S])
+  const [over, setOver] = useState(null)
+  const [shown, setShown] = useState(false)
+  const orb = useRef(null), pokes = useRef([]), calm = useRef(0)
+  const mood = (over && over.mood) || base.mood
+  const line = over ? over.line : base.line
+
+  useEffect(() => {
+    setShown(false)
+    if (!line) return
+    const tm = setTimeout(() => setShown(true), over ? 200 : 600 + Math.random() * 1400)
+    return () => clearTimeout(tm)
+  }, [line])
+  useEffect(() => () => clearTimeout(calm.current), [])
+
+  const onPoke = () => {
+    const now = Date.now()
+    pokes.current = pokes.current.filter(x => now - x < 4000).concat(now)
+    const r = pokeReaction(pokes.current.length, Math.random)
+    if (r) setOver({ mood: r.mood, line: r.line || line })
+    else {
+      orb.current?.react(TAPS[Math.floor(Math.random() * TAPS.length)], 900)
+      const l = Math.random() < 0.4 ? coachLine(base.mood, base.signals, Math.random) : null
+      if (l && l !== line) setOver({ mood: base.mood, line: l })
+    }
+    clearTimeout(calm.current)
+    calm.current = setTimeout(() => { setOver(null); pokes.current = [] }, 6000)
+  }
+
+  return <div className="pk-coachtop">
+    <Orb ref={orb} size={88} mood={mood} onPoke={onPoke} />
+    {shown && line && <p className="pk-say" aria-live="polite">{line}</p>}
+  </div>
+}
 
 const GREETING = {
   morning: ['Morning, {0}.', 'Good morning.'],
@@ -55,7 +100,7 @@ export default function Home() {
 
   return <div className="narrow pk-home">
     <div className="pk-top">
-      <Orb size={88} poke="joyful-wide" />
+      <Coach S={S} />
       <button className="iconbtn" onClick={() => nav('/settings')} aria-label={t('Settings')}><Icon name="gear" /></button>
     </div>
     <div className="pk-greet">
