@@ -5,8 +5,8 @@ import { useState, useEffect } from 'react'
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { EXIDX } from '../lib/exercises.js'
-import { fmtDate, fmtNum, fmtVol, fmtDur, durPart, todayISO, uid, MONTHS_LONG } from '../lib/format.js'
-import { bestWeightFor, buildSets, effectiveRoutineId, workoutVolume, setsDone, setsDoneActive, supersetUnits, unitOf, setLabel, effortOf, previousSession, topSet, nextSetLabel } from '../lib/history.js'
+import { fmtDate, fmtNum, fmtVol, fmtDur, durPart, todayISO, isoOf, uid, MONTHS_LONG, DAYN } from '../lib/format.js'
+import { bestWeightFor, buildSets, effectiveRoutine, effectiveRoutineId, workoutVolume, setsDone, setsDoneActive, supersetUnits, unitOf, setLabel, effortOf, previousSession, topSet, nextSetLabel } from '../lib/history.js'
 import { beep } from '../lib/sound.js'
 import { t } from '../lib/i18n.js'
 import { nav } from '../lib/nav.js'
@@ -16,7 +16,11 @@ import { Thumb } from '../components/Media.jsx'
 import BodyMap from '../components/BodyMap.jsx'
 import Orb from '../components/Orb.jsx'
 import { Button } from '../components/ui.jsx'
-import { loadOfWorkouts } from '../lib/muscles.js'
+import { loadOfWorkouts, rankOf, MUSCLE_NAME } from '../lib/muscles.js'
+import { afterWorkout, stageOf } from '../lib/peek/memory.js'
+import { journeySteps, finishVerdict } from '../lib/peek/moments.js'
+import { getPeek, sayNow, said } from '../store/peek.js'
+import PeekSay from '../components/PeekSay.jsx'
 import { parseImport, mergeImport } from '../lib/import-csv.js'
 import { is1RMRecord } from '../lib/onerm.js'
 import { nextPrescription, applyPrescription } from '../lib/progression.js'
@@ -275,20 +279,31 @@ function WorkoutComplete({ close }) {
 }
 export const workoutCompleteSheet = () => ui().openSheet(close => <WorkoutComplete close={close} />, { kind: 'center' })
 
-// D6 from the Peek design: the finished workout as a whole screen — the orb, the headline
-// numbers, how it compares with the last time this routine was done, and any records. The
-// muscle map ("what you just trained") stays: the design has no room drawn for it, but it is
-// the one part of this screen that says something the numbers don't.
-const CHEER = ['joyful-wide', 'small-attentive', 'joyful-wide', 'neutral']
-function FinishSummary({ w, prs, e1prs = [], close }) {
+// The end of a workout as a journey (lib/peek/moments.js journeySteps): a few screens in a
+// row, each saying one thing, with Peek reacting throughout and giving its verdict near the
+// end. A big day gets the whole story (numbers, records, what you trained, what's next); a
+// normal day gets out of the way in three taps; leaving early gets a screen about what was
+// left behind. Skip jumps straight to the summary, which is where Done and Share live.
+const STEP_LABEL = {
+  done: 'Finished', first: 'Session one', numbers: 'The numbers', record: 'Something happened',
+  skipped: 'Left behind', trained: 'What you trained', next: 'Next time', verdict: "Peek's verdict", summary: 'Summary'
+}
+const exName = id => (EXIDX[id] || {}).n || id
+function FinishJourney({ w, prs, prevBest, e1prs = [], left, skipped, prev, plan, close }) {
   const st = useStore(s => s.S)
   const user = useStore(s => s.user)
   const unit = st.unit
-  const prev = previousSession(st.workouts, w)
-  const diff = prev ? (w.vol || 0) - (prev.vol || 0) : null
+  const [i, setI] = useState(0)
   const entryOf = id => w.entries.find(e => e.id === id)
-  const nameOf = id => (EXIDX[id] || {}).n || id
-  const line = [w.name, ...durPart(w.end - w.start), t('{0} sets', setsDone(w))].join(' · ')
+  const diff = prev ? (w.vol || 0) - (prev.vol || 0) : null
+  const worked = rankOf(loadOfWorkouts([w])).worked
+  const line = [w.name, ...durPart(w.end - w.start), t(setsDone(w) === 1 ? '{0} set' : '{0} sets', setsDone(w))].join(' · ')
+
+  const { v, steps } = plan
+  const step = steps[i]
+  const theme = step === 'record' ? 'ink' : step === 'verdict' ? (v.tone === 'good' ? 'go' : v.tone === 'bad' ? 'ink' : '') : ''
+
+  const onward = () => setI(x => Math.min(steps.length - 1, x + 1))
   const done = () => { close(); nav('/home') }
   // the system share sheet where there is one, the clipboard where there isn't
   const share = async () => {
@@ -298,38 +313,100 @@ function FinishSummary({ w, prs, e1prs = [], close }) {
       else { await navigator.clipboard.writeText(text); toast(t('Copied to clipboard')) }
     } catch (e) { if (e.name !== 'AbortError') toast(t('Could not share')) }
   }
-  return <div className="pk-done">
-    <div className="pk-done-orb"><Orb size={180} pool={CHEER} poke="joyful-wide" /></div>
-    <div className="pk-done-h">
-      <h1>{user ? t('Nice work, {0}.', user.name) : t('Nice work.')}</h1>
-      <p>{line}</p>
-    </div>
-    <div className="pk-done-tiles">
-      <div className="pk-tile"><span>{t('Volume')}</span><b>{fmtNum(w.vol || 0)}<small> {unit}</small></b></div>
-      {prev
-        ? <div className="pk-tile"><span>{t('vs last {0}', w.name)}</span><b className={diff > 0 ? 'up' : ''}>{diff > 0 ? '+' : diff < 0 ? '−' : ''}{fmtNum(Math.abs(diff))}<small> {unit}</small></b></div>
-        : <div className="pk-tile"><span>{t('Duration')}</span><b>{w.end - w.start >= 60000 ? fmtDur(w.end - w.start) : '—'}</b></div>}
-    </div>
-    {prs.map(id => {
-      const top = topSet(entryOf(id))
-      return <div key={id} className="pk-best">
-        <span className="l"><em>{t('New best')}</em><b className="capitalize">{nameOf(id)}</b></span>
-        {top && <span className="v">{nextSetLabel(entryOf(id), top, unit)}</span>}
+
+  const rxLabel = ({ p, cfg }) => p.weight > 0 ? fmtNum(p.weight) + ' ' + unit + ' × ' + (p.reps || cfg.reps || '')
+    : p.sec ? p.sec + 's' : '× ' + (p.reps || cfg.reps || '')
+  const rxWhy = kind => t(kind === 'up' ? 'Heavier' : kind === 'deload' ? 'Lighter, on purpose' : kind === 'first' ? 'Starting point' : 'Same weight, beat the reps')
+
+  const body = {
+    done: <div className="pkj-center">
+      <Orb size={200} mood="curious" />
+      <PeekSay line={plan.open} delay={500} className="up" />
+      <h1 className="pkj-huge">{t('Done.')}</h1>
+      <p className="pkj-sub">{line}</p>
+    </div>,
+    first: <div className="pkj-center">
+      <Orb size={180} mood="shy" />
+      <h1 className="pkj-h">{t('Session one.')}</h1>
+      {plan.firstLine && <p className="pkj-quote">{plan.firstLine}</p>}
+    </div>,
+    numbers: <div className="pkj-col">
+      <Orb size={56} mood="focused" />
+      {w.vol > 0
+        ? <div className="pkj-stat"><span>{t('You moved')}</span><b>{fmtNum(w.vol)}</b><em>{t('{0} today.', unit)}</em></div>
+        : <div className="pkj-stat"><span>{t('You did')}</span><b>{setsDone(w)}</b><em>{t('sets today.')}</em></div>}
+      {diff != null && w.vol > 0 && <span className={'pkj-pill' + (diff > 0 ? ' up' : '')}>
+        {diff > 0 ? t('{0} more than last {1}', fmtVol(diff, unit), w.name) : diff < 0 ? t('{0} less than last {1}', fmtVol(-diff, unit), w.name) : t('Same as last {0}', w.name)}
+      </span>}
+      <div className="pkj-tiles">
+        <div><b>{Math.max(1, Math.round((w.end - w.start) / 60000))}</b><span>{t('min')}</span></div>
+        <div><b>{setsDone(w)}</b><span>{t('sets')}</span></div>
+        <div><b>{w.entries.length}</b><span>{t('exercises')}</span></div>
       </div>
-    })}
-    {/* a heavier estimate without a heavier top set is its own kind of progress — same weight
-        for more reps — so it is labelled as that, never as a load record */}
-    {e1prs.map(p => <div key={p.id} className="pk-best">
-      <span className="l"><em>{t('Best estimated 1RM')}</em><b className="capitalize">{nameOf(p.id)}</b></span>
-      <span className="v">{fmtNum(p.est)} {unit}</span>
-    </div>)}
-    <div className="card pk-done-map">
-      <div className="pk-card-h"><b>{t('What you just trained')}</b></div>
-      <BodyMap load={loadOfWorkouts([w])} body={st.body} />
+    </div>,
+    record: <div className="pkj-center">
+      <Orb size={170} mood="celebrate" inverted />
+      {prs.length > 0 && (() => {
+        const id = prs[0], top = topSet(entryOf(id))
+        return <div className="pkj-rec">
+          <span className="eyebrow">{t('New best')}</span>
+          <h1 className="pkj-h capitalize">{exName(id)}</h1>
+          {top && <b className="mono">{nextSetLabel(entryOf(id), top, unit)}</b>}
+          {prevBest[id] > 0 && <span className="was">{t('Old best: {0}', fmtNum(prevBest[id]) + ' ' + unit)}</span>}
+        </div>
+      })()}
+      {[...prs.slice(1).map(id => ({ id, k: t('New best'), v: (() => { const tp = topSet(entryOf(id)); return tp ? nextSetLabel(entryOf(id), tp, unit) : '' })() })),
+        ...e1prs.map(p => ({ id: p.id, k: t('Best estimated 1RM'), v: fmtNum(p.est) + ' ' + unit }))].map(r =>
+        <div key={r.k + r.id} className="pkj-row dark"><span><em>{r.k}</em><b className="capitalize">{exName(r.id)}</b></span><span className="mono">{r.v}</span></div>)}
+    </div>,
+    skipped: <div className="pkj-col">
+      <Orb size={72} mood="disappointed" />
+      <h1 className="pkj-h">{t(left === 1 ? '{0} set left behind.' : '{0} sets left behind.', left)}</h1>
+      <div className="pkj-list">{skipped.map(x => <div key={x.id} className="pkj-row"><b className="capitalize">{exName(x.id)}</b><span className="mono dim">{t(x.n === 1 ? '{0} set' : '{0} sets', x.n)}</span></div>)}</div>
+    </div>,
+    trained: <div className="pkj-col">
+      <Orb size={56} mood="focused" />
+      <h1 className="pkj-h">{worked.length ? t('{0} did most of the work.', t(MUSCLE_NAME[worked[0]] || worked[0])) : t("Here's what you trained.")}</h1>
+      <div className="card pkj-map"><BodyMap load={loadOfWorkouts([w])} body={st.body} /></div>
+    </div>,
+    next: <div className="pkj-col">
+      <Orb size={56} mood="curious" />
+      <h1 className="pkj-h">{t("Here's what you'll lift next {0}.", plan.routine ? plan.routine.name : w.name)}</h1>
+      <div className="pkj-list">{plan.rx.map(x => <div key={x.cfg.id} className="pkj-row">
+        <span><b className="capitalize">{exName(x.cfg.id)}</b><em className={x.p.kind === 'up' ? 'up' : ''}>{rxWhy(x.p.kind)}</em></span>
+        <span className="mono">{rxLabel(x)}</span>
+      </div>)}</div>
+      {plan.nextUp && <div className="pkj-row dark"><span className="dim">{t('Next session')}</span><b>{plan.nextUp.name} · {plan.nextUp.day}</b></div>}
+    </div>,
+    verdict: <div className="pkj-col pkj-verdict">
+      <Orb size={200} mood={v.mood} inverted={theme === 'ink'} className="pkj-bigorb" />
+      {v.line && <p className="pkj-quote">{v.line}</p>}
+      {v.sub && <p className="pkj-subq">{v.sub}</p>}
+    </div>,
+    summary: <div className="pkj-col">
+      <div className="pkj-sumh"><Orb size={64} mood={v.tone === 'bad' ? 'suspicious' : 'happy'} /><h1 className="pkj-h">{user ? t('Nice work, {0}.', user.name) : t('{0}, done.', w.name)}</h1></div>
+      <div className="pkj-list">
+        {w.vol > 0 && <div className="pkj-row"><span className="dim">{t('Volume')}</span><b>{fmtVol(w.vol, unit)}{diff > 0 && <em className="up"> +{fmtNum(diff)}</em>}</b></div>}
+        <div className="pkj-row"><span className="dim">{t('Session')}</span><b>{line}</b></div>
+        {prs.length > 0 && <div className="pkj-row"><span className="dim">{t('New best')}</span><b className="capitalize">{prs.map(exName).join(', ')}</b></div>}
+        {worked.length > 0 && <div className="pkj-row"><span className="dim">{t('Most worked')}</span><b>{t(MUSCLE_NAME[worked[0]] || worked[0])}</b></div>}
+        {plan.nextUp && <div className="pkj-row"><span className="dim">{t('Next up')}</span><b>{plan.nextUp.name} · {plan.nextUp.day}</b></div>}
+      </div>
     </div>
-    <div className="pk-done-acts">
-      <Button variant="primary" onClick={done}>{t('Done')}</Button>
-      <Button variant="soft" onClick={share}>{t('Share')}</Button>
+  }[step]
+
+  return <div className={'pkj ' + theme}>
+    <div className="pkj-prog" aria-hidden="true">{steps.map((x, k) => <i key={x} className={k <= i ? 'on' : ''} />)}</div>
+    <div className="pkj-top">
+      <span>{t(STEP_LABEL[step])}</span>
+      {step !== 'summary' && <button className="pkj-skip" onClick={() => setI(steps.length - 1)}>{t('Skip')}</button>}
+    </div>
+    <div className="pkj-body" key={step}>{body}</div>
+    <div className="pkj-acts">
+      {step === 'summary' ? <>
+        <Button variant="primary" onClick={done}>{t('Done')}</Button>
+        <Button variant="soft" onClick={share}>{t('Share')}</Button>
+      </> : <button className="pkj-go" onClick={onward}>{i === 0 ? t('See how it went') : t('Continue')}</button>}
     </div>
   </div>
 }
@@ -338,19 +415,47 @@ export function finishWorkout() {
   if (!A) return
   const done = setsDoneActive(A)
   const total = A.entries.reduce((n, e) => n + e.sets.length, 0)
-  if (!done) { confirmSheet({ title: t('Nothing logged yet'), message: t('You haven’t checked off any sets. Finish the workout anyway?'), confirmText: t('Finish anyway'), onConfirm: doFinishWorkout }); return }
-  if (done < total) { confirmSheet({ title: t('Finish early?'), message: t(total - done === 1 ? '{0} set still unchecked. Finish the workout now?' : '{0} sets still unchecked. Finish the workout now?', total - done), confirmText: t('Finish workout'), onConfirm: doFinishWorkout }); return }
+  // Peek has an opinion about leaving sets behind (lib/peek, key moments)
+  const cross = () => (getPeek().honesty === 'gentle' ? 'disappointed' : 'angry')
+  if (!done) { confirmSheet({ title: t('Nothing logged yet'), message: t('You haven’t checked off any sets. Finish the workout anyway?'), confirmText: t('Finish anyway'), onConfirm: doFinishWorkout, peek: { mood: 'suspicious', line: sayNow('nothingLogged') } }); return }
+  if (done < total) { confirmSheet({ title: t('Finish early?'), message: t(total - done === 1 ? '{0} set still unchecked. Finish the workout now?' : '{0} sets still unchecked. Finish the workout now?', total - done), confirmText: t('Finish workout'), onConfirm: doFinishWorkout, peek: { mood: total - done > 2 ? cross() : 'disappointed', line: sayNow('finishEarly', [total - done]) } }); return }
   doFinishWorkout()
 }
+// Everything Peek decides about the journey is decided once, as it opens — the store keeps
+// changing underneath and the story shouldn't shift mid-read. Runs after the workout is
+// saved, so "next time" is worked out from today's sets.
+function journeyPlan(w, { prs, e1prs, early, left, prev, events }) {
+  const st = S()
+  const peek = getPeek()
+  const routine = w.routineId ? st.routines.find(r => r.id === w.routineId) : null
+  const rx = routine ? routine.ex.map(cfg => ({ cfg, p: nextPrescription(st, cfg, routine) }))
+    .filter(x => x.p && x.p.kind !== 'off' && (x.p.weight > 0 || x.p.reps || x.p.sec)).slice(0, 4) : []
+  let nextUp = null
+  for (let k = 1; k <= 7 && !nextUp; k++) {
+    const d = new Date(); d.setDate(d.getDate() + k)
+    const r = effectiveRoutine(st, isoOf(d))
+    if (r) nextUp = { name: r.name, day: t(DAYN[d.getDay()]) }
+  }
+  const diff = prev ? (w.vol || 0) - (prev.vol || 0) : null
+  const opts = { stage: stageOf(peek.bond), honesty: peek.honesty, said: peek.said }
+  const v = finishVerdict({ prNames: prs.map(exName), early, left, diff, prev: prev ? prev.vol || 0 : 0, diffText: diff > 0 ? fmtVol(diff, st.unit) : '', events }, Math.random, opts)
+  let steps = journeySteps({ first: events.some(e => e.k === 'first'), prs, e1prs, early, diff, hasNext: rx.length > 0 })
+  if (!peek.voice) steps = steps.filter(x => x !== 'verdict')
+  else (v.keys || []).forEach(k => said({ key: k }))
+  return { routine, rx, nextUp, v, steps, open: sayNow('finishOpen'), firstLine: steps.includes('first') ? sayNow('first') : null }
+}
+
 function doFinishWorkout() {
   const st = S()
   const A = st.active
   if (!A) return
   const prs = []
   const e1prs = []
+  const prevBest = {}
   A.entries.forEach(e => {
     const mx = Math.max(0, ...e.sets.filter(s => s.done).map(s => s.w))
-    if (mx > 0 && mx > bestWeightFor(st, e.id)) prs.push(e.id)
+    const best = bestWeightFor(st, e.id)
+    if (mx > 0 && mx > best) { prs.push(e.id); prevBest[e.id] = best }
     // A heavier estimate without a heavier top set is its own kind of progress —
     // same weight for more reps. Reported separately so it can't be read as a load PR.
     const rec = is1RMRecord(st, e.id, e)
@@ -365,6 +470,13 @@ function doFinishWorkout() {
     prs
   }
   w.vol = workoutVolume(w)
+  const done = setsDoneActive(A)
+  const total = A.entries.reduce((n, e) => n + e.sets.length, 0)
+  const early = done > 0 && done < total
+  const skipped = A.entries.map(e => ({ id: e.id, n: e.sets.filter(s => !s.done).length })).filter(x => x.n > 0)
+  const prev = previousSession(st.workouts, w)
+  // Peek remembers the session (bond, moments) before the journey asks what it thinks
+  const mem = afterWorkout(getPeek(), st, w, { early })
   update(s => {
     w.entries.forEach(e => {
       const mx = Math.max(0, ...e.sets.filter(x => x.done).map(x => x.w || 0), e.topW || 0)
@@ -372,8 +484,11 @@ function doFinishWorkout() {
     })
     s.workouts.push(w)
     s.active = null
+    s.peek = mem.peek
   })
   useUI.getState().stopRest()
   beep(snd(), 880, 0.15); beep(snd(), 1100, 0.15, 0.18); beep(snd(), 1320, 0.3, 0.36)
-  ui().openSheet(close => <FinishSummary w={w} prs={prs} e1prs={e1prs} close={close} />, { kind: 'full', locked: true })
+  const plan = journeyPlan(w, { prs, e1prs, early, left: total - done, prev, events: mem.events })
+  ui().openSheet(close => <FinishJourney w={w} prs={prs} prevBest={prevBest} e1prs={e1prs} left={total - done}
+    skipped={skipped} prev={prev} plan={plan} close={close} />, { kind: 'full', locked: true })
 }

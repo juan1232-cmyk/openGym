@@ -11,6 +11,8 @@ import { t, LANGS, INSTR_LANGS } from '../lib/i18n.js'
 import { loadStarterPlan, confirmSheet, importFromApp } from '../sheets.jsx'
 import Icon from '../components/Icon.jsx'
 import { Section, Row, SelectRow, Switch, Segmented, Button, TextField } from '../components/ui.jsx'
+import { usePeek, updatePeek } from '../store/peek.js'
+import { stageOf, STAGE_NAME } from '../lib/peek/memory.js'
 
 export default function Settings() {
   const nav = useNavigate()
@@ -18,6 +20,7 @@ export default function Settings() {
   const user = useStore(s => s.user)
   const { update, replaceState, setUser, pullState, pushState, signOut, signOutAll } = useStore()
   const toast = useUI(s => s.toast)
+  const pk = usePeek()
   const fileRef = useRef(null)
   const importRef = useRef(null)
   const wakeOK = wakeLockSupported()
@@ -118,6 +121,21 @@ export default function Settings() {
         <Segmented className="seg-inline"
           options={[{ value: 'none', label: t('Off') }, { value: 'rir', label: t('RIR') }, { value: 'rpe', label: t('RPE') }]}
           value={effortOf(S)} onChange={v => update(s => { s.effort = v; delete s.showRir })} />
+      </Row>
+    </Section>
+
+    {/* ---------- Peek, the orb (docs/PEEK.md) ---------- */}
+    <Section title={t('Peek')} footer={t('Bond: {0}. It grows every time you train, and fades if you disappear.', t(STAGE_NAME[stageOf(pk.bond)]))}>
+      <Row icon="sparkles" iconTint="var(--indigo)" title={t('Talks')} subtitle={t('Off: it still reacts, it just keeps quiet.')}>
+        <Switch checked={pk.voice} onChange={v => updatePeek(p => ({ ...p, voice: v }))} />
+      </Row>
+      <Row icon="bell" iconTint="var(--orange)" title={t('Notifications in its voice')} subtitle={t('Reminders, and a nudge if you stop showing up.')}>
+        <Switch checked={pk.push} onChange={v => updatePeek(p => ({ ...p, push: v }))} />
+      </Row>
+      <Row icon="shield" iconTint="var(--red)" title={t('Honesty')}>
+        <Segmented className="seg-inline"
+          options={[{ value: 'gentle', label: t('Gentle') }, { value: 'normal', label: t('Normal') }, { value: 'brutal', label: t('Brutal') }]}
+          value={pk.honesty} onChange={v => updatePeek(p => ({ ...p, honesty: v }))} />
       </Row>
     </Section>
 

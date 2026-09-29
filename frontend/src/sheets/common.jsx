@@ -6,6 +6,8 @@ import { useUI } from '../store/useUI.js'
 import { fmtNum } from '../lib/format.js'
 import { t } from '../lib/i18n.js'
 import Icon from '../components/Icon.jsx'
+import Orb from '../components/Orb.jsx'
+import PeekSay from '../components/PeekSay.jsx'
 import { Button, Slider } from '../components/ui.jsx'
 
 export const S = () => useStore.getState().S
@@ -15,8 +17,14 @@ export const toast = m => ui().toast(m)
 export const snd = () => S().sound
 
 /* ============================ custom confirm dialog ============================ */
-function ConfirmDialog({ title, message, confirmText, cancelText, danger, onConfirm, close }) {
+// `peek` ({ mood, line }) puts the orb on top of the question — for the moments it has an
+// opinion about, like leaving a workout early.
+function ConfirmDialog({ title, message, confirmText, cancelText, danger, onConfirm, close, peek }) {
   return <div style={{ textAlign: 'center', padding: '4px 0' }}>
+    {peek && <div className="pk-confirm">
+      <Orb size={72} mood={peek.mood} />
+      <PeekSay line={peek.line} delay={250} className="up" />
+    </div>}
     {title && <h3 style={{ marginBottom: 8 }}>{title}</h3>}
     <div className="muted" style={{ marginBottom: 18, lineHeight: 1.5 }}>{message}</div>
     <button className={'btn ' + (danger ? 'danger' : 'primary')} onClick={() => { close(); onConfirm && onConfirm() }}>{confirmText || t('Confirm')}</button>

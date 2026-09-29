@@ -5,7 +5,11 @@ import { effectiveRoutine, effectiveRoutineId, streakWeeks, lastBW } from '../li
 import { fmtNum, fmtDate, todayISO, isoOf, durPart } from '../lib/format.js'
 import { t, dateLocale } from '../lib/i18n.js'
 import { weeklyVolumes, volumeBars, partOfDay } from '../lib/dashboard.js'
-import { coach, coachLine, pokeReaction } from '../lib/coach.js'
+import { coach, coachLine, pokeReaction } from '../lib/peek/coach.js'
+import { visit, stageOf, rememberPoked } from '../lib/peek/memory.js'
+import { pickLine } from '../lib/peek/lines.js'
+import { getPeek, updatePeek, said } from '../store/peek.js'
+import PeekSay from '../components/PeekSay.jsx'
 import { EXIDX } from '../lib/exercises.js'
 import { bwSheet, goalSheet, dayOverrideSheet, calendarSheet, startFlow, loadStarterPlan, bwDeltaColor, workoutDetailSheet } from '../sheets.jsx'
 import LineChart from '../components/LineChart.jsx'
@@ -15,43 +19,69 @@ import { Button } from '../components/ui.jsx'
 
 const nameOf = id => (EXIDX[id] || {}).n || id
 const TAPS = ['joyful-wide', 'surprised-left', 'small-attentive', 'curious-left']
+const hhmm = d => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0')
 
-// The orb as coach: a mood and maybe a line from lib/coach.js, a bubble that takes a moment to
-// show up (it's reacting, not a tooltip), and a temper if you keep poking it. A tap's mood and
-// line only last a few seconds before it goes back to what it thinks of your training.
+// The orb as coach (lib/peek, docs/PEEK.md): a mood and maybe a line from coach.js, a bubble
+// that takes a moment to show up (it's reacting, not a tooltip), and a temper if you keep
+// poking it. A tap's mood and line only last a few seconds before it goes back to what it
+// thinks of your training. Two moments are its own: asleep in the small hours until you tap
+// it, and a cold, then curious, reunion the first time you open the app after 5+ days away.
 function Coach({ S }) {
-  const base = useMemo(() => coach(S, new Date(), nameOf), [S])
+  // memory as it was when Home opened: the visit below rewrites it, and the mood shouldn't
+  // jump the moment it does
+  const peek0 = useRef(getPeek()).current
+  const now0 = useRef(new Date()).current
+  const base = useMemo(() => coach(S, now0, nameOf, peek0), [S.workouts, S.week, S.dayPlan, S.routines, S.active])
+  const asleep = now0.getHours() < 6 && !base.signals.active && !base.signals.freshPR
+  const voice = peek0.voice
+  const opts = { stage: stageOf(peek0.bond), honesty: peek0.honesty, said: peek0.said }
   const [over, setOver] = useState(null)
-  const [shown, setShown] = useState(false)
-  const orb = useRef(null), pokes = useRef([]), calm = useRef(0)
-  const mood = (over && over.mood) || base.mood
-  const line = over ? over.line : base.line
+  const [awake, setAwake] = useState(!asleep)
+  const orb = useRef(null), pokes = useRef([]), calm = useRef(0), seq = useRef(0)
+  const mood = (over && over.mood) || (awake ? base.mood : 'sleeping')
+  const line = !voice ? null : over ? over.line : awake ? base.line : null
+
+  const hold = (o, ms = 6000) => {
+    setOver(o)
+    clearTimeout(calm.current)
+    calm.current = setTimeout(() => { setOver(null); pokes.current = [] }, ms)
+  }
 
   useEffect(() => {
-    setShown(false)
-    if (!line) return
-    const tm = setTimeout(() => setShown(true), over ? 200 : 600 + Math.random() * 1400)
-    return () => clearTimeout(tm)
-  }, [line])
-  useEffect(() => () => clearTimeout(calm.current), [])
+    const v = visit(peek0, S, now0, base.raw)
+    if (v.changed) updatePeek(() => v.peek)
+    if (v.reunion && !asleep) {
+      const l = pickLine('reunion', [v.daysOff], Math.random, opts)
+      hold({ mood: 'cold', line: null }, 12000)
+      seq.current = setTimeout(() => { hold({ mood: 'curious', line: l && l.text }, 7000); said(l) }, 2600)
+    }
+    return () => { clearTimeout(calm.current); clearTimeout(seq.current) }
+  }, [])
 
   const onPoke = () => {
+    if (!awake) {
+      setAwake(true)
+      orb.current?.react('surprised-wide-left', 700)
+      const l = pickLine('asleep', [hhmm(new Date())], Math.random, opts)
+      hold({ mood: 'drowsy', line: l && l.text }); said(l)
+      return
+    }
     const now = Date.now()
     pokes.current = pokes.current.filter(x => now - x < 4000).concat(now)
     const r = pokeReaction(pokes.current.length, Math.random)
-    if (r) setOver({ mood: r.mood, line: r.line || line })
-    else {
+    if (r) {
+      hold({ mood: r.mood, line: r.line || line })
+      if (r.mood === 'angry') updatePeek(p => rememberPoked(p, new Date()))
+    } else {
       orb.current?.react(TAPS[Math.floor(Math.random() * TAPS.length)], 900)
-      const l = Math.random() < 0.4 ? coachLine(base.mood, base.signals, Math.random) : null
-      if (l && l !== line) setOver({ mood: base.mood, line: l })
+      const l = Math.random() < 0.4 ? coachLine(base.mood, base.signals, Math.random, opts) : null
+      if (l && l !== line) hold({ mood: base.mood, line: l })
     }
-    clearTimeout(calm.current)
-    calm.current = setTimeout(() => { setOver(null); pokes.current = [] }, 6000)
   }
 
   return <div className="pk-coachtop">
     <Orb ref={orb} size={88} mood={mood} onPoke={onPoke} />
-    {shown && line && <p className="pk-say" aria-live="polite">{line}</p>}
+    <PeekSay line={line} delay={over ? 200 : 600 + Math.random() * 1400} />
   </div>
 }
 

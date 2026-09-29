@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { coachSignals, coachScore, coachMood, coachLine, coach, seeded, pokeReaction, BAND_OF } from './coach.js'
-import { MOODS } from './orb-rig.js'
-import { isoOf } from './format.js'
+import { coachSignals, coachScore, coachMood, coachLine, coach, seeded, pokeReaction, BAND_OF, statsLine } from './coach.js'
+import { MOODS } from '../orb-rig.js'
+import { isoOf } from '../format.js'
 
 // Wednesday 23 Sep 2026, mid-morning
 const TODAY = new Date('2026-09-23T10:00:00')
@@ -123,5 +123,24 @@ describe('pokeReaction', () => {
     expect(pokeReaction(3, rng).mood).toBe('suspicious')
     expect(pokeReaction(6, rng).mood).toBe('angry')
     expect(pokeReaction(6, rng).line).toBeTruthy()
+  })
+})
+
+describe('statsLine', () => {
+  const bench = (n, w) => wk(n, { entries: [{ id: 'bench', sets: [{ w, r: 5, done: true }] }] })
+  it('calls out the lift that climbed', () => {
+    const S = state([bench(35, 80), bench(20, 82.5), bench(5, 85)])
+    const l = statsLine({ ...S, unit: 'kg' }, TODAY, id => id, seeded('u'))
+    expect(l.mood).toBe('proud')
+    expect(l.text).toMatch(/bench.*5 kg/i)
+  })
+  it('calls out a lift stuck at the same top weight for weeks', () => {
+    const S = state([bench(60, 100), bench(40, 100), bench(30, 95), bench(20, 100), bench(10, 97.5), bench(3, 100)])
+    const l = statsLine(S, TODAY, id => id, seeded('s'))
+    expect(l.mood).toBe('suspicious')
+    expect(l.text).toMatch(/8 weeks/)
+  })
+  it('has nothing to say about nothing', () => {
+    expect(statsLine(state([]), TODAY)).toBe(null)
   })
 })

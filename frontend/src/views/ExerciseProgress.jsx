@@ -10,6 +10,7 @@ import { exerciseDetailSheet } from '../sheets.jsx'
 import Icon from '../components/Icon.jsx'
 import Orb from '../components/Orb.jsx'
 import { Button } from '../components/ui.jsx'
+import { PeekEmpty } from '../components/PeekNote.jsx'
 
 const LABEL = { e1rm: 'Estimated 1 rep max', weight: 'Heaviest set', reps: 'Most reps', sec: 'Longest hold', speed: 'Top speed' }
 const SHOWN = 10   // sessions on the chart — enough for a trend, few enough to read each step
@@ -70,6 +71,11 @@ export default function ExerciseProgress() {
         : next.why ? t(...next.why) : null
   ].filter(Boolean).join(' ')
 
+  // Peek's face follows the trend: climbing is proud, sliding disappoints it, a deload on the
+  // way makes it suspicious, holding steady is just a look
+  const tipMood = next && next.kind === 'deload' ? 'suspicious'
+    : rate == null || step < 0.5 ? 'idle' : rate > 0 ? 'proud' : 'disappointed'
+
   const row = r => {
     const ws = r.sets.map(s => s.w || 0)
     const sameLoad = (kind === 'e1rm' || kind === 'weight') && ws.every(w => w === ws[0])
@@ -98,12 +104,12 @@ export default function ExerciseProgress() {
         <Spark points={shown} />
         <div className="axis"><span>{fmtDate(first.d)}</span><span>{cur.d === todayISO() ? t('Today') : fmtDate(cur.d)}</span></div>
       </div>
-      {tip && <div className="pk-coach"><Orb size={44} inverted poke="joyful-wide" /><p>{tip}</p></div>}
+      {tip && <div className="pk-coach"><Orb size={44} inverted poke="joyful-wide" mood={tipMood} /><p>{tip}</p></div>}
       <div className="card pk-list">
         <div className="pk-card-h"><b>{t('Sessions')}</b></div>
         {rows.slice(-12).reverse().map(row)}
       </div>
-    </> : <div className="empty"><div className="ico"><Icon name="chartLine" /></div>{t('Log this exercise in a workout to see its progress here.')}</div>}
+    </> : <PeekEmpty situation="emptyProgress" hint="Log this exercise in a workout to see its progress here." />}
     <Button variant="soft" icon="info" onClick={() => exerciseDetailSheet(ex)}>{t('About this exercise')}</Button>
   </div>
 }

@@ -17,6 +17,9 @@ import {
   effortHistogram, isHardSet, HARD_RIR
 } from '../lib/effort.js'
 import { Button, Segmented, SelectRow } from '../components/ui.jsx'
+import { PeekNote } from '../components/PeekNote.jsx'
+import { statsLine } from '../lib/peek/coach.js'
+import { usePeek, peekOpts } from '../store/peek.js'
 
 // Which muscles the training in a window actually hit — and, the point of the card,
 // which ones it keeps missing. Shading is relative within the window (lib/muscles.js).
@@ -136,6 +139,9 @@ export default function Stats() {
   const [range, setRange] = useState(90)
   const [exId, setExId] = useState(null)
   const [exMetric, setExMetric] = useState('top')
+  // Peek's one remark on the big picture, chosen once per visit
+  const pk = usePeek()
+  const [peekLine] = useState(() => (pk.voice ? statsLine(S, new Date(), id => (EXIDX[id] || {}).n || id, Math.random, peekOpts(pk)) : null))
   const now = Date.now()
   const anyEffort = hasEffort(S)
   const kind = displayScale(S)
@@ -197,6 +203,8 @@ export default function Stats() {
   return <>
     <div className="hdr"><div><h1>{t('Stats')}</h1><div className="sub">{t('Progress & history')}</div></div>
       <button className="iconbtn" onClick={() => nav('/history')} aria-label={t('History')}><Icon name="history" /></button></div>
+
+    {peekLine && <PeekNote line={peekLine.text} mood={peekLine.mood} />}
 
     <div className="tiles">
       <div className="tile"><div className="l"><Icon name="dumbbell" />{t('Workouts')}</div><div className="v">{S.workouts.length}</div></div>

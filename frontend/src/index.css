@@ -1103,6 +1103,28 @@ h4.sec{
   transform-origin:0 50%;animation:pk-say-in 260ms var(--spring) both;
 }
 .pk-say::before{content:'';position:absolute;left:-6px;bottom:0;width:12px;height:12px;background:var(--surface);clip-path:polygon(100% 0,100% 100%,0 100%)}
+/* a bubble under the orb instead of beside it: the tail points up at it */
+.pk-say.up{margin-top:10px;border-radius:16px;transform-origin:50% 0}
+.pk-say.up::before{left:auto;right:28px;bottom:auto;top:-6px;clip-path:polygon(50% 0,100% 100%,0 100%)}
+/* during a workout: under the header orb, gone after a few seconds */
+.pk-wsay{display:flex;justify-content:flex-end;padding:0 8px;min-height:0}
+.pk-wsay .pk-say{margin-top:8px;max-width:260px}
+/* the confirm dialog, when Peek has an opinion about the question */
+.pk-confirm{display:flex;flex-direction:column;align-items:center;margin-bottom:14px}
+.pk-confirm .pk-say.up{text-align:center}
+.pk-confirm .pk-say.up::before{right:auto;left:50%;margin-left:-6px}
+/* Goals: Peek's remark on an answer, under the question */
+.pk-goal-say{min-height:0;padding:0 4px}
+.pk-goal-say .pk-say.up{margin:0 0 8px;display:inline-block}
+.pk-goal-say .pk-say.up::before{right:auto;left:24px}
+/* a remark in a card, orb beside it (Stats) */
+.pk-note{display:flex;align-items:center;gap:12px}
+.pk-note p{margin:0;font-size:15px;line-height:1.4}
+/* an empty screen with Peek in it */
+.pk-empty{display:flex;flex-direction:column;align-items:center;gap:4px;padding:28px 12px;text-align:center}
+.pk-empty .pk-say.up{text-align:center;max-width:280px}
+.pk-empty .pk-say.up::before{right:auto;left:50%;margin-left:-6px}
+.pk-empty .hint{margin-top:8px;font-size:13px;color:var(--label-3)}
 .pk-greet{display:flex;flex-direction:column;gap:6px;padding:22px 8px 22px}
 .pk-greet span{font-size:14px;color:var(--label-2)}
 .pk-greet h1{font-size:32px;line-height:1.05;font-weight:600;letter-spacing:-.045em;color:var(--label)}
@@ -1315,3 +1337,72 @@ button.pk-tile:active{background:var(--surface-2)}
 .pk-coach .orb{animation:none}
 .pk-coach p{font-size:14px;line-height:1.4;text-wrap:pretty}
 .pk-prog > .btn{margin-top:2px}
+
+/* ------------------------------------------------------- finish journey -- */
+/* One screen per step (sheets/workout.jsx FinishJourney). Fills the full sheet edge to edge,
+   so a step can change the whole ground: ink for a record, green for a good verdict. */
+@keyframes pkj-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.pkj{
+  --pkj-fg:var(--label);--pkj-dim:var(--label-2);--pkj-card:var(--surface);--pkj-line:var(--sep);
+  margin:calc(-1 * (var(--sat) + 16px)) -24px calc(-1 * (var(--sab) + 16px));
+  min-height:100dvh;box-sizing:border-box;padding:calc(var(--sat) + 14px) 24px calc(var(--sab) + 20px);
+  display:flex;flex-direction:column;gap:14px;background:var(--bg);color:var(--pkj-fg);
+  transition:background-color .4s ease,color .4s ease;
+}
+.pkj.ink{background:#0b0b0b;--pkj-fg:#f3f2ee;--pkj-dim:#a9a8a1;--pkj-card:#232322;--pkj-line:#2e2e2c}
+.pkj.go{background:#12b76a;--pkj-fg:#06140d;--pkj-dim:#0b3d24;--pkj-card:rgba(255,255,255,.35);--pkj-line:rgba(6,20,13,.12)}
+.pkj > *{max-width:520px;width:100%;margin-inline:auto}
+.pkj-prog{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px}
+.pkj-prog i{height:3px;border-radius:2px;background:currentColor;opacity:.18;transition:opacity .3s}
+.pkj-prog i.on{opacity:1}
+.pkj-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--pkj-dim);min-height:24px}
+.pkj-skip{padding:10px 0 10px 16px;color:inherit;font:inherit}
+.pkj-body{flex:1;display:flex;flex-direction:column;justify-content:center;animation:pkj-in 380ms var(--spring) both}
+.pkj-center{display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center}
+.pkj-col{display:flex;flex-direction:column;gap:20px}
+.pkj-huge{font-size:56px;line-height:1;font-weight:600;letter-spacing:-.05em;margin-top:10px}
+.pkj-h{font-size:34px;line-height:1.08;font-weight:600;letter-spacing:-.045em;text-wrap:balance}
+.pkj-sub{font-size:15px;color:var(--pkj-dim)}
+.pkj-quote{font-size:32px;line-height:1.12;font-weight:600;letter-spacing:-.04em;text-wrap:balance}
+.pkj-subq{font-size:19px;line-height:1.3;font-weight:500;color:var(--pkj-dim)}
+.pkj-verdict .pkj-bigorb{align-self:center;margin-bottom:8px}
+.pkj-stat{display:flex;flex-direction:column;gap:4px}
+.pkj-stat span{font-size:15px;color:var(--pkj-dim)}
+.pkj-stat b{font-size:84px;line-height:.95;font-weight:600;letter-spacing:-.06em;font-variant-numeric:tabular-nums}
+.pkj-stat em{font-style:normal;font-size:22px;font-weight:500;letter-spacing:-.02em}
+.pkj-pill{align-self:flex-start;padding:8px 14px;border-radius:99px;background:var(--pkj-card);font-size:15px;font-weight:600}
+.pkj-pill.up{background:var(--acc-soft);color:var(--acc-ink)}
+.pkj-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pkj-tiles div{display:flex;flex-direction:column;gap:4px;padding:14px;border-radius:16px;background:var(--pkj-card)}
+.pkj-tiles b{font-size:24px;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.pkj-tiles span{font-size:13px;color:var(--pkj-dim)}
+.pkj-rec{display:flex;flex-direction:column;align-items:center;gap:8px}
+.pkj-rec .eyebrow{font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#5fd79b}
+.pkj-rec .mono{font-family:var(--mono);font-size:40px;font-weight:500;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.pkj-rec .was{font-size:15px;color:var(--pkj-dim)}
+.pkj-list{display:flex;flex-direction:column;border-radius:20px;background:var(--pkj-card);padding:2px 16px}
+.pkj-list .pkj-row{border-bottom:1px solid var(--pkj-line);border-radius:0;background:none;padding:14px 0}
+.pkj-list .pkj-row:last-child{border-bottom:0}
+.pkj-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;background:var(--pkj-card);text-align:left;width:100%;box-sizing:border-box}
+.pkj-row > span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.pkj-row b{font-size:16px;font-weight:600;overflow-wrap:anywhere}
+.pkj-row em{font-style:normal;font-size:13px;color:var(--pkj-dim)}
+.pkj-row em.up,.pkj-row b em.up{color:var(--acc-ink)}
+.pkj-row .mono{font-family:var(--mono);font-size:15px;font-variant-numeric:tabular-nums;flex:none}
+.pkj-row .dim{color:var(--pkj-dim);font-size:14px}
+.pkj-row.dark{background:#0b0b0b;color:#f3f2ee}
+.pkj.ink .pkj-row.dark{background:var(--pkj-card)}
+.pkj-row.dark em,.pkj-row.dark .dim{color:#a9a8a1}
+.pkj-map{margin:0;padding:12px}
+.pkj-sumh{display:flex;align-items:center;gap:14px}
+.pkj-acts{display:flex;gap:10px}
+.pkj-acts .btn:first-child{flex:2}
+.pkj-acts .btn:last-child{flex:1}
+.pkj-go{
+  flex:1;height:56px;border-radius:14px;background:var(--ink);color:var(--on-ink);
+  font:inherit;font-size:16px;font-weight:600;
+}
+.pkj.ink .pkj-go{background:var(--acc);color:var(--on-acc)}
+.pkj.go .pkj-go{background:#06140d;color:#f3f2ee}
+.pkj .pk-say.up::before{right:auto;left:50%;margin-left:-6px}
+.pkj .pk-say{text-align:center}

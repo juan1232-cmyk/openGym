@@ -69,7 +69,7 @@ function Welcome({ onCreate }) {
   return <div className="pk-step">
     <div className="grow" />
     <div className="pk-hero">
-      <h1>{t("Hey. I'll be your coach.")}</h1>
+      <h1>{t("Hey. I'm Peek.")}<br />{t("I'll be your coach.")}</h1>
       <p>{passkeys ? t("Make an account and we'll start with your first session.") : t("This browser doesn't support passkeys — you can still use openGym locally on this device.")}</p>
     </div>
     <div className="pk-actions">

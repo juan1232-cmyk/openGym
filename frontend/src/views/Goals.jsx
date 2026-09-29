@@ -5,6 +5,7 @@ import { useUI } from '../store/useUI.js'
 import { starterPlan, DAY_OPTIONS } from '../lib/starter.js'
 import { t } from '../lib/i18n.js'
 import Orb from '../components/Orb.jsx'
+import PeekSay from '../components/PeekSay.jsx'
 import Icon from '../components/Icon.jsx'
 import { Button } from '../components/ui.jsx'
 
@@ -17,6 +18,14 @@ const GOAL_INFO = [
   ['consistent', 'Stay consistent', 'Short sessions, steady habit']
 ]
 
+const GOAL_REMARK = {
+  muscle: 'Good. We build.',
+  strength: "Heavy it is. I'll keep count.",
+  fat: 'Shorter rests. You were warned.',
+  consistent: 'The underrated one. Showing up is the whole game.'
+}
+const DAY_REMARK = { 2: 'Two days. We can work with that.', 5: 'Five. Ambitious. I like it.', 6: "Six days? Bold. Don't burn out on me." }
+
 // D5 — goals. Shown once to a profile with nothing planned and nothing logged (see needsGoals
 // in the store), in place of Home's old "load the starter plan" card: the two answers pick
 // the starter plan's split and schedule (lib/starter.js starterPlan). Skipping records 'own'
@@ -28,7 +37,14 @@ export default function Goals() {
   const [goal, setGoal] = useState('muscle')
   const [days, setDays] = useState(3)
   const orb = useRef(null)
-  const pick = g => { setGoal(g); orb.current?.react('small-attentive', 700) }
+  // Peek reacts to each answer — a remark per goal, and an opinion on the extremes of days
+  const [remark, setRemark] = useState(null)
+  const pick = g => { setGoal(g); orb.current?.react('small-attentive', 700); setRemark(t(GOAL_REMARK[g])) }
+  const pickDays = n => {
+    setDays(n)
+    orb.current?.react(n >= 5 ? 'surprised-wide-left' : 'curious-left', 800)
+    setRemark(DAY_REMARK[n] ? t(DAY_REMARK[n]) : null)
+  }
 
   const finish = () => {
     const plan = starterPlan({ goal, days })
@@ -51,6 +67,7 @@ export default function Goals() {
         <Orb ref={orb} size={64} poke="joyful-wide" />
         <h1>{t('What are we training for?')}</h1>
       </div>
+      <div className="pk-goal-say"><PeekSay line={remark} delay={150} className="up" /></div>
       <div className="pk-choices" role="radiogroup" aria-label={t('Goal')}>
         {GOAL_INFO.map(([k, name, sub]) => (
           <button key={k} role="radio" aria-checked={goal === k} className={'pk-choice' + (goal === k ? ' on' : '')} onClick={() => pick(k)}>
@@ -62,7 +79,7 @@ export default function Goals() {
       <div className="pk-label">{t('Days per week')}</div>
       <div className="pk-seg" role="radiogroup" aria-label={t('Days per week')}>
         {DAY_OPTIONS.map(n => (
-          <button key={n} role="radio" aria-checked={days === n} className={days === n ? 'on' : ''} onClick={() => setDays(n)}>{n}</button>
+          <button key={n} role="radio" aria-checked={days === n} className={days === n ? 'on' : ''} onClick={() => pickDays(n)}>{n}</button>
         ))}
       </div>
       <div className="grow" />

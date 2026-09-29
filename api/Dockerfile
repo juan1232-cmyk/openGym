@@ -2,7 +2,7 @@ FROM node:22-alpine
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm install --omit=dev && npm cache clean --force
-COPY server.js ./
+COPY server.js peek-lines.js ./
 ENV NODE_ENV=production
 EXPOSE 3000
 # Runs as the image's built-in unprivileged user instead of root -- server.js never needs root

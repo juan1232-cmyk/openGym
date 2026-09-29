@@ -62,7 +62,14 @@ export const MOODS = {
   disappointed: { pool: ['downward-gaze', 'shy-downward', 'uneasy-left', 'gentle-downward-gaze'], hold: [3000, 4600], blink: IDLE_BLINK },
   angry:        { pool: ['angry-right', 'angry-left', 'angry-brows'], hold: [1800, 3000], blink: BUSY_BLINK },
   bored:        { pool: ['sleepy-squint', 'drowsy-closed', 'upward-side-glance'], hold: [3600, 5200], blink: SLOW_BLINK },
-  drowsy:       { pool: ['sleepy-squint', 'drowsy-closed', 'eyes-closed'], hold: [3600, 5200], blink: SLOW_BLINK }
+  drowsy:       { pool: ['sleepy-squint', 'drowsy-closed', 'eyes-closed'], hold: [3600, 5200], blink: SLOW_BLINK },
+  // the rest of the JSON's lifecycle, and a few the character needs on top of it
+  sleeping:     { pool: ['eyes-closed', 'drowsy-closed', 'eyes-closed'], hold: [5200, 8000], blink: [60000, 90000] },
+  shy:          { pool: ['upward-side-glance', 'shy-downward', 'gentle-downward-gaze'], hold: [2300, 3600], blink: BUSY_BLINK },
+  focused:      { pool: ['attentive-left', 'downward-gaze', 'small-attentive', 'gentle-downward-gaze'], hold: [3000, 5000], blink: IDLE_BLINK },
+  cold:         { pool: ['uneasy-left', 'shy-downward'], hold: [2600, 3600], blink: SLOW_BLINK },
+  // only a Ride-or-die bond sees these faces — the asymmetric ones nothing else uses
+  cheeky:       { pool: ['asymmetric-up-left', 'playful-right', 'asymmetric-down-right', 'wide-down-left'], hold: [1800, 2800], blink: BUSY_BLINK }
 }
 const CLOSED = EX['eyes-closed']
 const lerp = (a, b, t) => a + (b - a) * t

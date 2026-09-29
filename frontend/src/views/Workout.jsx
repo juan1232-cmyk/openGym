@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { exOr } from '../lib/exercises.js'
-import { effectiveRoutine, lastEntryFor, buildSets, setsDoneActive, supersetUnits, unitOf, setLabel, modeOf, isBw, isPerSide, sideReps, EFFORT, effortOf, capEffort, fmtSec, nextUp, nextSetLabel } from '../lib/history.js'
+import { effectiveRoutine, bestWeightFor, lastEntryFor, buildSets, setsDoneActive, supersetUnits, unitOf, setLabel, modeOf, isBw, isPerSide, sideReps, EFFORT, effortOf, capEffort, fmtSec, nextUp, nextSetLabel } from '../lib/history.js'
 import { fmtNum, todayISO, exCount, DAYN } from '../lib/format.js'
 import { beep, vibrate } from '../lib/sound.js'
 import { t } from '../lib/i18n.js'
@@ -12,9 +12,13 @@ import Media from '../components/Media.jsx'
 import { startFlow, exercisePicker, exConfigSheet, exerciseDetailSheet, topWeightSheet, finishWorkout, workoutCompleteSheet, confirmSheet } from '../sheets.jsx'
 import Icon from '../components/Icon.jsx'
 import Orb from '../components/Orb.jsx'
+import PeekSay from '../components/PeekSay.jsx'
+import { setFace, isSetPR, missedTwice, restState, IDLE_MIN } from '../lib/peek/moments.js'
+import { getPeek, sayNow } from '../store/peek.js'
 import { Button, Check, NumberField } from '../components/ui.jsx'
 import { nextPrescription, applyPrescription } from '../lib/progression.js'
 import { glyphOf } from '../lib/glyphs.js'
+import { PeekEmpty } from '../components/PeekNote.jsx'
 
 /* ---------- start chooser (no active workout) ---------- */
 function StartChooser() {
@@ -153,6 +157,36 @@ function ActiveWorkout() {
   const orb = useRef(null)
   const [collapsed, setCollapsed] = useState(false)
   const A = S.active
+
+  // Peek during a session (lib/peek/moments.js): a focused face that reacts to every set,
+  // and words only at the moments that matter — a PR, two short sets in a row, a rest that
+  // drags on, the last set. Never mid-set: everything here fires on a check-off or a pause.
+  const [pkMood, setPkMood] = useState(() => (Date.now() - A.start < 15000 ? 'excited' : 'focused'))
+  const [bubble, setBubble] = useState(null)
+  const moodTm = useRef(0), lastSetAt = useRef(Date.now()), restFired = useRef({}), missedSaid = useRef(new Set())
+  const flash = (m, ms = 3000) => {
+    setPkMood(m)
+    clearTimeout(moodTm.current)
+    moodTm.current = setTimeout(() => setPkMood('focused'), ms)
+  }
+  const speak = (sit, args) => { const l = sayNow(sit, args); if (l) setBubble({ text: l, n: Date.now() }) }
+  useEffect(() => {
+    if (Date.now() - A.start < 15000) { flash('excited', 3500); speak('start') }
+    const iv = setInterval(() => {
+      const st = useStore.getState().S, A2 = st.active
+      if (!A2) return
+      const u = useUI.getState()
+      const r = restState({
+        lastSetAt: lastSetAt.current, restSec: st.restSec, now: Date.now(), resting: !!(u.timer || u.work),
+        allDone: A2.entries.every(e => e.sets.every(x => x.done))
+      })
+      if (!r || restFired.current[r]) return
+      restFired.current[r] = true
+      if (r === 'idle') { clearTimeout(moodTm.current); setPkMood('drowsy'); speak('idle', [IDLE_MIN]) }
+      else { flash('bored', 6000); speak('restLong', [Math.round((Date.now() - lastSetAt.current) / 60000)]) }
+    }, 5000)
+    return () => { clearInterval(iv); clearTimeout(moodTm.current) }
+  }, [])
   const units = supersetUnits(A.entries)
   const cur = Math.min(A.cur, Math.max(0, A.entries.length - 1))
   const unit = A.entries.length ? unitOf(units, cur) : []
@@ -200,7 +234,6 @@ function ActiveWorkout() {
       e.sets[i].done = !e.sets[i].done
       if (e.sets[i].done) {
         beep(S.sound, 1040, 0.12); vibrate(30)
-        orb.current?.react('joyful-wide', 1100)
         const isLastExInUnit = idx === unit[unit.length - 1]
         const unitDone = unit.every(ui => (ui === idx ? e : A.entries[ui]).sets.every(x => x.done))
         if (isLastExInUnit && !unitDone) startRest(S.restSec)
@@ -214,6 +247,7 @@ function ActiveWorkout() {
         if (e.sets.every(x => x.done)) { exJustDone = true; if (loaded && !e.asked) { e.asked = true; askTop = true } }
       }
     })
+    peekOnSet(idx, i, m)
     // reps: topWeight first (it chains into the finish/continue prompt on the last unit, and
     // opens the next card itself). cardio/timed or already-confirmed: go straight on — the
     // next unfinished card opens, as it does in the design.
@@ -226,14 +260,34 @@ function ActiveWorkout() {
     }
   }
 
+  // the set as it is now stored — its face, and whether it's one of the moments worth a word
+  const peekOnSet = (idx, i, m) => {
+    const st = useStore.getState().S
+    const e = st.active && st.active.entries[idx]
+    if (!e || !e.sets[i] || !e.sets[i].done) return
+    lastSetAt.current = Date.now(); restFired.current = {}
+    setPkMood(p => (p === 'drowsy' || p === 'bored' ? 'focused' : p))
+    orb.current?.react(setFace(e.sets[i], e.target, m), 1100)
+    const left = st.active.entries.reduce((n, x) => n + x.sets.filter(y => !y.done).length, 0)
+    if (m === 'reps' && isSetPR(e, i, bestWeightFor(st, e.id))) {
+      flash('celebrate', 3500); vibrate([60, 40, 120]); speak('pr', [exOr(e.id).n])
+    } else if (missedTwice(e, i, m) && !missedSaid.current.has(idx)) {
+      missedSaid.current.add(idx); flash('suspicious', 3000); speak('missedTwice')
+    } else if (left === 1) {
+      flash('excited', 3000); speak('lastSet')
+    }
+  }
+
   const openUnit = k => {
     if (k === unitIdx) { setCollapsed(c => !c); return }
     setCollapsed(false)
     update(s => { s.active.cur = units[k][0] })
   }
 
-  const discard = () => confirmSheet({
+  // bailing on a planned session in its first five minutes gets a look
+  const discard = (mins = (Date.now() - A.start) / 60000) => confirmSheet({
     title: t('Discard workout?'), message: t('The sets you logged in this session will be lost.'), confirmText: t('Discard'), danger: true,
+    peek: A.routineId && mins < 5 ? { mood: getPeek().honesty === 'gentle' ? 'disappointed' : 'angry', line: sayNow('quitEarly', [Math.max(1, Math.round(mins))]) } : null,
     onConfirm: () => { update(s => { s.active = null }); stopRest(); nav('/home') }
   })
 
@@ -270,8 +324,9 @@ function ActiveWorkout() {
     </div>
     <div className="pk-whead">
       <div className="pk-wtitle"><span className="el"><Elapsed start={A.start} /></span><h1>{A.name}</h1></div>
-      <Orb ref={orb} size={60} poke="joyful-wide" />
+      <Orb ref={orb} size={60} mood={pkMood} poke="joyful-wide" />
     </div>
+    <div className="pk-wsay">{bubble && <PeekSay key={bubble.n} line={bubble.text} hideAfter={4500} className="up" />}</div>
     <div className="pk-wprog">
       <div className="bar"><i style={{ width: (total ? done / total * 100 : 0) + '%' }} /></div>
       <span>{done}/{total}</span>
@@ -295,7 +350,7 @@ function ActiveWorkout() {
           </div>}
         </div>
       })}
-    </div> : <div className="empty"><div className="ico"><Icon name="shuffle" /></div>{t('Freestyle workout — add your first exercise.')}</div>}
+    </div> : <PeekEmpty situation="emptyFreestyle" hint="Freestyle workout — add your first exercise." />}
 
     <div style={{ height: 12 }} />
     <Button variant="soft" icon="plus" onClick={() => exercisePicker(ex => exConfigSheet(ex, null, cfg => update(s => {
@@ -304,7 +359,7 @@ function ActiveWorkout() {
       s.active.entries.push({ id: ex.id, target: { ...cfg }, plan, sets: applyPrescription(buildSets(s, full), plan) })
       s.active.cur = s.active.entries.length - 1
     }), null, S.routines.find(r => r.id === A.routineId)))}>{t('Add exercise')}</Button>
-    <button className="pk-link pk-discard" onClick={discard}>{t('Discard workout')}</button>
+    <button className="pk-link pk-discard" onClick={() => discard()}>{t('Discard workout')}</button>
 
     {/* while a rest or a timed set runs, the timer bar (RestTimer) sits exactly here instead */}
     {!resting && <div className="pk-dock">

@@ -9,6 +9,7 @@ import {
   generateAuthenticationOptions, verifyAuthenticationResponse
 } from '@simplewebauthn/server';
 import webpush from 'web-push';
+import * as peekLines from './peek-lines.js';
 
 const PORT = +(process.env.PORT || 3000);
 const DATA = process.env.DATA_DIR || '/data';
@@ -100,7 +101,7 @@ function scheduleRestTimer(userId, sec) {
   if (t) clearTimeout(t);
   restTimers.set(userId, setTimeout(() => {
     restTimers.delete(userId);
-    sendPush(userId, { title: 'Rest over 💪', body: 'Time for your next set.', tag: 'rest-timer' });
+    sendPush(userId, { title: 'Rest over', body: peekLines.restOver(), tag: 'rest-timer' });
   }, sec * 1000));
 }
 function cancelRestTimer(userId) {
@@ -129,6 +130,30 @@ function userNow(tz) {
     return { date: `${g('year')}-${g('month')}-${g('day')}`, hhmm: `${g('hour')}:${g('minute')}` };
   } catch { return null; } // unknown/invalid tz string — skip this user rather than guess
 }
+// Peek's absence nudges (docs/PEEK.md): one each at 3, 7 and 14 days since the last workout,
+// then silence. Sent at the user's reminder time (or 18:00) in their own zone, only with
+// Peek's notifications on, and each (last workout, day count) pair at most once.
+const NUDGE_DAYS = [3, 7, 14];
+function absenceNudges() {
+  for (const user of db.users) {
+    if (!db.subs.some(s => s.userId === user.id)) continue;
+    const S = readState(user.id);
+    const ws = S?.workouts || [];
+    if (!ws.length || S.peek?.push === false || S.active) continue;
+    const now = userNow(S.reminder?.tz || 'UTC');
+    if (!now || now.hhmm !== (S.reminder?.on ? S.reminder.time : '18:00')) continue;
+    const last = ws.map(w => w.d).sort().pop();
+    const days = Math.round((new Date(now.date + 'T12:00:00') - new Date(last + 'T12:00:00')) / 864e5);
+    if (!NUDGE_DAYS.includes(days)) continue;
+    const key = last + ':' + days;
+    if (user.peekNudge === key || user.lastReminder === now.date) continue;   // one ping a day is plenty
+    const body = peekLines.absence(days, peekLines.stageOf(S.peek?.bond), S.peek?.honesty);
+    if (!body) continue;
+    user.peekNudge = key;
+    saveDb();
+    sendPush(user.id, { title: 'Peek', body, tag: 'peek-nudge' });
+  }
+}
 setInterval(() => {
   for (const user of db.users) {
     if (!db.subs.some(s => s.userId === user.id)) continue;
@@ -144,12 +169,17 @@ setInterval(() => {
     console.log('reminder firing', user.id, rid);
     user.lastReminder = now.date;
     saveDb();
+    // Peek's voice unless it's been switched off in Settings (then a plain line, no emoji
+    // either way — the reminder is a nudge, not a party)
+    const peek = S.peek || {};
+    const name = routine ? routine.name : 'A workout';
     sendPush(user.id, {
-      title: routine ? `${routine.emoji || '🏋️'} ${routine.name} today` : 'Workout planned today',
-      body: "It's on your plan — let's go 💪",
+      title: routine ? `${routine.name} today` : 'Workout planned today',
+      body: peek.push === false ? "It's on your plan." : peekLines.reminder(name, peekLines.stageOf(peek.bond)),
       tag: 'day-reminder'
     });
   }
+  absenceNudges();
 // Checked every 10s (not 60s) — ticks aren't aligned to the top of the minute, so a 60s
 // interval could sit on your target minute for up to 59s before noticing. 10s caps that at ~9s.
 }, 10000).unref();

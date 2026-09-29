@@ -16,7 +16,10 @@ export const DEF = {
   reminder: { on: false, time: '08:00', tz: null }, effort: null,
   // the onboarding answers (Goals screen): goal is one of lib/starter.js GOALS, or 'own' when
   // the profile skipped it to build a plan by hand. null means never asked — see needsGoals.
-  goal: null, days: null
+  goal: null, days: null,
+  // the orb's memory and its settings — lib/peek/memory.js PEEK_DEF; read it through peekOf,
+  // which fills in whatever an older profile (or this null) doesn't have yet
+  peek: null
 }
 const clone = o => JSON.parse(JSON.stringify(o))
 
@@ -36,6 +39,7 @@ const hasData = st => !!((st.workouts || []).length || (st.routines || []).lengt
 
 export const useStore = create((set, get) => {
   let pushTm = null
+  let offlineSaid = false
 
   const persist = (S, push = true) => {
     S._ts = Date.now()
@@ -93,8 +97,18 @@ export const useStore = create((set, get) => {
     async pushState() {
       if (!get().user) return
       clearTimeout(pushTm)
-      try { await api('/api/data', { method: 'PUT', body: JSON.stringify({ state: get().S }) }); localStorage.removeItem('gym_dirty') }
-      catch (e) { localStorage.setItem('gym_dirty', '1') }
+      try { await api('/api/data', { method: 'PUT', body: JSON.stringify({ state: get().S }) }); localStorage.removeItem('gym_dirty'); offlineSaid = false }
+      catch (e) {
+        localStorage.setItem('gym_dirty', '1')
+        // Peek says so once per outage (loaded lazily: both of those modules import this one)
+        if (!offlineSaid) {
+          offlineSaid = true
+          Promise.all([import('./peek.js'), import('./useUI.js')]).then(([pk, ui]) => {
+            const l = pk.sayNow('offline')
+            if (l) ui.useUI.getState().toast(l)
+          }).catch(() => {})
+        }
+      }
     },
     // true while a pull is in flight, so a screen that depends on "does this profile have any
     // data yet" (the Goals onboarding step) doesn't flash up on a device that simply hasn't

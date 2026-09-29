@@ -9,10 +9,13 @@
 // All the randomness comes from one seeded generator (see coachSeed), so the orb holds its
 // mood across re-renders and visits within a few hours, and shifts when the day moves on or
 // something new is logged — without it being obvious which of those did it.
-import { isoOf } from './format.js'
-import { effectiveRoutineId, modeOf } from './history.js'
-import { sessionsFor, stallCount } from './progression.js'
-import { t } from './i18n.js'
+import { isoOf } from '../format.js'
+import { effectiveRoutineId, modeOf } from '../history.js'
+import { sessionsFor, stallCount } from '../progression.js'
+import { t } from '../i18n.js'
+import { stageOf, callbackLine } from './memory.js'
+import { pickLine } from './lines.js'
+import { progressSeries } from '../progress.js'
 
 const DAY = 864e5
 const dayNum = iso => Math.round(new Date(iso + 'T12:00:00').getTime() / DAY)
@@ -70,6 +73,9 @@ export function coachSignals(state, now = new Date(), nameOf = id => id) {
     freshPR: fresh ? nameOf(fresh.prs[fresh.prs.length - 1]) : null,
     stalled,
     today: todayRoutine ? todayRoutine.name : null,
+    hasPlan: Object.values(S.week).some(Boolean),
+    // a session started and left open — Home has something to say about that
+    active: S.active ? S.active.name : null,
     hour: now.getHours()
   }
 }
@@ -112,19 +118,33 @@ const BANDS = {
   mid: { idle: 4, curious: 2, suspicious: 1, playful: 1 },
   low: { angry: 3, suspicious: 2, disappointed: 2, bored: 1 }
 }
-export const BAND_OF = { drowsy: 'late' }
+export const BAND_OF = { drowsy: 'late', shy: 'mid', cheeky: 'high' }
 Object.entries(BANDS).forEach(([b, tb]) => Object.keys(tb).forEach(m => { BAND_OF[m] = BAND_OF[m] || b }))
 
-/** One of orb-rig MOODS. */
-export function coachMood(score, s, rng) {
+// How the character options bend a band's weights (memory.js has the bond stages):
+// a stranger is shy now and then, a ride-or-die bond gets faces nobody else sees, gentle
+// honesty never gets angry and brutal gets there faster.
+function tableFor(band, score, { stage = 0, honesty = 'normal' } = {}) {
+  let tb = { ...BANDS[band] }
+  if (band === 'low' && score < -0.6) tb.angry = 6
+  if (band === 'mid' && stage === 0) tb.shy = 2
+  if (band === 'high' && stage >= 3) tb.cheeky = 2
+  if (honesty === 'gentle' && tb.angry) { tb.disappointed = (tb.disappointed || 0) + tb.angry; delete tb.angry }
+  if (honesty === 'brutal' && band !== 'high') tb.angry = (tb.angry || 0) + (band === 'low' ? 4 : 1)
+  return tb
+}
+
+/** One of orb-rig MOODS. `opts` = { stage, honesty } from memory.js — both optional. */
+export function coachMood(score, s, rng, opts) {
   if (s.freshPR) return pickW(rng, { celebrate: 3, proud: 2, excited: 2 })
+  if (s.active) return 'suspicious'
   if ((s.hour >= 23 || s.hour < 5) && rng() < 0.35) return 'drowsy'
   if (!s.total) return pickW(rng, { curious: 3, idle: 2, playful: 1 })
   const nudge = (rng() - 0.5) * 0.3
   let band = score + nudge > 0.35 ? 'high' : score + nudge < -0.25 ? 'low' : 'mid'
   // now and then it's in a mood of its own: grumpy on a good week, soft on a bad one
   if (rng() < 0.08) band = band === 'mid' ? (rng() < 0.5 ? 'high' : 'low') : 'mid'
-  return pickW(rng, band === 'low' && score < -0.6 ? { ...BANDS.low, angry: 6 } : BANDS[band])
+  return pickW(rng, tableFor(band, score, opts))
 }
 
 // Lines are [template, ...args] until the end, so a template is only ever filled by t().
@@ -147,6 +167,7 @@ const LINES = {
   mid: s => [
     ...(s.today && !s.trainedToday ? [['{0} today. You know what to do.', s.today], ['{0} is waiting.', s.today]] : []),
     ...(s.trainedToday ? [['Done for today. Eat something with protein in it.'], ["Rest counts too. Don't skip it."]] : []),
+    ...(s.hasPlan && !s.today && !s.trainedToday ? [['Rest day. Actually rest.'], ["Rest day. I'll allow it."]] : []),
     ...(s.stalled.length ? [['{0} has been stubborn lately.', s.stalled[0]]] : [])
   ],
   midAny: () => [["I'm watching. Casually."], ['Still here.'], ['Good day to lift something heavy.']],
@@ -161,16 +182,26 @@ const LINES = {
 const say = ([tpl, ...args]) => { const v = t(tpl, ...args); return v.charAt(0).toUpperCase() + v.slice(1) }
 const one = (rng, arr) => arr[Math.floor(rng() * arr.length)]
 
+// the stock low lines, by honesty setting: gentle never scolds, brutal has two extra
+const LOW_ANY = {
+  gentle: [['No rush. But today would be good.'], ['Even a short session counts.'], ['Still here when you are.']],
+  brutal: [['Get up. Now.'], ['Your excuses are getting stronger than you.']]
+}
+
 /** What it says in this mood, or null — silence is part of it. */
-export function coachLine(mood, s, rng) {
+export function coachLine(mood, s, rng, { honesty = 'normal' } = {}) {
   if (s.freshPR) return say(one(rng, LINES.pr(s)))
+  if (s.active) return say(one(rng, [["You're still in the middle of {0}.", s.active], ["{0} isn't finished. I'm waiting.", s.active], ['Go back. {0} is still open.', s.active]]))
   if (mood === 'drowsy') return rng() < 0.6 ? say(one(rng, LINES.late())) : null
   if (!s.total) return say(one(rng, LINES.new()))
   const band = BAND_OF[mood] || 'mid'
   if (rng() < (band === 'mid' ? 0.2 : 0.08)) return null
   // the specific lines win most of the time; the stock ones keep it from sounding like a report
   const specific = LINES[band](s)
-  return say(one(rng, specific.length && rng() < 0.75 ? specific : LINES[band + 'Any']()))
+  let stock = LINES[band + 'Any']()
+  if (band === 'low' && honesty === 'gentle') stock = LOW_ANY.gentle
+  if (band === 'low' && honesty === 'brutal') stock = [...stock, ...LOW_ANY.brutal]
+  return say(one(rng, specific.length && rng() < 0.75 ? specific : stock))
 }
 
 /** A burst of taps: `n` taps in the last few seconds. null = just a squish. */
@@ -180,11 +211,55 @@ export function pokeReaction(n, rng) {
   return null
 }
 
-/** Everything Home needs in one call. */
-export function coach(S, now = new Date(), nameOf) {
+/**
+ * Everything Home needs in one call. `peek` (memory.js peekOf) is optional: with it, the bond
+ * stage and honesty setting bend the mood, yesterday's mood (`carry`) leaks into today's
+ * score, and now and then a memory replaces the line.
+ */
+export function coach(S, now = new Date(), nameOf, peek) {
   const signals = coachSignals(S, now, nameOf)
-  const score = coachScore(signals)
+  const raw = coachScore(signals)
+  const score = peek && signals.total ? raw * 0.75 + (peek.carry || 0) * 0.25 : raw
+  const opts = peek ? { stage: stageOf(peek.bond), honesty: peek.honesty } : {}
   const rng = seeded(coachSeed(S, now))
-  const mood = coachMood(score, signals, rng)
-  return { signals, score, mood, line: coachLine(mood, signals, rng) }
+  const mood = coachMood(score, signals, rng, opts)
+  let line = coachLine(mood, signals, rng, opts)
+  // a PR or an open session is news; otherwise a quarter of the time it remembers something
+  if (peek && !signals.freshPR && !signals.active && rng() < 0.25) {
+    const cb = callbackLine(peek, S, now, rng, opts)
+    if (cb) line = cb.text
+  }
+  return { signals, score, raw, mood, line }
+}
+
+/**
+ * One line for the Stats screen: the lift that climbed most over the last six weeks, or one
+ * whose top weight hasn't moved in five weeks or more despite being trained. Weight only —
+ * the numbers it quotes are the top set on the bar, the same as the progress screen's.
+ */
+export function statsLine(S, now = new Date(), nameOf = id => id, rng = Math.random, opts = {}) {
+  const DAY = 864e5, t0 = now.getTime()
+  const ids = [...new Set((S.workouts || []).filter(w => t0 - new Date(w.d + 'T12:00:00').getTime() < 42 * DAY).flatMap(w => w.entries.map(e => e.id)))]
+  const up = [], stuck = []
+  for (const id of ids) {
+    const top = progressSeries(S, id).top
+    const win = top.filter(p => t0 - p.t < 42 * DAY)
+    if (win.length >= 3 && win[win.length - 1].y > win[0].y) up.push({ id, gain: win[win.length - 1].y - win[0].y })
+    // weeks since the heaviest top set was first reached, trained at least four times since
+    const best = Math.max(0, ...top.map(p => p.y))
+    const firstBest = top.find(p => p.y === best)
+    const since = firstBest ? top.filter(p => p.t > firstBest.t).length : 0
+    const weeks = firstBest ? Math.floor((t0 - firstBest.t) / (7 * DAY)) : 0
+    if (best > 0 && weeks >= 5 && since >= 4) stuck.push({ id, weeks })
+  }
+  up.sort((a, b) => b.gain - a.gain); stuck.sort((a, b) => b.weeks - a.weeks)
+  const u = up[0] && (Math.round(up[0].gain * 10) / 10) + ' ' + (S.unit || 'kg')
+  // { key, text, mood } — the face goes with the news
+  const as = (l, mood) => (l ? { ...l, mood } : null)
+  const pickUp = () => as(pickLine('statsUp', [nameOf(up[0].id), u], rng, opts), 'proud')
+  const pickStuck = () => as(pickLine('statsStuck', [nameOf(stuck[0].id), stuck[0].weeks], rng, opts), 'suspicious')
+  if (up.length && stuck.length) return (rng() < 0.5 ? pickUp() : pickStuck())
+  if (up.length) return pickUp()
+  if (stuck.length) return pickStuck()
+  return (S.workouts || []).length ? as(pickLine('statsNone', [], rng, opts), 'curious') : null
 }
