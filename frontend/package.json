@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "preview:page": "vite build --config ../tools/preview/vite.config.mjs && node ../tools/preview/inline.mjs"
   },
   "license": "AGPL-3.0-or-later",
   "dependencies": {

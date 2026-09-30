@@ -44,6 +44,16 @@ docker compose up -d --build
 that's normally the `media` compose service downloading the ~140MB exercise dataset. Exercise
 list/text still works without it; only images/GIFs are missing.
 
+## Preview on the phone
+
+The user tries the app on their phone through one private artifact, which runs the real app in
+guest mode with example data: **https://claude.ai/artifact/AdSeA3KF27jCJCVkAUnD9Z** (pinned in
+their Claude sidebar). **Keep it current: after any change under `frontend/src`, rebuild and
+republish it to that same URL** — `cd frontend && npm run preview:page`, then publish
+`tools/preview/out/peek-preview.html` with the Artifact tool's `url` set to that link.
+`tools/preview/README.md` has the details (example situations, the Preview menu, why the
+exercise GIFs are hidden there).
+
 ## Architecture
 
 **One build target, self-hosted only.** Upstream also had a `VITE_DEMO=1` GitHub Pages demo
