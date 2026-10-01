@@ -12,6 +12,6 @@ export {
   dayOverrideSheet, dayAssignSheet
 } from './sheets/plan.jsx'
 export {
-  WorkoutRow, startFlow, beginWorkout, topWeightSheet, workoutCompleteSheet,
+  WorkoutRow, startFlow, beginWorkout, workoutCompleteSheet,
   finishWorkout, workoutDetailSheet, calendarSheet, importFromApp
 } from './sheets/workout.jsx'

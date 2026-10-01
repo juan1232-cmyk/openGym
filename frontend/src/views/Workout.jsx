@@ -9,7 +9,7 @@ import { beep, vibrate } from '../lib/sound.js'
 import { t } from '../lib/i18n.js'
 import { api } from '../lib/api.js'
 import Media from '../components/Media.jsx'
-import { startFlow, exercisePicker, exConfigSheet, exerciseDetailSheet, topWeightSheet, finishWorkout, workoutCompleteSheet, confirmSheet } from '../sheets.jsx'
+import { startFlow, exercisePicker, exConfigSheet, exerciseDetailSheet, finishWorkout, workoutCompleteSheet, confirmSheet } from '../sheets.jsx'
 import Icon from '../components/Icon.jsx'
 import Orb from '../components/Orb.jsx'
 import { Button, Check, NumberField } from '../components/ui.jsx'
@@ -195,7 +195,7 @@ function ActiveWorkout() {
     const m = modeAt(idx)
     const cardioEntry = m === 'cardio'
     const isLastUnit = unitIdx >= units.length - 1
-    let askTop = false, exJustDone = false, workoutDone = false, unitJustDone = false
+    let exJustDone = false, workoutDone = false, unitJustDone = false
     mutEntry(idx, e => {
       e.sets[i].done = !e.sets[i].done
       if (e.sets[i].done) {
@@ -207,18 +207,15 @@ function ActiveWorkout() {
         else if (unitDone) stopRest()
         unitJustDone = unitDone
         if (unitDone && isLastUnit) workoutDone = true      // last exercise's last set → done
-        // Only loaded reps training has a "working weight" worth confirming — a bodyweight
-        // plank has nothing to put in that slider, and neither does a set of push-ups
-        // (issue #32: the fewest taps that still record what happened).
-        const loaded = m === 'reps' && !(isBw({ ...(e.target || {}), id: e.id }) && !e.sets.some(x => x.w > 0))
-        if (e.sets.every(x => x.done)) { exJustDone = true; if (loaded && !e.asked) { e.asked = true; askTop = true } }
+        // No "confirm the weight you worked with" sheet here any more: finishing the workout
+        // already keeps the heaviest done set as next time's starting weight, so the sheet
+        // only asked for a number the app had.
+        if (e.sets.every(x => x.done)) exJustDone = true
       }
     })
-    // reps: topWeight first (it chains into the finish/continue prompt on the last unit, and
-    // opens the next card itself). cardio/timed or already-confirmed: go straight on — the
-    // next unfinished card opens, as it does in the design.
-    if (askTop) topWeightSheet(idx)
-    else if (workoutDone) workoutCompleteSheet()
+    // the last set of the session asks finish-or-continue; otherwise the next unfinished card
+    // opens, as it does in the design
+    if (workoutDone) workoutCompleteSheet()
     else {
       if (unitJustDone) update(s => { const n = nextUp(s.active); if (n) s.active.cur = n.entry })
       if (exJustDone && cardioEntry) useUI.getState().toast(t('Cardio logged'))
