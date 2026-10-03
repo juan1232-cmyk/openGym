@@ -73,10 +73,11 @@ export function best1RM(S, exId, formula = DEFAULT_FORMULA) {
 }
 
 // Did this workout beat every estimate that came before it? Used for the finish summary,
-// so it compares against history that does not yet contain `w`.
+// so it compares against history that does not yet contain `w`. A first estimate has
+// nothing to beat and is not a record (same rule as isLoadPR in history.js).
 export function is1RMRecord(S, exId, entry, formula = DEFAULT_FORMULA) {
   const now = bestSetOf(entry, formula)
   if (!now) return null
   const prev = best1RM(S, exId, formula)
-  return !prev || now.est > prev.est ? { ...now, prev: prev ? prev.est : 0 } : null
+  return prev && now.est > prev.est ? { ...now, prev: prev.est } : null
 }

@@ -5,7 +5,7 @@ import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { EXIDX } from '../lib/exercises.js'
 import { fmtDate, fmtNum, fmtVol, fmtDur, durPart, todayISO, uid, MONTHS_LONG } from '../lib/format.js'
-import { bestWeightFor, buildSets, effectiveRoutineId, workoutVolume, setsDone, setsDoneActive, setLabel, effortOf, previousSession, topSet, nextSetLabel } from '../lib/history.js'
+import { isLoadPR, buildSets, effectiveRoutineId, workoutVolume, setsDone, setsDoneActive, setLabel, effortOf, previousSession, topSet, nextSetLabel } from '../lib/history.js'
 import { beep } from '../lib/sound.js'
 import { t } from '../lib/i18n.js'
 import { nav } from '../lib/nav.js'
@@ -298,8 +298,7 @@ function doFinishWorkout() {
   const prs = []
   const e1prs = []
   A.entries.forEach(e => {
-    const mx = Math.max(0, ...e.sets.filter(s => s.done).map(s => s.w))
-    if (mx > 0 && mx > bestWeightFor(st, e.id)) prs.push(e.id)
+    if (isLoadPR(st, e.id, e)) prs.push(e.id)
     // A heavier estimate without a heavier top set is its own kind of progress —
     // same weight for more reps. Reported separately so it can't be read as a load PR.
     const rec = is1RMRecord(st, e.id, e)

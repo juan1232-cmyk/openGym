@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { modeOf, isTimed, fmtSec, setLabel, defaultConfig, buildSets, exLine, workoutVolume, effortOf, stepEffort, capEffort, isBw, isPerSide, sideReps, repStep, nextUp, nextSetLabel, previousSession, topSet } from './history.js'
+import { modeOf, isTimed, fmtSec, setLabel, defaultConfig, buildSets, exLine, workoutVolume, effortOf, stepEffort, capEffort, isBw, isPerSide, sideReps, repStep, nextUp, nextSetLabel, previousSession, topSet, isLoadPR } from './history.js'
 import { EXDB } from './exercises.js'
 
 // Real ids out of the shipped catalogue, so the body-part fallback is exercised for real.
@@ -482,5 +482,31 @@ describe('topSet', () => {
   it('is null when nothing was checked', () => {
     expect(topSet({ sets: [{ w: 60, r: 8, done: false }] })).toBeNull()
     expect(topSet(null)).toBeNull()
+  })
+})
+
+describe('isLoadPR', () => {
+  const W = (d, sets) => ({ d, entries: [{ id: 'bench', sets }] })
+  const S = { workouts: [W('2026-09-01', [{ w: 60, r: 8, done: true }, { w: 62.5, r: 6, done: true }])] }
+  const entry = (...ws) => ({ id: 'bench', sets: ws.map(w => ({ w, r: 5, done: true })) })
+
+  it('is never a record the first time an exercise is logged', () => {
+    expect(isLoadPR({ workouts: [] }, 'bench', entry(100))).toBe(false)
+    expect(isLoadPR(S, 'squat', { id: 'squat', sets: [{ w: 100, r: 5, done: true }] })).toBe(false)
+  })
+
+  it('is a record when the heaviest done set beats every earlier one', () => {
+    expect(isLoadPR(S, 'bench', entry(60, 65))).toBe(true)
+  })
+
+  it('is not a record for an equal or lighter top set', () => {
+    expect(isLoadPR(S, 'bench', entry(62.5))).toBe(false)
+    expect(isLoadPR(S, 'bench', entry(55))).toBe(false)
+  })
+
+  it('ignores unchecked sets, in history and in the session', () => {
+    const unfinished = { workouts: [W('2026-09-01', [{ w: 60, r: 8, done: false }])] }
+    expect(isLoadPR(unfinished, 'bench', entry(70))).toBe(false)
+    expect(isLoadPR(S, 'bench', { id: 'bench', sets: [{ w: 90, r: 5, done: false }] })).toBe(false)
   })
 })

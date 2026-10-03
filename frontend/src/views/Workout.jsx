@@ -8,7 +8,7 @@ import { fmtNum, todayISO, exCount, DAYN } from '../lib/format.js'
 import { beep, vibrate } from '../lib/sound.js'
 import { t } from '../lib/i18n.js'
 import { api } from '../lib/api.js'
-import Media from '../components/Media.jsx'
+import { Thumb } from '../components/Media.jsx'
 import { startFlow, exercisePicker, exConfigSheet, exerciseDetailSheet, finishWorkout, workoutCompleteSheet, confirmSheet } from '../sheets.jsx'
 import Icon from '../components/Icon.jsx'
 import Orb from '../components/Orb.jsx'
@@ -119,8 +119,10 @@ function ExerciseBody({ entryIdx, inSuperset, onToggle, onField, onAddSet, onRem
   const plan = entry.plan
   return <div className="pk-ex-part">
     {inSuperset && <div className="pk-ex-sub">{ex.n}</div>}
-    <Media ex={ex} key={entry.id} compact minimizable />
     <div className="pk-ex-meta">
+      {/* A still, not the animation: mid-workout you know the lift, and the GIF pushed the
+          sets you actually tap below the rest bar. The movement is one tap away in Details. */}
+      <button className="pk-thumb" onClick={() => exerciseDetailSheet(ex)} aria-label={t('Details')}><Thumb ex={ex} /></button>
       {mode === 'cardio' && <span className="tag acc"><Icon name="figureRun" />{t('Cardio')}</span>}
       {/* You log the total; this is the split, so the set in front of you is unambiguous
           without the rep count having to mean two different things (issue #31). */}
