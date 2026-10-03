@@ -291,8 +291,6 @@ export default {
   'Notifications on': 'Benachrichtigungen an',
   'Could not change notification settings': 'Benachrichtigungs-Einstellungen konnten nicht geändert werden',
   // --- media ---
-  'tap to pause': 'Tippen zum Pausieren',
-  'tap to play': 'Tippen zum Abspielen',
   // --- data terms: body parts ---
   'back': 'Rücken', 'cardio': 'Cardio', 'chest': 'Brust', 'lower arms': 'Unterarme',
   'lower legs': 'Unterschenkel', 'neck': 'Nacken', 'shoulders': 'Schultern',
@@ -356,8 +354,6 @@ export default {
   'Delete exercise': 'Übung löschen',
   'Edit or delete this exercise': 'Übung bearbeiten oder löschen',
   'Remove from routine': 'Aus Routine entfernen',
-  'Minimize': 'Verkleinern',
-  'Expand': 'Vergrössern',
   'Invite code': 'Einladungscode',
   'This app is invite-only — enter the code you were given.': 'Diese App ist nur mit Einladung — gib den Code ein, den du erhalten hast.',
   'An invite code is required': 'Ein Einladungscode ist erforderlich',
