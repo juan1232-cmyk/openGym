@@ -158,6 +158,15 @@ export function bestWeightFor(S, exId) {
   }))
   return best
 }
+// Did this session lift heavier than any earlier one? A first session has nothing to beat,
+// so it is never a record — otherwise every exercise logged for the first time showed up as
+// a "New best" on the finish screen, and the coach celebrated PRs that weren't.
+// Compares against history that does not yet contain `entry`'s workout.
+export function isLoadPR(S, exId, entry) {
+  if (!lastEntryFor(S, exId)) return false
+  const mx = Math.max(0, ...entry.sets.filter(s => s.done).map(s => s.w || 0))
+  return mx > 0 && mx > bestWeightFor(S, exId)
+}
 export function effectiveRoutineId(S, iso) {
   const ov = S.dayPlan[iso]
   if (ov === 'rest') return null

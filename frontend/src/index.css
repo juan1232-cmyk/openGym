@@ -1184,7 +1184,7 @@ button.pk-tile:active{background:var(--surface-2)}
 .pk-ex-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:0 6px 6px}
 .pk-thumb{display:flex;flex:none;padding:0;border:none;background:none;border-radius:9px;margin-right:4px}
 /* the dataset stills are on white, like the card — the outline gives the square an edge */
-.pk-thumb .thumb{width:44px;height:44px;outline:1px solid var(--line);outline-offset:-1px}
+.pk-thumb .thumb{width:56px;height:56px;outline:1px solid var(--line);outline-offset:-1px}
 .pk-thumb:active{opacity:.7}
 .pk-info{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:13px;color:var(--label-2);padding:6px 0 6px 8px}
 .pk-info .icn{font-size:15px}
