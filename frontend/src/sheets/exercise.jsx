@@ -2,8 +2,8 @@
 // sets/reps/progression config, the exercise picker, and custom (user-created) exercises.
 import { useState } from 'react'
 import { useStore } from '../store/useStore.js'
-import { EXIDX, BODYPARTS, isCardio, isBodyweightEq, allExercises, equipmentOf, exOr } from '../lib/exercises.js'
-import { searchExercises, usageOf, recentIds, primaryOf, secondaryOf, muscleChips, matchesMuscle, suggestionFor, similarTo } from '../lib/pick.js'
+import { EXDB, EXIDX, BODYPARTS, isCardio, isBodyweightEq, allExercises, equipmentOf, exOr } from '../lib/exercises.js'
+import { searchExercises, usageOf, recentIds, primaryOf, secondaryOf, muscleChips, matchesMuscle, suggestionFor, similarTo, gymFilter } from '../lib/pick.js'
 import { MUSCLE_NAME, musclesOf } from '../lib/muscles.js'
 import BodyMap from '../components/BodyMap.jsx'
 import Orb from '../components/Orb.jsx'
@@ -14,7 +14,7 @@ import { nav } from '../lib/nav.js'
 import Media, { Thumb } from '../components/Media.jsx'
 import Stepper from '../components/Stepper.jsx'
 import Icon from '../components/Icon.jsx'
-import { Button, Switch, Segmented, SelectRow, Row } from '../components/ui.jsx'
+import { Button, Switch, Segmented, SelectRow, Row, Section } from '../components/ui.jsx'
 import { glyphOf, DEFAULT_GLYPH } from '../lib/glyphs.js'
 import { estimate1RM, best1RM, REP_CAP } from '../lib/onerm.js'
 import { policyFor, defaultIncrement, POLICIES_FOR, POLICY_NAME, POLICY_DESC, MAX_BW_SETS } from '../lib/progression.js'
@@ -228,8 +228,14 @@ function ExercisePicker({ onPick, close, listOf, where }) {
   const [eq, setEq] = useState('')          // '' = any equipment
   const [shown, setShown] = useState(50)
   const reset = () => setShown(50)
+  const [allKit, setAllKit] = useState(false)
   const all = allExercises(st)
-  const base = searchExercises(all.filter(e => matchesMuscle(e, mu)), q, { usage })
+  const found = searchExercises(all.filter(e => matchesMuscle(e, mu)), q, { usage })
+  // The gym profile hides what you can't do there — with a way out, so a search for a
+  // machine your gym lacks still finds it instead of looking like the app doesn't know it.
+  const gymOn = !!st.gymEq && !allKit
+  const base = gymOn ? gymFilter(found, st.gymEq) : found
+  const hidden = found.length - base.length
   const eqOpts = equipmentOf(base)
   // Drop the equipment filter if the search narrowed it away, so you never hit a dead end.
   const eqOn = eqOpts.includes(eq) ? eq : ''
@@ -257,6 +263,11 @@ function ExercisePicker({ onPick, close, listOf, where }) {
       <button className={'chip nocap' + (!eqOn ? ' on' : '')} onClick={() => { setEq(''); reset() }}>{t('Any equipment')}</button>
       {eqOpts.map(x => <button key={x} className={'chip' + (eqOn === x ? ' on' : '')} onClick={() => { setEq(x); reset() }}>{t(x)}</button>)}
     </div>}
+    {st.gymEq && (hidden > 0 || allKit) && <div className="small dim row" style={{ gap: 5, margin: '0 2px 10px' }}>
+      <Icon name="dumbbell" style={{ fontSize: 13, flex: 'none' }} />
+      <span className="grow">{allKit ? t('Showing all equipment.') : t('{0} hidden — your gym doesn’t have the equipment.', hidden)}</span>
+      <button className="accent" style={{ flex: 'none', whiteSpace: 'nowrap' }} onClick={() => { setAllKit(v => !v); reset() }}>{allKit ? t('Only my gym') : t('Show all')}</button>
+    </div>}
     {recent.length > 0 && <>
       <h4 className="sec">{t('Recent')}</h4>
       <div className="list" style={{ marginBottom: 14 }}>
@@ -279,13 +290,46 @@ function ExercisePicker({ onPick, close, listOf, where }) {
 export const exercisePicker = (onPick, opts = {}) =>
   ui().openSheet(close => <ExercisePicker onPick={onPick} close={close} listOf={opts.listOf} where={opts.where} />)
 
+/* ============================ my gym's equipment ============================ */
+// Every kind of kit in the catalogue, most exercises first, so the list reads "barbell,
+// dumbbell, cable…" before the one-off tire and hammer.
+const KIT_ALL = (() => {
+  const c = {}
+  EXDB.forEach(e => { c[e.eq] = (c[e.eq] || 0) + 1 })
+  return Object.keys(c).filter(k => k !== 'body weight').sort((a, b) => c[b] - c[a]).map(k => ({ eq: k, n: c[k] }))
+})()
+export const gymEqLabel = gymEq => (gymEq ? t('{0} of {1}', gymEq.length, KIT_ALL.length) : t('All'))
+
+function GymEquipment() {
+  const gymEq = useStore(s => s.S.gymEq)
+  const on = k => !gymEq || gymEq.includes(k)
+  // Stored as the list you have; ticking everything back stores null, so "all" stays the
+  // plain default rather than a list that quietly misses kit a future dataset adds.
+  const set = list => update(s => { s.gymEq = list.length >= KIT_ALL.length ? null : list })
+  const toggle = (k, v) => set(v ? [...(gymEq || []), k] : KIT_ALL.map(x => x.eq).filter(x => x !== k && on(x)))
+  return <>
+    <h3>{t('My gym’s equipment')}</h3>
+    <div className="muted small" style={{ marginBottom: 12 }}>{t('The exercise picker hides what your gym can’t do. Bodyweight and your own exercises always show.')}</div>
+    <div className="row" style={{ gap: 8, marginBottom: 12 }}>
+      <Button size="sm" variant="tinted" onClick={() => set(KIT_ALL.map(x => x.eq))}>{t('Select all')}</Button>
+      <Button size="sm" onClick={() => update(s => { s.gymEq = [] })}>{t('Bodyweight only')}</Button>
+    </div>
+    <Section>
+      {KIT_ALL.map(({ eq, n }) => <Row key={eq} title={<span className="capitalize">{t(eq)}</span>} subtitle={exCount(n)}>
+        <Switch checked={on(eq)} onChange={v => toggle(eq, v)} />
+      </Row>)}
+    </Section>
+  </>
+}
+export const gymEquipmentSheet = () => ui().openSheet(() => <GymEquipment />)
+
 /* ============================ swap for similar ============================ */
 // Same main muscle, different exercise — for when the rack is taken, or a lift stops
 // agreeing with you. Closest movement first ("barbell bench press" → "dumbbell bench press").
 function SwapPicker({ ex, exclude, onSwap, close }) {
   const st = useStore(s => s.S)
   const [eq, setEq] = useState('')
-  const base = similarTo(ex, allExercises(st), { exclude, usage: usageOf(st) })
+  const base = similarTo(ex, allExercises(st), { exclude, gymEq: st.gymEq, usage: usageOf(st) })
   const eqOpts = equipmentOf(base)
   const eqOn = eqOpts.includes(eq) ? eq : ''
   const f = (eqOn ? base.filter(e => e.eq === eqOn) : base).slice(0, 30)
@@ -315,7 +359,7 @@ export const swapSheet = (ex, exclude, onSwap) => ui().openSheet(close => <SwapP
 // clothes. Peek says so and offers a neglected neighbour instead — never blocks the add.
 function PeekOverlap({ ex, ctx, close }) {
   const st = useStore(s => s.S)
-  const sug = suggestionFor(ctx.list, ex.id, allExercises(st), { usage: usageOf(st) })
+  const sug = suggestionFor(ctx.list, ex.id, allExercises(st), { gymEq: st.gymEq, usage: usageOf(st) })
   if (!sug) return null
   const { overlap, muscle, ex: alt } = sug
   const names = overlap.ids.map(id => '“' + exOr(id).n + '”')

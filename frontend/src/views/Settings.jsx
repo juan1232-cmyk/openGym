@@ -8,7 +8,7 @@ import { api, webauthnOK, passkeyLogin, passkeyRegister, IS_ANDROID } from '../l
 import { pushSupported, enablePush, disablePush, sendTestPush } from '../lib/push.js'
 import { wakeLockSupported } from '../lib/wakelock.js'
 import { t, LANGS, INSTR_LANGS } from '../lib/i18n.js'
-import { loadStarterPlan, confirmSheet, importFromApp } from '../sheets.jsx'
+import { loadStarterPlan, confirmSheet, importFromApp, gymEquipmentSheet, gymEqLabel } from '../sheets.jsx'
 import Icon from '../components/Icon.jsx'
 import { Section, Row, SelectRow, Switch, Segmented, Button, TextField } from '../components/ui.jsx'
 
@@ -96,6 +96,11 @@ export default function Settings() {
           options={[{ value: 'kg', label: 'kg' }, { value: 'lb', label: 'lb' }]}
           value={S.unit} onChange={v => update(s => { s.unit = v })} />
       </Row>
+    </Section>
+
+    {/* ---------- equipment ---------- */}
+    <Section title={t('Equipment')} footer={t('The exercise picker only offers what your gym has.')}>
+      <Row icon="dumbbell" iconTint="var(--acc)" title={t('My gym’s equipment')} value={gymEqLabel(S.gymEq)} accessory="chevron" onClick={gymEquipmentSheet} />
     </Section>
 
     {/* ---------- during a workout ---------- */}
