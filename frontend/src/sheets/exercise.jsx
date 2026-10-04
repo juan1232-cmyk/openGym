@@ -2,10 +2,11 @@
 // sets/reps/progression config, the exercise picker, and custom (user-created) exercises.
 import { useState } from 'react'
 import { useStore } from '../store/useStore.js'
-import { EXIDX, BODYPARTS, isCardio, isBodyweightEq, allExercises, equipmentOf } from '../lib/exercises.js'
-import { searchExercises, usageOf, recentIds, primaryOf, secondaryOf, muscleChips, matchesMuscle } from '../lib/pick.js'
+import { EXIDX, BODYPARTS, isCardio, isBodyweightEq, allExercises, equipmentOf, exOr } from '../lib/exercises.js'
+import { searchExercises, usageOf, recentIds, primaryOf, secondaryOf, muscleChips, matchesMuscle, suggestionFor, similarTo } from '../lib/pick.js'
 import { MUSCLE_NAME, musclesOf } from '../lib/muscles.js'
 import BodyMap from '../components/BodyMap.jsx'
+import Orb from '../components/Orb.jsx'
 import { fmtDate, fmtNum, uid, exCount } from '../lib/format.js'
 import { lastEntryFor, bestWeightFor, setLabel, defaultConfig, cleanupSg, modeOf, isBw, isPerSide, sideReps } from '../lib/history.js'
 import { t, instrFor, getLang, INSTR_LANGS } from '../lib/i18n.js'
@@ -278,6 +279,57 @@ function ExercisePicker({ onPick, close, listOf, where }) {
 export const exercisePicker = (onPick, opts = {}) =>
   ui().openSheet(close => <ExercisePicker onPick={onPick} close={close} listOf={opts.listOf} where={opts.where} />)
 
+/* ============================ swap for similar ============================ */
+// Same main muscle, different exercise — for when the rack is taken, or a lift stops
+// agreeing with you. Closest movement first ("barbell bench press" → "dumbbell bench press").
+function SwapPicker({ ex, exclude, onSwap, close }) {
+  const st = useStore(s => s.S)
+  const [eq, setEq] = useState('')
+  const base = similarTo(ex, allExercises(st), { exclude, usage: usageOf(st) })
+  const eqOpts = equipmentOf(base)
+  const eqOn = eqOpts.includes(eq) ? eq : ''
+  const f = (eqOn ? base.filter(e => e.eq === eqOn) : base).slice(0, 30)
+  const p = primaryOf(ex)
+  return <>
+    <h3 className="capitalize">{t('Swap “{0}”', ex.n)}</h3>
+    <div className="muted small" style={{ marginBottom: 10 }}>
+      {t('Same main muscle ({0}) — sets and reps stay as they are.', p ? t(MUSCLE_NAME[p]) : t('Cardio'))}</div>
+    {eqOpts.length > 1 && <div className="chips" style={{ marginBottom: 10 }}>
+      <button className={'chip nocap' + (!eqOn ? ' on' : '')} onClick={() => setEq('')}>{t('Any equipment')}</button>
+      {eqOpts.map(x => <button key={x} className={'chip' + (eqOn === x ? ' on' : '')} onClick={() => setEq(x)}>{t(x)}</button>)}
+    </div>}
+    <div className="list">
+      {f.map(e => <div key={e.id} className="item" onClick={() => { close(); onSwap(e) }}>
+        <Thumb ex={e} /><div className="grow"><div className="tt capitalize">{e.n}</div><div className="ss">{muscleLine(e)}</div></div>
+        <Icon name="shuffle" className="chev" />
+      </div>)}
+      {f.length === 0 && <div className="empty">{t('No match')}</div>}
+    </div>
+  </>
+}
+// `exclude` = ids already in the routine/workout, so a swap never makes a duplicate.
+export const swapSheet = (ex, exclude, onSwap) => ui().openSheet(close => <SwapPicker ex={ex} exclude={exclude} onSwap={onSwap} close={close} />)
+
+/* ============================ Peek: overlap ============================ */
+// Adding a third exercise for the same muscle is usually the same lift twice in different
+// clothes. Peek says so and offers a neglected neighbour instead — never blocks the add.
+function PeekOverlap({ ex, ctx, close }) {
+  const st = useStore(s => s.S)
+  const sug = suggestionFor(ctx.list, ex.id, allExercises(st), { usage: usageOf(st) })
+  if (!sug) return null
+  const { overlap, muscle, ex: alt } = sug
+  const names = overlap.ids.map(id => '“' + exOr(id).n + '”')
+  return <div className="pk-coach pk-overlap">
+    {/* a light orb on the dark sheet, the usual dark one on a light sheet */}
+    <Orb size={44} inverted={document.documentElement.dataset.theme !== 'light'} poke="surprised-left" />
+    <div className="grow">
+      <p>{t('{0} already hit {1}: {2}.', t('{0} exercises', overlap.ids.length), t(MUSCLE_NAME[overlap.muscle]).toLowerCase(), names.join(', '))}
+        {alt && ' ' + t('{0} barely get any work — try “{1}”?', t(MUSCLE_NAME[muscle]), alt.n)}</p>
+      {alt && <Button size="sm" variant="primary" icon="shuffle" className="capitalize" onClick={() => { close(); ctx.retarget(alt) }}>{t('Use “{0}” instead', alt.n)}</Button>}
+    </div>
+  </div>
+}
+
 /* ============================ exercise config ============================ */
 // Progression settings for one exercise (issue #17). Shown inside the config sheet because
 // "how does this lift go up" belongs next to sets and reps, not in a separate screen. Left
@@ -305,7 +357,9 @@ function ProgressionFields({ ex, mode, c, setC, routine, unit }) {
   </>
 }
 
-function ExConfig({ ex, existing, onSave, onDelete, close, routine }) {
+// `ctx` comes from the caller: { list } is what is being added to (for Peek's overlap
+// check), { retarget } re-runs the add with another exercise, { swap } replaces this one.
+function ExConfig({ ex, existing, onSave, onDelete, close, routine, ctx }) {
   const st = useStore(s => s.S)
   const cardio = isCardio(ex.id)
   const [c, setC] = useState(existing || defaultConfig(ex.id))
@@ -354,6 +408,7 @@ function ExConfig({ ex, existing, onSave, onDelete, close, routine }) {
       <span className="tag"><Icon name="dumbbell" />{t(ex.eq)}</span>
     </div>
     <MusclesTrained ex={ex} />
+    {!existing && ctx && ctx.retarget && <PeekOverlap ex={ex} ctx={ctx} close={close} />}
     {ex.desc && <div className="exnote">{ex.desc}</div>}
     {!cardio && <div style={{ marginBottom: 14 }}>
       <Segmented className="seg-range" value={mode} onChange={setMode}
@@ -416,8 +471,9 @@ function ExConfig({ ex, existing, onSave, onDelete, close, routine }) {
     </div>}
     <ProgressionFields ex={ex} mode={mode} c={c} setC={setC} routine={routine} unit={st.unit} />
     <Button variant="primary" onClick={save}>{existing ? t('Save') : t('Add to routine')}</Button>
+    {existing && ctx && ctx.swap && <><div style={{ height: 8 }} /><Button icon="shuffle" onClick={() => { close(); swapSheet(ex, (ctx.list || []).map(e => e.id), ctx.swap) }}>{t('Swap for similar')}</Button></>}
     {ex.custom && <><div style={{ height: 8 }} /><Button icon="pencil" onClick={() => { close(); customExSheet(ex) }}>{t('Edit or delete this exercise')}</Button></>}
     {onDelete && <><div style={{ height: 8 }} /><Button variant="danger" onClick={() => { close(); onDelete() }}>{t('Remove from routine')}</Button></>}
   </>
 }
-export const exConfigSheet = (ex, existing, onSave, onDelete, routine) => ui().openSheet(close => <ExConfig ex={ex} existing={existing} onSave={onSave} onDelete={onDelete} routine={routine} close={close} />)
+export const exConfigSheet = (ex, existing, onSave, onDelete, routine, ctx) => ui().openSheet(close => <ExConfig ex={ex} existing={existing} onSave={onSave} onDelete={onDelete} routine={routine} ctx={ctx} close={close} />)

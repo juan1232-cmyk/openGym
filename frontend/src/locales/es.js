@@ -549,4 +549,12 @@ export default {
   'All exercises': 'Todos los ejercicios',
   'Create “{0}”': 'Crear «{0}»',
   'Clear': 'Borrar',
+  'Swap': 'Cambiar',
+  'Swap for similar': 'Cambiar por uno parecido',
+  'Swap “{0}”': 'Cambiar «{0}»',
+  'Swapped to “{0}”': 'Cambiado a «{0}»',
+  'Same main muscle ({0}) — sets and reps stay as they are.': 'Mismo músculo principal ({0}): las series y repeticiones se mantienen.',
+  '{0} already hit {1}: {2}.': '{0} ya trabajan {1}: {2}.',
+  '{0} barely get any work — try “{1}”?': '{0} apenas trabajan, ¿probamos «{1}»?',
+  'Use “{0}” instead': 'Usar «{0}»',
 }

@@ -9,7 +9,7 @@ import { beep, vibrate } from '../lib/sound.js'
 import { t } from '../lib/i18n.js'
 import { api } from '../lib/api.js'
 import { Thumb } from '../components/Media.jsx'
-import { startFlow, exercisePicker, exConfigSheet, exerciseDetailSheet, finishWorkout, workoutCompleteSheet, confirmSheet } from '../sheets.jsx'
+import { startFlow, exercisePicker, exConfigSheet, swapSheet, exerciseDetailSheet, finishWorkout, workoutCompleteSheet, confirmSheet } from '../sheets.jsx'
 import Icon from '../components/Icon.jsx'
 import Orb from '../components/Orb.jsx'
 import { Button, Check, NumberField } from '../components/ui.jsx'
@@ -125,6 +125,12 @@ function ExerciseBody({ entryIdx, inSuperset, onToggle, onField, onAddSet, onRem
   // What the progression policy decided for this session, and why (issue #17). Computed when
   // the session was built so the reason matches the numbers already in the rows.
   const plan = entry.plan
+  const update = useStore(s => s.update)
+  const swap = () => swapSheet(ex, S.active.entries.map(e => e.id), alt => update(s => {
+    const e = s.active.entries[entryIdx]
+    const { weight, bodyweight, ...keep } = e.target || {}
+    s.active.entries[entryIdx] = { ...entryFor(s, alt.id, { ...keep, id: alt.id, weight: 0 }), sg: e.sg }
+  }))
   return <div className="pk-ex-part">
     {inSuperset && <div className="pk-ex-sub">{ex.n}</div>}
     <div className="pk-ex-meta">
@@ -135,6 +141,9 @@ function ExerciseBody({ entryIdx, inSuperset, onToggle, onField, onAddSet, onRem
       {/* You log the total; this is the split, so the set in front of you is unambiguous
           without the rep count having to mean two different things (issue #31). */}
       {mode === 'reps' && isPerSide(cfg) && <span className="tag acc nocap"><Icon name="shuffle" />{t('{0} per side', fmtNum(sideReps(entry.sets.find(s => !s.done)?.r ?? entry.sets[0]?.r)))}</span>}
+      {/* Only before the first set is ticked: once something is logged under this exercise,
+          changing what it was would rewrite history rather than the plan. */}
+      {!entry.sets.some(s => s.done) && <button className="pk-info" onClick={swap}><Icon name="shuffle" />{t('Swap')}</button>}
       <button className="pk-info" onClick={() => exerciseDetailSheet(ex)}><Icon name="info" />{t('Details')}</button>
     </div>
     {plan && plan.why && plan.kind !== 'off' && <div className={'progline' + (plan.kind === 'deload' ? ' warn' : '')}>

@@ -1243,6 +1243,7 @@ button.pk-tile:active{background:var(--surface-2)}
 .pk-thumb:active{opacity:.7}
 .pk-info{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:13px;color:var(--label-2);padding:6px 0 6px 8px}
 .pk-info .icn{font-size:15px}
+.pk-info + .pk-info{margin-left:0}   /* Swap + Details sit together on the right */
 .pk-ex-b .progline{padding:0 6px 8px}
 .pk-ex-b .progline:not(.warn){color:var(--acc-ink)}
 .pk-sets{display:flex;flex-direction:column;gap:4px}
@@ -1369,4 +1370,7 @@ button.pk-tile:active{background:var(--surface-2)}
 .pk-coach{display:flex;align-items:center;gap:14px;margin-bottom:10px;padding:14px 16px;border-radius:var(--r-card);background:var(--ink);color:var(--on-ink)}
 .pk-coach .orb{animation:none}
 .pk-coach p{font-size:14px;line-height:1.4;text-wrap:pretty}
+/* in a sheet, outside the Peek skin's --ink, so it carries its own colours */
+.pk-overlap{align-items:flex-start;margin:0 0 14px;background:var(--surface-2);color:var(--label)}
+.pk-overlap .btn{margin-top:10px;width:auto}
 .pk-prog > .btn{margin-top:2px}
