@@ -14,6 +14,8 @@
       rail, so a list reads as one object instead of a stack of outlined boxes.
    4. MOTION THAT ACKNOWLEDGES, NOT ANIMATES. Presses scale ~2%, transitions run
       140–220ms on an ease-out curve. Nothing bounces or slides for decoration.
+      The one deliberate exception is moving between exercises mid-workout: a
+      change of place, not a press, so it gets a slower fold that reads as a step.
    ========================================================================== */
 
 /* ---------------------------------------------------------------- tokens -- */
@@ -1176,9 +1178,33 @@ button.pk-tile:active{background:var(--surface-2)}
 .pk-ex-h{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;padding:18px 16px;text-align:left}
 .pk-ex-h .nm{font-size:16px;font-weight:600;line-height:1.2;letter-spacing:-.015em;color:var(--label);text-transform:capitalize;min-width:0}
 .pk-ex-h em{display:flex;align-items:center;gap:4px;font-style:normal;font-size:11px;font-weight:500;color:var(--label-2);text-transform:none;margin-bottom:4px}
-.pk-ex-h .ct{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--label-2);background:var(--bg);padding:6px 9px;border-radius:99px;flex:none}
+.pk-ex-h .ct{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:12px;font-weight:500;color:var(--label-2);background:var(--bg);padding:6px 9px;border-radius:99px;flex:none}
+.pk-ex-h .ct .icn{font-size:12px;--icon-stroke:3}
 .pk-ex.finished .ct{background:var(--acc-soft);color:var(--acc-ink)}
 .pk-ex-b{padding:0 10px 12px}
+
+/* Moving between exercises. The finished card holds a beat (CHEER_MS in Workout.jsx) — a
+   green wash sweeps across it, a ring pulses out, the count pops — then its body folds shut
+   while the next card's opens and its sets rise in one after another. Grid rows 0fr↔1fr
+   animate to the content's real height, which max-height hacks can't do without guessing. */
+.pk-ex{position:relative;isolation:isolate}
+.pk-fold{display:grid;grid-template-rows:0fr;transition:grid-template-rows 520ms cubic-bezier(.65,0,.25,1)}
+.pk-fold.open{grid-template-rows:1fr}
+.pk-fold-in{min-height:0;overflow:hidden}
+.pk-fold .pk-ex-b{opacity:0;transform:translateY(-12px) scale(.98);transform-origin:50% 0;
+  transition:opacity 400ms ease-in,transform 480ms cubic-bezier(.65,0,.25,1)}
+.pk-fold.open .pk-ex-b{opacity:1;transform:none;animation:pk-fold-open 480ms var(--spring) 60ms backwards}
+@keyframes pk-fold-open{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.pk-fold.open .pk-set:not(.hd){animation:pk-up 460ms var(--spring) backwards;animation-delay:calc(140ms + var(--i,0) * 55ms)}
+
+.pk-ex::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--acc-soft);
+  transform-origin:0 50%;opacity:0;pointer-events:none}
+.pk-ex.cheer::before{animation:pk-sweep 650ms var(--spring) both}
+@keyframes pk-sweep{0%{opacity:1;transform:scaleX(0)}55%{opacity:1;transform:scaleX(1)}100%{opacity:0;transform:scaleX(1)}}
+.pk-ex.cheer{animation:pk-ring 650ms ease-out}
+@keyframes pk-ring{0%{box-shadow:0 0 0 0 var(--acc-line)}30%{box-shadow:0 0 0 3px var(--acc-line)}100%{box-shadow:0 0 0 14px transparent}}
+.pk-ex.cheer .ct{animation:pk-pop 520ms cubic-bezier(.34,1.56,.64,1)}
+@keyframes pk-pop{0%{transform:scale(1)}40%{transform:scale(1.25)}100%{transform:scale(1)}}
 .pk-ex-part+.pk-ex-part{margin-top:18px;padding-top:14px;border-top:1px solid var(--sep)}
 .pk-ex-sub{font-size:15px;font-weight:600;text-transform:capitalize;padding:0 6px 10px}
 .pk-ex-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:0 6px 6px}
@@ -1223,7 +1249,8 @@ button.pk-tile:active{background:var(--surface-2)}
   background:var(--ink);color:var(--on-ink);border-radius:22px;padding:16px 16px 16px 20px;
   display:flex;align-items:center;gap:14px;animation:slideup var(--med) var(--ease);
 }
-.pk-dock .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.pk-dock .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;animation:pk-dock-turn 380ms var(--spring,cubic-bezier(.22,1,.36,1)) both}
+@keyframes pk-dock-turn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .pk-dock .txt span{font-size:13px;color:var(--on-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pk-dock .txt i{font-style:normal}
 .pk-dock .txt b{font-size:19px;font-weight:600;line-height:1.1;letter-spacing:-.02em}
