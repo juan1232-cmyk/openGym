@@ -539,4 +539,14 @@ export default {
   '{0} sets of {1} — time to add weight or move to a harder variation.': '{0} series de {1}: toca añadir peso o pasar a una variante más difícil.',
   '{0} per side': '{0} por lado',
   'You still log the total: {0} is {1} per side.': 'Sigues registrando el total: {0} son {1} por lado.',
+  // exercise picker
+  'Main muscle': 'Músculo principal',
+  'Also works': 'También trabaja',
+  'In routine': 'En la rutina',
+  'In workout': 'En el entreno',
+  '{0} added': '{0} añadidos',
+  'Recent': 'Recientes',
+  'All exercises': 'Todos los ejercicios',
+  'Create “{0}”': 'Crear «{0}»',
+  'Clear': 'Borrar',
 }

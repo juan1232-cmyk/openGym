@@ -107,6 +107,14 @@ function SetGrid({ entryIdx, onToggle, onField, onStartTimed }) {
   </div>
 }
 
+// A fresh workout entry for `id` with config `cfg`, prescribed the way the routine would —
+// shared by adding an exercise mid-workout and swapping one for another.
+function entryFor(s, id, cfg) {
+  const full = { ...cfg, id }
+  const plan = nextPrescription(s, full, s.routines.find(r => r.id === s.active.routineId))
+  return { id, target: { ...cfg }, plan, sets: applyPrescription(buildSets(s, full), plan) }
+}
+
 /* ---------- one exercise inside an open card ---------- */
 function ExerciseBody({ entryIdx, inSuperset, onToggle, onField, onAddSet, onRemoveSet, onStartTimed }) {
   const S = useStore(s => s.S)
@@ -407,12 +415,10 @@ function ActiveWorkout() {
     </div> : <div className="empty"><div className="ico"><Icon name="shuffle" /></div>{t('Freestyle workout — add your first exercise.')}</div>}
 
     <div style={{ height: 12 }} />
-    <Button variant="soft" icon="plus" onClick={() => exercisePicker(ex => exConfigSheet(ex, null, cfg => update(s => {
-      const full = { ...cfg, id: ex.id }
-      const plan = nextPrescription(s, full, s.routines.find(r => r.id === s.active.routineId))
-      s.active.entries.push({ id: ex.id, target: { ...cfg }, plan, sets: applyPrescription(buildSets(s, full), plan) })
+    <Button variant="soft" icon="plus" onClick={() => exercisePicker((ex, ctx) => exConfigSheet(ex, null, cfg => update(s => {
+      s.active.entries.push(entryFor(s, ex.id, cfg))
       s.active.cur = s.active.entries.length - 1
-    }), null, S.routines.find(r => r.id === A.routineId)))}>{t('Add exercise')}</Button>
+    }), null, S.routines.find(r => r.id === A.routineId), ctx), { where: 'workout', listOf: st => st.active?.entries })}>{t('Add exercise')}</Button>
     <button className="pk-link pk-discard" onClick={discard}>{t('Discard workout')}</button>
 
     {/* while a rest or a timed set runs, the timer bar (RestTimer) sits exactly here instead */}

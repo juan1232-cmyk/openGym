@@ -3,6 +3,9 @@
 import { useState } from 'react'
 import { useStore } from '../store/useStore.js'
 import { EXIDX, BODYPARTS, isCardio, isBodyweightEq, allExercises, equipmentOf } from '../lib/exercises.js'
+import { searchExercises, usageOf, recentIds, primaryOf, secondaryOf, muscleChips, matchesMuscle } from '../lib/pick.js'
+import { MUSCLE_NAME, musclesOf } from '../lib/muscles.js'
+import BodyMap from '../components/BodyMap.jsx'
 import { fmtDate, fmtNum, uid, exCount } from '../lib/format.js'
 import { lastEntryFor, bestWeightFor, setLabel, defaultConfig, cleanupSg, modeOf, isBw, isPerSide, sideReps } from '../lib/history.js'
 import { t, instrFor, getLang, INSTR_LANGS } from '../lib/i18n.js'
@@ -45,6 +48,29 @@ function OneRM({ ex }) {
   </>
 }
 
+// What an exercise works, as a small body map plus names — the main muscle in accent, the
+// helpers plain. Same shading as every other map, so "full accent" means "this is the one".
+function MusclesTrained({ ex }) {
+  const body = useStore(s => s.S.body)
+  const p = primaryOf(ex), sec = secondaryOf(ex)
+  if (!p && !sec.length && !isCardio(ex)) return null
+  return <div className="mtrain">
+    <BodyMap load={musclesOf(ex)} body={body} />
+    <div className="mtrain-l">
+      <div className="small dim">{t('Main muscle')}</div>
+      <div className="row" style={{ gap: 6, flexWrap: 'wrap', margin: '4px 0 10px' }}>
+        <span className="tag acc">{p ? t(MUSCLE_NAME[p]) : t('Cardio')}</span>
+      </div>
+      {sec.length > 0 && <>
+        <div className="small dim">{t('Also works')}</div>
+        <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+          {sec.map(m => <span key={m} className="tag">{t(MUSCLE_NAME[m])}</span>)}
+        </div>
+      </>}
+    </div>
+  </div>
+}
+
 function ExerciseDetail({ ex, close }) {
   const st = useStore(s => s.S)
   const last = lastEntryFor(st, ex.id)
@@ -54,11 +80,9 @@ function ExerciseDetail({ ex, close }) {
     <h3 className="capitalize">{ex.n}</h3>
     <Media ex={ex} />
     <div className="row" style={{ gap: 6, flexWrap: 'wrap', margin: '10px 0' }}>
-      <span className="tag acc">{t(ex.bp)}</span>
-      {ex.tg && <span className="tag"><Icon name="target" />{t(ex.tg)}</span>}
       <span className="tag"><Icon name="dumbbell" />{t(ex.eq)}</span>
-      {(ex.sm || []).slice(0, 3).map((s, i) => <span key={i} className="tag">{t(s)}</span>)}
     </div>
+    <MusclesTrained ex={ex} />
     {ex.desc && <div className="exnote">{ex.desc}</div>}
     {best > 0 && <div className="small row" style={{ marginBottom: 6, gap: 5 }}><Icon name="trophy" style={{ fontSize: 14, color: 'var(--yellow)' }} />{t('Best:')} <b className="accent">{fmtNum(best)} {st.unit}</b>{last ? ` · ${t('last')} ${fmtDate(last.d)}: ${last.sets.map(s => setLabel(ex.id, s, last.target)).join(', ')}` : ''}</div>}
     {/* the progress page, unless that's where this sheet was opened from */}
@@ -169,59 +193,90 @@ export function deleteCustomEx(ex, afterDelete) {
 }
 
 /* ============================ exercise picker ============================ */
-// Exercises already used in your routines or past workouts (for the "Chosen" filter + a marker).
-function usageMap(st) {
-  const u = {}
-  st.routines.forEach(r => r.ex.forEach(e => { u[e.id] = (u[e.id] || 0) + 1 }))
-  st.workouts.forEach(w => w.entries.forEach(e => { u[e.id] = (u[e.id] || 0) + 1 }))
-  return u
+// "Chest · triceps, shoulders · barbell" — what a row is *for*, which says more than the
+// dataset's target + equipment did (and is the same muscle language as the filter chips).
+export function muscleLine(ex) {
+  if (isCardio(ex)) return [t('Cardio'), t(ex.eq)].filter(Boolean).join(' · ')
+  const p = primaryOf(ex)
+  if (!p) return [t(ex.tg || ex.bp), t(ex.eq)].filter(Boolean).join(' · ')
+  const sec = secondaryOf(ex).slice(0, 2).map(m => t(MUSCLE_NAME[m]).toLowerCase()).join(', ')
+  return [t(MUSCLE_NAME[p]), sec, ex.eq !== 'custom' && t(ex.eq)].filter(Boolean).join(' · ')
 }
-function ExercisePicker({ onPick, close }) {
+export const chipLabel = m => (m === 'cardio' ? t('Cardio') : t(MUSCLE_NAME[m]))
+
+function PickRow({ ex, onPick, inList, where }) {
+  return <div className="item" onClick={() => onPick(ex)}>
+    <Thumb ex={ex} /><div className="grow"><div className="tt capitalize">{ex.n}</div>
+      <div className="ss">{inList && <b className="accent">{where === 'workout' ? t('In workout') : t('In routine')} · </b>}{muscleLine(ex)}</div></div>
+    <Icon name={inList ? 'check' : 'plus'} className={'chev' + (inList ? ' accent' : '')} />
+  </div>
+}
+
+// `listOf` reads the routine / workout being added to out of the live state, so the "In
+// routine" marks and the added count keep up while the picker stays open under each config
+// sheet — adding five exercises is five taps on this one list, not five trips back to it.
+function ExercisePicker({ onPick, close, listOf, where }) {
   const st = useStore(s => s.S)
-  const usage = usageMap(st)
+  const usage = usageOf(st)
+  const list = (listOf && listOf(st)) || []
+  const inList = new Set(list.map(e => e.id))
+  const [startLen] = useState(list.length)
+  const added = Math.max(0, list.length - startLen)
   const [q, setQ] = useState('')
-  const [bp, setBp] = useState('')          // '' = all, '★' = chosen, else a body part
+  const [mu, setMu] = useState('')          // '' = every muscle, else a muscle slug or 'cardio'
   const [eq, setEq] = useState('')          // '' = any equipment
   const [shown, setShown] = useState(50)
-  const ql = q.toLowerCase().trim()
+  const reset = () => setShown(50)
   const all = allExercises(st)
-  let base = all.filter(e =>
-    (bp === '★' ? usage[e.id] : (!bp || e.bp === bp)) &&
-    (!ql || e.n.toLowerCase().includes(ql) || e.tg.includes(ql) || e.eq.includes(ql) || (e.desc || '').toLowerCase().includes(ql)))
-  if (bp === '★') base = [...base].sort((a, b) => (usage[b.id] - usage[a.id]) || (a.n < b.n ? -1 : 1))
+  const base = searchExercises(all.filter(e => matchesMuscle(e, mu)), q, { usage })
   const eqOpts = equipmentOf(base)
   // Drop the equipment filter if the search narrowed it away, so you never hit a dead end.
   const eqOn = eqOpts.includes(eq) ? eq : ''
   const f = eqOn ? base.filter(e => e.eq === eqOn) : base
-  const chosenCount = Object.keys(usage).length
+  // Without a search, what you actually train comes first instead of "3/4 sit-up".
+  const recent = q.trim() ? [] : recentIds(st).map(id => EXIDX[id]).filter(e => e && f.includes(e)).slice(0, 8)
+  const rest = recent.length ? f.filter(e => !recent.includes(e)) : f
+  const pick = ex => onPick(ex, { list, retarget: alt => onPick(alt, { list: (listOf && listOf(S())) || [] }) })
   return <>
-    <h3>{t('Add exercise')}</h3>
+    <div className="row between" style={{ marginBottom: 10 }}>
+      <h3 style={{ margin: 0 }}>{t('Add exercise')}</h3>
+      <div className="row" style={{ gap: 8 }}>
+        {added > 0 && <span className="small accent">{t('{0} added', added)}</span>}
+        <Button size="sm" variant={added ? 'primary' : 'tinted'} onClick={close}>{t('Done')}</Button>
+      </div>
+    </div>
     <div className="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-      <input className="input" placeholder={t('Search {0} exercises…', all.length)} value={q} onChange={e => { setQ(e.target.value); setShown(50) }} /></div>
+      <input className="input" placeholder={t('Search {0} exercises…', all.length)} value={q} onChange={e => { setQ(e.target.value); reset() }} />
+      {q && <button className="search-x" aria-label={t('Clear')} onClick={() => { setQ(''); reset() }}><Icon name="xmark" /></button>}</div>
     <div className="chips" style={{ margin: eqOpts.length > 1 ? '10px 0 6px' : '10px 0' }}>
-      {chosenCount > 0 && <button className={'chip' + (bp === '★' ? ' on' : '')} onClick={() => { setBp('★'); setEq(''); setShown(50) }}><Icon name="starFill" style={{ fontSize: 12, display: 'inline-block', marginRight: 4, verticalAlign: '-1px' }} />{t('Chosen')} ({chosenCount})</button>}
-      <button className={'chip nocap' + (!bp ? ' on' : '')} onClick={() => { setBp(''); setEq(''); setShown(50) }}>{t('All')}</button>
-      {BODYPARTS.map(b => <button key={b} className={'chip' + (bp === b ? ' on' : '')} onClick={() => { setBp(b); setEq(''); setShown(50) }}>{t(b)}</button>)}
+      <button className={'chip nocap' + (!mu ? ' on' : '')} onClick={() => { setMu(''); setEq(''); reset() }}>{t('All')}</button>
+      {muscleChips(all).map(m => <button key={m} className={'chip' + (mu === m ? ' on' : '')} onClick={() => { setMu(m); setEq(''); reset() }}>{chipLabel(m)}</button>)}
     </div>
     {eqOpts.length > 1 && <div className="chips" style={{ marginBottom: 10 }}>
-      <button className={'chip nocap' + (!eqOn ? ' on' : '')} onClick={() => { setEq(''); setShown(50) }}>{t('Any equipment')}</button>
-      {eqOpts.map(x => <button key={x} className={'chip' + (eqOn === x ? ' on' : '')} onClick={() => { setEq(x); setShown(50) }}>{t(x)}</button>)}
+      <button className={'chip nocap' + (!eqOn ? ' on' : '')} onClick={() => { setEq(''); reset() }}>{t('Any equipment')}</button>
+      {eqOpts.map(x => <button key={x} className={'chip' + (eqOn === x ? ' on' : '')} onClick={() => { setEq(x); reset() }}>{t(x)}</button>)}
     </div>}
+    {recent.length > 0 && <>
+      <h4 className="sec">{t('Recent')}</h4>
+      <div className="list" style={{ marginBottom: 14 }}>
+        {recent.map(e => <PickRow key={e.id} ex={e} onPick={pick} inList={inList.has(e.id)} where={where} />)}
+      </div>
+      <h4 className="sec">{t('All exercises')}</h4>
+    </>}
     <div className="list">
-      {bp !== '★' && <div className="item" onClick={() => customExSheet(null, ex => onPick(ex), q.trim())}>
+      {rest.slice(0, shown).map(e => <PickRow key={e.id} ex={e} onPick={pick} inList={inList.has(e.id)} where={where} />)}
+      {f.length === 0 && <div className="empty"><div className="ico"><Icon name="magnifier" /></div>{t('No match')}</div>}
+      <div className="item" onClick={() => customExSheet(null, ex => pick(ex), q.trim())}>
         <div className="thumb thumb-x"><Icon name="sparkles" /></div>
-        <div className="grow"><div className="tt">{t('Create your own exercise')}</div><div className="ss">{t('name + body part, no animation')}</div></div><Icon name="plus" className="chev" />
-      </div>}
-      {f.slice(0, shown).map(e => <div key={e.id} className="item" onClick={() => onPick(e)}>
-        <Thumb ex={e} /><div className="grow"><div className="tt capitalize">{e.n}</div><div className="ss capitalize">{t(e.tg || e.bp)} · {t(e.eq)}</div></div>
-        {usage[e.id] && <span className="tag acc"><Icon name="starFill" /></span>}<Icon name="plus" className="chev" />
-      </div>)}
-      {f.length === 0 && bp === '★' && <div className="empty">{t('Nothing chosen yet — add exercises and they’ll show up here.')}</div>}
+        <div className="grow"><div className="tt">{q.trim() ? t('Create “{0}”', q.trim()) : t('Create your own exercise')}</div><div className="ss">{t('name + body part, no animation')}</div></div><Icon name="plus" className="chev" />
+      </div>
     </div>
-    {f.length > shown && <><div style={{ height: 8 }} /><Button onClick={() => setShown(s => s + 50)}>{t('Show more')}</Button></>}
+    {rest.length > shown && <><div style={{ height: 8 }} /><Button onClick={() => setShown(s => s + 50)}>{t('Show more')}</Button></>}
   </>
 }
-export const exercisePicker = onPick => ui().openSheet(close => <ExercisePicker onPick={onPick} close={close} />)
+// `opts.listOf(state)` → the [{ id }] being added to; `opts.where` = 'routine' | 'workout'.
+export const exercisePicker = (onPick, opts = {}) =>
+  ui().openSheet(close => <ExercisePicker onPick={onPick} close={close} listOf={opts.listOf} where={opts.where} />)
 
 /* ============================ exercise config ============================ */
 // Progression settings for one exercise (issue #17). Shown inside the config sheet because
@@ -296,8 +351,9 @@ function ExConfig({ ex, existing, onSave, onDelete, close, routine }) {
     <Media ex={ex} />
     <div className="row" style={{ gap: 6, flexWrap: 'wrap', margin: '10px 0 14px' }}>
       {cardio && <span className="tag acc"><Icon name="figureRun" />{t('Cardio')}</span>}
-      <span className="tag">{t(ex.tg || ex.bp)}</span><span className="tag">{t(ex.eq)}</span>
+      <span className="tag"><Icon name="dumbbell" />{t(ex.eq)}</span>
     </div>
+    <MusclesTrained ex={ex} />
     {ex.desc && <div className="exnote">{ex.desc}</div>}
     {!cardio && <div style={{ marginBottom: 14 }}>
       <Segmented className="seg-range" value={mode} onChange={setMode}
