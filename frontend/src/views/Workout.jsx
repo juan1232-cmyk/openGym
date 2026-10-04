@@ -275,10 +275,10 @@ function ActiveWorkout() {
         if (isLastExInUnit && !unitDone) startRest(S.restSec)
         else if (unitDone) stopRest()
         unitJustDone = unitDone
-        // a whole exercise done gets more than a set: a rising three-note chime, a longer buzz
+        // a whole exercise done gets more than a set: a triple pulse you feel in the hand (three
+        // ticks on an iPhone) instead of the single one a set gets — no extra sound, on purpose
         if (unitDone) {
-          beep(S.sound, 1318, 0.14, 0.09); beep(S.sound, 1568, 0.26, 0.18)
-          vibrate([30, 60, 30, 60, 90])
+          vibrate([40, 70, 40, 70, 120])
           orb.current?.react('joyful-down-right', 1800)
         } else orb.current?.react('joyful-wide', 1100)
         if (unitDone && isLastUnit) workoutDone = true      // last exercise's last set → done
