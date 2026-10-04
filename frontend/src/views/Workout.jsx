@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { exOr } from '../lib/exercises.js'
-import { effectiveRoutine, lastEntryFor, buildSets, setsDoneActive, supersetUnits, unitOf, setLabel, modeOf, isBw, isPerSide, sideReps, EFFORT, effortOf, capEffort, fmtSec, nextUp, nextSetLabel } from '../lib/history.js'
-import { fmtNum, todayISO, exCount, DAYN } from '../lib/format.js'
+import { effectiveRoutine, lastEntryFor, buildSets, setsDoneActive, supersetUnits, unitOf, setLabel, modeOf, isBw, isPerSide, sideReps, EFFORT, effortOf, capEffort, fmtSec, nextUp, nextSetLabel, isLoadPR } from '../lib/history.js'
+import { fmtNum, fmtVol, todayISO, exCount, DAYN } from '../lib/format.js'
 import { beep, vibrate } from '../lib/sound.js'
 import { t } from '../lib/i18n.js'
 import { api } from '../lib/api.js'
@@ -89,7 +89,7 @@ function SetGrid({ entryIdx, onToggle, onField, onStartTimed }) {
     <div className="pk-set hd" style={grid}><span>{t('Set')}</span><span>{t('Last time')}</span>{cols.map(c => <span key={c.f}>{c.hd}</span>)}{timed && <span />}<span /></div>
     {entry.sets.map((s, i) => {
       const prev = last && last.sets[i] ? setLabel(entry.id, last.sets[i], last.target) : '—'
-      return <div key={i} className={'pk-set' + (s.done ? ' done' : '')} style={grid}>
+      return <div key={i} className={'pk-set' + (s.done ? ' done' : '')} style={{ ...grid, '--i': i }} data-set={entryIdx + '-' + i}>
         <span className="n">{i + 1}</span>
         <span className="prev">{prev}</span>
         {cols.map(c => s.done
@@ -141,6 +141,70 @@ function ExerciseBody({ entryIdx, inSuperset, onToggle, onField, onAddSet, onRem
   </div>
 }
 
+/* ---------- a card body that folds shut instead of vanishing ---------- */
+// Kept mounted through the close so the rows can be seen folding away, then dropped, so a
+// closed card costs nothing and reopening replays the entrance. Matches the CSS transition.
+const FOLD_MS = 520
+function Fold({ open, children }) {
+  const [shown, setShown] = useState(open)
+  useEffect(() => {
+    if (open) { setShown(true); return }
+    const id = setTimeout(() => setShown(false), FOLD_MS)
+    return () => clearTimeout(id)
+  }, [open])
+  return <div className={'pk-fold' + (open ? ' open' : '')} inert={!open}>
+    <div className="pk-fold-in">{(open || shown) && children}</div>
+  </div>
+}
+
+// What a finished card says it was, in one line under its name — finishing leaves something
+// behind to look at. Volume for loaded sets; reps where there's no load to multiply (a
+// bodyweight set's "+5 kg" times reps isn't the work done); time or minutes otherwise.
+function doneSummary(es, unit) {
+  let sets = 0, vol = 0, reps = 0, sec = 0, min = 0, bw = true
+  es.forEach(e => {
+    const cfg = { ...(e.target || {}), id: e.id }
+    const m = modeOf(cfg)
+    if (m !== 'reps' || !isBw(cfg)) bw = false
+    e.sets.forEach(s => {
+      if (!s.done) return
+      sets++
+      if (m === 'cardio') min += s.min || 0
+      else if (m === 'time') sec += s.sec || 0
+      else { vol += (s.w || 0) * (s.r || 0); reps += s.r || 0 }
+    })
+  })
+  const parts = [t(sets === 1 ? '{0} set' : '{0} sets', sets)]
+  if (vol > 0 && !bw) parts.push(fmtVol(vol, unit))
+  else if (reps) parts.push(t('{0} reps', reps))
+  if (sec) parts.push(fmtSec(sec))
+  if (min) parts.push(t('{0} min', min))
+  return parts.join(' · ')
+}
+
+// A spray of sparks and a ring from the box that finished an exercise. Plain DOM outside
+// React: it lives under a second and no state reads it. Skipped under reduced motion, where
+// the global rule would freeze the sparks in place instead of removing them.
+function burst(el) {
+  if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  const r = el.getBoundingClientRect(), b = document.createElement('div')
+  b.className = 'pk-burst'
+  b.style.left = r.left + r.width / 2 + 'px'; b.style.top = r.top + r.height / 2 + 'px'
+  b.append(document.createElement('b'))
+  for (let k = 0; k < 14; k++) {
+    const sp = document.createElement('i')
+    sp.style.setProperty('--a', k * (360 / 14) + Math.random() * 16 + 'deg')
+    sp.style.setProperty('--d', 30 + Math.random() * 30 + 'px')
+    b.append(sp)
+  }
+  document.body.append(b)
+  setTimeout(() => b.remove(), 900)
+}
+
+// How long a just-finished card holds before the next one opens. Advancing on the same frame
+// read as the exercise disappearing; the beat lets the last green row and the cheer land first.
+const CHEER_MS = 650
+
 /* ---------- active workout ---------- */
 // D2 from the Peek design: every exercise as a card in one list (the open one is the unit
 // you're on — a superset is one card), the orb cheering each checked set, and a dark dock at
@@ -153,7 +217,10 @@ function ActiveWorkout() {
   const { startRest, stopRest } = useUI()
   const resting = useUI(s => !!(s.timer || s.work))
   const orb = useRef(null)
+  const listRef = useRef(null)
+  const advance = useRef(null)
   const [collapsed, setCollapsed] = useState(false)
+  const [cheer, setCheer] = useState(null)
   const A = S.active
   const units = supersetUnits(A.entries)
   const cur = Math.min(A.cur, Math.max(0, A.entries.length - 1))
@@ -164,6 +231,7 @@ function ActiveWorkout() {
   const done = setsDoneActive(A)
   const nx = nextUp(A)
   const nxEntry = nx && A.entries[nx.entry]
+  const unitsDone = units.filter(u => u.every(i => A.entries[i].sets.every(s => s.done))).length
 
   const mutEntry = (idx, fn) => update(s => { fn(s.active.entries[idx]) }, true)
   // Clearing an optional field drops the key rather than storing null, so a set only carries
@@ -202,12 +270,17 @@ function ActiveWorkout() {
       e.sets[i].done = !e.sets[i].done
       if (e.sets[i].done) {
         beep(S.sound, 1040, 0.12); vibrate(30)
-        orb.current?.react('joyful-wide', 1100)
         const isLastExInUnit = idx === unit[unit.length - 1]
         const unitDone = unit.every(ui => (ui === idx ? e : A.entries[ui]).sets.every(x => x.done))
         if (isLastExInUnit && !unitDone) startRest(S.restSec)
         else if (unitDone) stopRest()
         unitJustDone = unitDone
+        // a whole exercise done gets more than a set: a triple pulse you feel in the hand (three
+        // ticks on an iPhone) instead of the single one a set gets — no extra sound, on purpose
+        if (unitDone) {
+          vibrate([40, 70, 40, 70, 120])
+          orb.current?.react('joyful-down-right', 1800)
+        } else orb.current?.react('joyful-wide', 1100)
         if (unitDone && isLastUnit) workoutDone = true      // last exercise's last set → done
         // No "confirm the weight you worked with" sheet here any more: finishing the workout
         // already keeps the heaviest done set as next time's starting weight, so the sheet
@@ -215,21 +288,54 @@ function ActiveWorkout() {
         if (e.sets.every(x => x.done)) exJustDone = true
       }
     })
-    // the last set of the session asks finish-or-continue; otherwise the next unfinished card
-    // opens, as it does in the design
-    if (workoutDone) workoutCompleteSheet()
-    else {
-      if (unitJustDone) update(s => { const n = nextUp(s.active); if (n) s.active.cur = n.entry })
+    if (unitJustDone) {
+      burst(listRef.current?.querySelector(`[data-set="${idx}-${i}"] .chk`))
+      setCheer(unit.join('-'))
+      clearTimeout(advance.current?.id)
+    }
+    // the last set of the session asks finish-or-continue — after the same beat, so the
+    // celebration isn't hidden behind the sheet; otherwise the next unfinished card opens
+    if (workoutDone) {
+      const go = () => { advance.current = null; setCheer(null) }
+      advance.current = { go, id: setTimeout(() => { go(); workoutCompleteSheet() }, CHEER_MS) }
+    } else {
+      if (unitJustDone) {
+        // nextUp is read when the beat ends, not now: a set unchecked meanwhile keeps you here
+        const go = () => { advance.current = null; setCheer(null); update(s => { const n = s.active && nextUp(s.active); if (n) s.active.cur = n.entry }) }
+        advance.current = { go, id: setTimeout(go, CHEER_MS) }
+      }
       if (exJustDone && cardioEntry) useUI.getState().toast(t('Cardio logged'))
       else if (exJustDone && m === 'time') useUI.getState().toast(t('Hold logged'))
     }
   }
 
+  // Leaving mid-beat still moves on, so coming back lands on the next exercise (but doesn't
+  // pop the finish sheet over whatever screen you went to — that's still one tap on Finish).
+  useEffect(() => () => { if (advance.current) { clearTimeout(advance.current.id); advance.current.go() } }, [])
+
   const openUnit = k => {
+    if (advance.current) { clearTimeout(advance.current.id); advance.current = null; setCheer(null) }
     if (k === unitIdx) { setCollapsed(c => !c); return }
     setCollapsed(false)
     update(s => { s.active.cur = units[k][0] })
   }
+
+  // Bring the newly opened card into view. The card above it is folding shut at the same time,
+  // so aim for where the header will end up, not where it is this frame — and leave the page
+  // alone if that's already comfortably on screen.
+  const shownUnit = useRef(unitIdx)
+  useLayoutEffect(() => {
+    if (shownUnit.current === unitIdx) return
+    shownUnit.current = unitIdx
+    const cards = listRef.current?.children
+    if (!cards?.[unitIdx]) return
+    let shift = 0
+    for (let k = 0; k < unitIdx; k++) shift += cards[k].querySelector('.pk-fold-in')?.offsetHeight || 0
+    const top = cards[unitIdx].getBoundingClientRect().top - shift
+    if (top >= 8 && top <= innerHeight * 0.4) return
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches
+    scrollTo({ top: scrollY + top - 16, behavior: still ? 'auto' : 'smooth' })
+  }, [unitIdx])
 
   const discard = () => confirmSheet({
     title: t('Discard workout?'), message: t('The sets you logged in this session will be lost.'), confirmText: t('Discard'), danger: true,
@@ -272,26 +378,30 @@ function ActiveWorkout() {
       <Orb ref={orb} size={60} poke="joyful-wide" />
     </div>
     <div className="pk-wprog">
-      <div className="bar"><i style={{ width: (total ? done / total * 100 : 0) + '%' }} /></div>
+      {/* keyed on finished exercises, so a glint runs along the bar each time one completes */}
+      <div className="bar"><i style={{ width: (total ? done / total * 100 : 0) + '%' }}>{unitsDone > 0 && <b key={unitsDone} />}</i></div>
       <span>{done}/{total}</span>
     </div>
 
-    {A.entries.length ? <div className="pk-exlist">
+    {A.entries.length ? <div className="pk-exlist" ref={listRef}>
       {units.map((u, k) => {
         const open = k === unitIdx && !collapsed
         const es = u.map(i => A.entries[i])
         const d = es.reduce((n, e) => n + e.sets.filter(s => s.done).length, 0)
         const n = es.reduce((n, e) => n + e.sets.length, 0)
-        return <div key={u.join('-')} className={'pk-ex' + (open ? ' open' : '') + (d === n ? ' finished' : '')}>
+        const key = u.join('-')
+        const pr = d === n && es.some(e => isLoadPR(S, e.id, e))
+        return <div key={key} className={'pk-ex' + (open ? ' open' : '') + (d === n ? ' finished' : '') + (cheer === key ? ' cheer' : '')}>
           <button className="pk-ex-h" onClick={() => openUnit(k)} aria-expanded={open}>
-            <span className="nm">{u.length > 1 && <em><Icon name="link" />{t('Superset')}</em>}{es.map(e => exOr(e.id).n).join(' + ')}</span>
-            <span className="ct">{d}/{n}</span>
+            <span className="nm">{u.length > 1 && <em><Icon name="link" />{t('Superset')}</em>}{es.map(e => exOr(e.id).n).join(' + ')}
+              {d === n && <span className="pk-ex-sum">{doneSummary(es, S.unit)}{pr && <b><Icon name="trophy" />{t('New best')}</b>}</span>}</span>
+            <span className="ct">{d === n && <Icon name="check" />}{d}/{n}</span>
           </button>
-          {open && <div className="pk-ex-b">
+          <Fold open={open}><div className="pk-ex-b">
             {u.map(idx => <ExerciseBody key={idx} entryIdx={idx} inSuperset={u.length > 1}
               onToggle={i => toggle(idx, i)} onField={(i, f, v) => setField(idx, i, f, v)}
               onAddSet={() => addSet(idx)} onRemoveSet={() => removeSet(idx)} onStartTimed={i => startTimed(idx, i)} />)}
-          </div>}
+          </div></Fold>
         </div>
       })}
     </div> : <div className="empty"><div className="ico"><Icon name="shuffle" /></div>{t('Freestyle workout — add your first exercise.')}</div>}
@@ -307,7 +417,8 @@ function ActiveWorkout() {
 
     {/* while a rest or a timed set runs, the timer bar (RestTimer) sits exactly here instead */}
     {!resting && <div className="pk-dock">
-      <div className="txt">
+      {/* keyed on the set it points at, so the line visibly turns over when it changes */}
+      <div className="txt" key={nx ? nx.entry + ':' + nx.set : 'end'}>
         {/* exercise names arrive lowercase from the dataset — capitalised on their own, not the whole line */}
         <span>{nx ? <>{t('Up next')} · <i className="capitalize">{exOr(nxEntry.id).n}</i>, {t('set {0}', nx.set + 1)}</> : t('Up next · finish when ready')}</span>
         <b>{nx ? nextSetLabel(nxEntry, nxEntry.sets[nx.set], S.unit) : t('All sets done')}</b>
