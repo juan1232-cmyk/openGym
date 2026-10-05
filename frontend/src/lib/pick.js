@@ -64,6 +64,47 @@ export function muscleChips(list) {
   return out
 }
 
+/* ---------------- specific muscle ("upper chest", not "chest") ---------------- */
+
+// The dataset only knows "pectorals", "delts", "abs". Which part of the muscle a lift
+// works is in its name — incline is upper chest, a lateral raise is side delts — so the
+// finer label is read from there, inside the main muscle the dataset already gives.
+const REGION_RULES = {
+  chest: [['Upper chest', /incline|upper|low to high|low cable/], ['Lower chest', /decline|dip|lower|high to low|high cable/]],
+  deltoids: [['Rear delts', /rear|reverse fly|revers fly|face pull|bent over lateral/],
+    ['Side delts', /lateral|\bside\b|upright|\by raise|\bt raise|iron cross/],
+    ['Front delts', /front|forward|press|overhead|military|arnold|push|jerk|thruster/]],
+  abs: [['Obliques', /oblique|twist|russian|wood|bicycle|\bside\b|heel touch/],
+    ['Lower abs', /leg raise|knee raise|reverse crunch|flutter|scissor|v up|toes to|leg lift/]],
+}
+const REGION_DEFAULT = { chest: 'Mid chest', deltoids: 'Shoulders', abs: 'Upper abs' }
+const REGION_NAME = {
+  'upper-back': ex => (ex.tg === 'lats' ? 'Lats' : 'Mid back'), trapezius: 'Traps', 'lower-back': 'Lower back',
+  biceps: 'Biceps', triceps: 'Triceps', forearm: 'Forearms', quadriceps: 'Quads', gluteal: 'Glutes',
+  hamstring: 'Hamstrings', calves: 'Calves', adductors: 'Inner thighs', obliques: 'Obliques',
+  serratus: 'Serratus', 'hip-flexors': 'Hip flexors', tibialis: 'Shins',
+}
+// The parts of a muscle a suggestion can point at when one part is already crowded.
+const REGIONS_OF = {
+  chest: ['Upper chest', 'Mid chest', 'Lower chest'],
+  deltoids: ['Front delts', 'Side delts', 'Rear delts'],
+  abs: ['Upper abs', 'Lower abs', 'Obliques'],
+  'upper-back': ['Lats', 'Mid back'],
+}
+
+/** The specific muscle an exercise trains — an English label, also the i18n key. */
+export function regionOf(ex) {
+  if (!ex) return null
+  if (ex.bp === 'cardio') return 'Cardio'
+  const m = primaryOf(ex)
+  if (!m) return null
+  const name = norm(ex.n)
+  const hit = (REGION_RULES[m] || []).find(([, re]) => re.test(name))
+  if (hit) return hit[0]
+  const fixed = REGION_NAME[m]
+  return REGION_DEFAULT[m] || (typeof fixed === 'function' ? fixed(ex) : fixed) || null
+}
+
 /* ---------------- equipment ---------------- */
 
 // Bodyweight work needs no kit and a custom exercise is whatever you made it, so a gym
@@ -74,6 +115,10 @@ export const gymFilter = (list, gymEq) => (gymEq ? list.filter(e => gymAllows(e,
 // A light thumb on the scale for the kit most gyms have, so "squat" leads with a barbell
 // squat rather than a band one. Small enough that a better name match always wins.
 const EQ_BONUS = { barbell: 12, dumbbell: 12, cable: 8, 'body weight': 8, 'leverage machine': 6 }
+
+// Stretches and the dataset's filming variants ("(female)", "(back pov)") are rarely what
+// anyone is looking for when adding to a plan; they stay findable, just at the bottom.
+const isJunk = ex => /stretch|\b(male|female)\b|\bpov\b/.test(String(ex.n).toLowerCase())
 
 /* ---------------- search ---------------- */
 
@@ -127,9 +172,49 @@ export function searchExercises(list, q, { usage = {} } = {}) {
     if (tokens.every(t => about.some(w => w.startsWith(t)))) s += 10
     s += 15 * Math.min(usage[ex.id] || 0, 5)
     s += EQ_BONUS[ex.eq] || 0
+    if (isJunk(ex)) s -= 60
     scored.push({ ex, s, len: name.length })
   }
   return scored.sort((a, b) => b.s - a.s || a.len - b.len || (a.ex.n < b.ex.n ? -1 : 1)).map(x => x.ex)
+}
+
+// The lifts a plan is normally built from, roughly in the order you'd reach for them. Name
+// rules alone can't tell a staple from an oddity ("handstand", "elevator" are short, plain
+// names too), so without a search these lead each muscle — after what you already train.
+export const STAPLES = [
+  'barbell bench press', 'dumbbell bench press', 'barbell incline bench press', 'dumbbell incline bench press',
+  'dumbbell fly', 'chest dip', 'push-up', 'lever chest press', 'barbell decline bench press',
+  'pull-up', 'chin-up', 'cable pulldown', 'barbell bent over row', 'dumbbell bent over row', 'cable seated row',
+  'lever seated row', 'kettlebell one arm row',
+  'dumbbell seated shoulder press', 'barbell seated overhead press', 'dumbbell lateral raise', 'cable lateral raise',
+  'dumbbell rear fly', 'dumbbell front raise', 'dumbbell arnold press', 'lever military press',
+  'barbell curl', 'dumbbell biceps curl', 'dumbbell hammer curl', 'ez barbell curl', 'cable curl',
+  'dumbbell incline curl', 'barbell preacher curl',
+  'cable pushdown', 'cable pushdown (with rope attachment)', 'barbell close-grip bench press',
+  'barbell lying triceps extension skull crusher', 'cable overhead triceps extension (rope attachment)',
+  'dumbbell kickback', 'bench dip (knees bent)',
+  'barbell full squat', 'barbell front squat', 'lever leg extension', 'dumbbell lunge', 'dumbbell goblet squat',
+  'barbell hack squat', 'dumbbell single leg split squat',
+  'barbell romanian deadlift', 'lever lying leg curl', 'lever seated leg curl', 'barbell deadlift', 'dumbbell romanian deadlift',
+  'barbell glute bridge', 'lever standing calf raise', 'barbell standing calf raise', 'lever seated calf raise',
+  'dumbbell standing calf raise',
+  'crunch floor', 'hanging leg raise', 'cable kneeling crunch', 'russian twist', 'weighted front plank',
+  'barbell shrug', 'dumbbell shrug', 'hyperextension', 'barbell good morning',
+]
+const STAPLE_RANK = new Map(STAPLES.map((n, i) => [n, i]))
+
+/**
+ * The order of a list nobody has searched in (all, or one muscle chip): what you train,
+ * most recent first, then the STAPLES, then the plain version of each movement (common kit,
+ * short name) — so "Triceps" opens on pushdowns and close-grip bench, not a towel extension.
+ */
+export function browseOrder(list, { recent = [] } = {}) {
+  const rank = new Map(recent.map((id, i) => [id, i]))
+  const plain = ex => (EQ_BONUS[ex.eq] || 0) - 4 * moveWords(ex).size - (isJunk(ex) ? 100 : 0)
+  const staple = ex => (STAPLE_RANK.has(ex.n) ? STAPLE_RANK.get(ex.n) : Infinity)
+  return list.map(ex => ({ ex, r: rank.has(ex.id) ? rank.get(ex.id) : Infinity, st: staple(ex), p: plain(ex), len: ex.n.length }))
+    .sort((a, b) => (a.r - b.r) || (a.st - b.st) || (b.p - a.p) || (a.len - b.len) || (a.ex.n < b.ex.n ? -1 : 1))
+    .map(x => x.ex)
 }
 
 /* ---------------- overlap ("Peek" warnings) ---------------- */
@@ -149,39 +234,52 @@ const GROUPS = [
 
 const exOf = id => EXIDX[id]
 
-/** The list already has OVERLAP_AT+ other exercises for this one's main muscle → { muscle, ids }. */
+/**
+ * The list already has OVERLAP_AT+ other exercises for the exact same part of the muscle
+ * → { region, muscle, ids }. An incline press next to two flat ones is not a repeat.
+ */
 export function overlapFor(list, exId) {
-  const m = primaryOf(exOf(exId))
-  if (!m) return null
-  const ids = [...new Set((list || []).map(e => e.id))].filter(id => id !== exId && primaryOf(exOf(id)) === m)
-  return ids.length >= OVERLAP_AT ? { muscle: m, ids } : null
+  const ex = exOf(exId), m = primaryOf(ex), region = regionOf(ex)
+  if (!m || !region) return null
+  const ids = [...new Set((list || []).map(e => e.id))]
+    .filter(id => id !== exId && primaryOf(exOf(id)) === m && regionOf(exOf(id)) === region)
+  return ids.length >= OVERLAP_AT ? { region, muscle: m, ids } : null
 }
 
 const rankAlt = (usage, eq) => (a, b) =>
+  isJunk(a) - isJunk(b) ||
   (usage[b.id] || 0) - (usage[a.id] || 0) ||
   (eq ? (b.eq === eq) - (a.eq === eq) : 0) ||
   (EQ_BONUS[b.eq] || 0) - (EQ_BONUS[a.eq] || 0) ||
   a.n.length - b.n.length || (a.n < b.n ? -1 : 1)
 
 /**
- * When adding `exId` would overlap, the neighbouring muscle the list neglects most and an
- * exercise for it → { overlap, muscle, ex }. Just { overlap } when nothing nearby is short
- * of work, null when there is no overlap at all.
+ * When adding `exId` would overlap, something the list is missing instead → { overlap, ex }:
+ * first a part of the same muscle nothing in the list trains yet (two flat presses → an
+ * incline one), else the neighbouring muscle the day neglects most. Just { overlap } when
+ * neither turns anything up, null when there is no overlap at all.
  */
 export function suggestionFor(list, exId, all, { gymEq = null, usage = {} } = {}) {
   const overlap = overlapFor(list, exId)
   if (!overlap) return null
+  const inList = new Set((list || []).map(e => e.id))
+  const cand = exOf(exId)
+  const have = new Set([...inList].map(id => regionOf(exOf(id))))
+  for (const region of REGIONS_OF[overlap.muscle] || []) {
+    if (have.has(region)) continue
+    const pool = all.filter(e => !inList.has(e.id) && e.id !== exId && gymAllows(e, gymEq) &&
+      primaryOf(e) === overlap.muscle && regionOf(e) === region)
+    if (pool.length) return { overlap, ex: pool.sort(rankAlt(usage, cand && cand.eq))[0] }
+  }
   const group = GROUPS.find(g => g.includes(overlap.muscle))
   if (!group) return { overlap }
   const load = loadOf((list || []).map(e => ({ id: e.id, sets: 1 })))
-  const inList = new Set((list || []).map(e => e.id))
-  const cand = exOf(exId)
   // "Short of work" = less than one exercise's worth, counting supporting roles at 0.4.
   const short = group.filter(m => m !== overlap.muscle && (load[m] || 0) < 1)
     .sort((a, b) => (load[a] || 0) - (load[b] || 0) || group.indexOf(a) - group.indexOf(b))
   for (const muscle of short) {
     const pool = all.filter(e => !inList.has(e.id) && e.id !== exId && gymAllows(e, gymEq) && primaryOf(e) === muscle)
-    if (pool.length) return { overlap, muscle, ex: pool.sort(rankAlt(usage, cand && cand.eq))[0] }
+    if (pool.length) return { overlap, ex: pool.sort(rankAlt(usage, cand && cand.eq))[0] }
   }
   return { overlap }
 }
@@ -195,7 +293,7 @@ export function similarTo(ex, all, { exclude = [], gymEq = null, usage = {} } = 
     let s = 0
     moveWords(e).forEach(w => { if (mine.has(w)) s += 30 })
     secondaryOf(e).forEach(k => { if (sec.has(k)) s += 5 })
-    return s + 10 * Math.min(usage[e.id] || 0, 3) + (EQ_BONUS[e.eq] || 0)
+    return s + 10 * Math.min(usage[e.id] || 0, 3) + (EQ_BONUS[e.eq] || 0) - (isJunk(e) ? 60 : 0)
   }
   return all.filter(e => !skip.has(e.id) && gymAllows(e, gymEq) &&
     (m ? primaryOf(e) === m : ex.bp === 'cardio' && e.bp === 'cardio'))

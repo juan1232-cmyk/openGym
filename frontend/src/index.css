@@ -789,13 +789,6 @@ h4.sec{
    outline path of its own, so without this the body reads as one flat blob. */
 .bm-v path{stroke:var(--surface);stroke-width:2.5;stroke-linejoin:round}
 
-/* "What it trains" in an exercise sheet: a small map beside the muscle names. */
-.mtrain{display:flex;gap:14px;align-items:center;margin:2px 0 14px}
-.mtrain .bodymap{width:128px;flex:none}
-.mtrain .bm-v{max-height:150px}
-.mtrain .bm-ph{height:150px}
-.mtrain-l{flex:1;min-width:0}
-
 .mrow{display:flex;align-items:center;gap:9px;padding:5px 0}
 .mrow .nm{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mrow .bar{width:74px;height:5px;border-radius:3px;background:var(--surface-2);flex:none;overflow:hidden}
@@ -1370,7 +1363,6 @@ button.pk-tile:active{background:var(--surface-2)}
 .pk-coach{display:flex;align-items:center;gap:14px;margin-bottom:10px;padding:14px 16px;border-radius:var(--r-card);background:var(--ink);color:var(--on-ink)}
 .pk-coach .orb{animation:none}
 .pk-coach p{font-size:14px;line-height:1.4;text-wrap:pretty}
-/* in a sheet, outside the Peek skin's --ink, so it carries its own colours */
-.pk-overlap{align-items:flex-start;margin:0 0 14px;background:var(--surface-2);color:var(--label)}
+.pk-overlap{align-items:flex-start;margin:0 0 14px}
 .pk-overlap .btn{margin-top:10px;width:auto}
 .pk-prog > .btn{margin-top:2px}

@@ -2,10 +2,9 @@
 // sets/reps/progression config, the exercise picker, and custom (user-created) exercises.
 import { useState } from 'react'
 import { useStore } from '../store/useStore.js'
-import { EXDB, EXIDX, BODYPARTS, isCardio, isBodyweightEq, allExercises, equipmentOf, exOr } from '../lib/exercises.js'
-import { searchExercises, usageOf, recentIds, primaryOf, secondaryOf, muscleChips, matchesMuscle, suggestionFor, similarTo, gymFilter } from '../lib/pick.js'
-import { MUSCLE_NAME, musclesOf } from '../lib/muscles.js'
-import BodyMap from '../components/BodyMap.jsx'
+import { EXDB, EXIDX, BODYPARTS, isCardio, isBodyweightEq, allExercises } from '../lib/exercises.js'
+import { searchExercises, browseOrder, usageOf, recentIds, regionOf, muscleChips, matchesMuscle, suggestionFor, similarTo, gymFilter } from '../lib/pick.js'
+import { MUSCLE_NAME } from '../lib/muscles.js'
 import Orb from '../components/Orb.jsx'
 import { fmtDate, fmtNum, uid, exCount } from '../lib/format.js'
 import { lastEntryFor, bestWeightFor, setLabel, defaultConfig, cleanupSg, modeOf, isBw, isPerSide, sideReps } from '../lib/history.js'
@@ -49,26 +48,11 @@ function OneRM({ ex }) {
   </>
 }
 
-// What an exercise works, as a small body map plus names — the main muscle in accent, the
-// helpers plain. Same shading as every other map, so "full accent" means "this is the one".
-function MusclesTrained({ ex }) {
-  const body = useStore(s => s.S.body)
-  const p = primaryOf(ex), sec = secondaryOf(ex)
-  if (!p && !sec.length && !isCardio(ex)) return null
-  return <div className="mtrain">
-    <BodyMap load={musclesOf(ex)} body={body} />
-    <div className="mtrain-l">
-      <div className="small dim">{t('Main muscle')}</div>
-      <div className="row" style={{ gap: 6, flexWrap: 'wrap', margin: '4px 0 10px' }}>
-        <span className="tag acc">{p ? t(MUSCLE_NAME[p]) : t('Cardio')}</span>
-      </div>
-      {sec.length > 0 && <>
-        <div className="small dim">{t('Also works')}</div>
-        <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
-          {sec.map(m => <span key={m} className="tag">{t(MUSCLE_NAME[m])}</span>)}
-        </div>
-      </>}
-    </div>
+// What an exercise trains, in one line: the specific muscle ("Upper chest") and the kit.
+function MuscleTags({ ex }) {
+  return <div className="row" style={{ gap: 6, flexWrap: 'wrap', margin: '12px 0 14px' }}>
+    <span className="tag acc">{muscleLine(ex)}</span>
+    {ex.eq && ex.eq !== 'custom' && <span className="tag"><Icon name="dumbbell" />{t(ex.eq)}</span>}
   </div>
 }
 
@@ -80,10 +64,7 @@ function ExerciseDetail({ ex, close }) {
   return <>
     <h3 className="capitalize">{ex.n}</h3>
     <Media ex={ex} />
-    <div className="row" style={{ gap: 6, flexWrap: 'wrap', margin: '10px 0' }}>
-      <span className="tag"><Icon name="dumbbell" />{t(ex.eq)}</span>
-    </div>
-    <MusclesTrained ex={ex} />
+    <MuscleTags ex={ex} />
     {ex.desc && <div className="exnote">{ex.desc}</div>}
     {best > 0 && <div className="small row" style={{ marginBottom: 6, gap: 5 }}><Icon name="trophy" style={{ fontSize: 14, color: 'var(--yellow)' }} />{t('Best:')} <b className="accent">{fmtNum(best)} {st.unit}</b>{last ? ` · ${t('last')} ${fmtDate(last.d)}: ${last.sets.map(s => setLabel(ex.id, s, last.target)).join(', ')}` : ''}</div>}
     {/* the progress page, unless that's where this sheet was opened from */}
@@ -194,101 +175,66 @@ export function deleteCustomEx(ex, afterDelete) {
 }
 
 /* ============================ exercise picker ============================ */
-// "Chest · triceps, shoulders · barbell" — what a row is *for*, which says more than the
-// dataset's target + equipment did (and is the same muscle language as the filter chips).
-export function muscleLine(ex) {
-  if (isCardio(ex)) return [t('Cardio'), t(ex.eq)].filter(Boolean).join(' · ')
-  const p = primaryOf(ex)
-  if (!p) return [t(ex.tg || ex.bp), t(ex.eq)].filter(Boolean).join(' · ')
-  const sec = secondaryOf(ex).slice(0, 2).map(m => t(MUSCLE_NAME[m]).toLowerCase()).join(', ')
-  return [t(MUSCLE_NAME[p]), sec, ex.eq !== 'custom' && t(ex.eq)].filter(Boolean).join(' · ')
-}
+// The one thing a row says besides the name: which part of which muscle ("Upper chest").
+export const muscleLine = ex => t(regionOf(ex) || ex.tg || ex.bp || '')
 export const chipLabel = m => (m === 'cardio' ? t('Cardio') : t(MUSCLE_NAME[m]))
 
-function PickRow({ ex, onPick, inList, where }) {
+function PickRow({ ex, onPick, inList, icon = 'plus' }) {
   return <div className="item" onClick={() => onPick(ex)}>
-    <Thumb ex={ex} /><div className="grow"><div className="tt capitalize">{ex.n}</div>
-      <div className="ss">{inList && <b className="accent">{where === 'workout' ? t('In workout') : t('In routine')} · </b>}{muscleLine(ex)}</div></div>
-    <Icon name={inList ? 'check' : 'plus'} className={'chev' + (inList ? ' accent' : '')} />
+    <Thumb ex={ex} /><div className="grow"><div className="tt capitalize">{ex.n}</div><div className="ss">{muscleLine(ex)}</div></div>
+    <Icon name={inList ? 'check' : icon} className={'chev' + (inList ? ' accent' : '')} />
   </div>
 }
 
-// `listOf` reads the routine / workout being added to out of the live state, so the "In
-// routine" marks and the added count keep up while the picker stays open under each config
-// sheet — adding five exercises is five taps on this one list, not five trips back to it.
-function ExercisePicker({ onPick, close, listOf, where }) {
+// Deliberately bare: a search field, one row of muscles, the list. Without a search, what
+// you already train comes first, then the staple lifts (lib/pick.js browseOrder).
+// `listOf` reads the routine / workout being added to out of the live state, so the check
+// marks keep up while the picker stays open under each config sheet.
+function ExercisePicker({ onPick, close, listOf }) {
   const st = useStore(s => s.S)
-  const usage = usageOf(st)
   const list = (listOf && listOf(st)) || []
   const inList = new Set(list.map(e => e.id))
-  const [startLen] = useState(list.length)
-  const added = Math.max(0, list.length - startLen)
   const [q, setQ] = useState('')
   const [mu, setMu] = useState('')          // '' = every muscle, else a muscle slug or 'cardio'
-  const [eq, setEq] = useState('')          // '' = any equipment
   const [shown, setShown] = useState(50)
-  const reset = () => setShown(50)
   const [allKit, setAllKit] = useState(false)
+  const reset = () => setShown(50)
   const all = allExercises(st)
-  const found = searchExercises(all.filter(e => matchesMuscle(e, mu)), q, { usage })
-  // The gym profile hides what you can't do there — with a way out, so a search for a
-  // machine your gym lacks still finds it instead of looking like the app doesn't know it.
-  const gymOn = !!st.gymEq && !allKit
-  const base = gymOn ? gymFilter(found, st.gymEq) : found
-  const hidden = found.length - base.length
-  const eqOpts = equipmentOf(base)
-  // Drop the equipment filter if the search narrowed it away, so you never hit a dead end.
-  const eqOn = eqOpts.includes(eq) ? eq : ''
-  const f = eqOn ? base.filter(e => e.eq === eqOn) : base
-  // Without a search, what you actually train comes first instead of "3/4 sit-up".
-  const recent = q.trim() ? [] : recentIds(st).map(id => EXIDX[id]).filter(e => e && f.includes(e)).slice(0, 8)
-  const rest = recent.length ? f.filter(e => !recent.includes(e)) : f
+  const searching = !!q.trim()
+  const pool = all.filter(e => matchesMuscle(e, mu))
+  const found = searching ? searchExercises(pool, q, { usage: usageOf(st) }) : browseOrder(pool, { recent: recentIds(st) })
+  // The gym profile hides what you can't do there — with a way out while searching, so a
+  // machine your gym lacks still turns up instead of looking like the app doesn't know it.
+  const f = st.gymEq && !allKit ? gymFilter(found, st.gymEq) : found
+  const hidden = found.length - f.length
   const pick = ex => onPick(ex, { list, retarget: alt => onPick(alt, { list: (listOf && listOf(S())) || [] }) })
   return <>
-    <div className="row between" style={{ marginBottom: 10 }}>
+    <div className="row between" style={{ marginBottom: 14 }}>
       <h3 style={{ margin: 0 }}>{t('Add exercise')}</h3>
-      <div className="row" style={{ gap: 8 }}>
-        {added > 0 && <span className="small accent">{t('{0} added', added)}</span>}
-        <Button size="sm" variant={added ? 'primary' : 'tinted'} onClick={close}>{t('Done')}</Button>
-      </div>
+      <Button size="sm" variant="primary" onClick={close}>{t('Done')}</Button>
     </div>
     <div className="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-      <input className="input" placeholder={t('Search {0} exercises…', all.length)} value={q} onChange={e => { setQ(e.target.value); reset() }} />
+      <input className="input" placeholder={t('Search')} value={q} onChange={e => { setQ(e.target.value); reset() }} />
       {q && <button className="search-x" aria-label={t('Clear')} onClick={() => { setQ(''); reset() }}><Icon name="xmark" /></button>}</div>
-    <div className="chips" style={{ margin: eqOpts.length > 1 ? '10px 0 6px' : '10px 0' }}>
-      <button className={'chip nocap' + (!mu ? ' on' : '')} onClick={() => { setMu(''); setEq(''); reset() }}>{t('All')}</button>
-      {muscleChips(all).map(m => <button key={m} className={'chip' + (mu === m ? ' on' : '')} onClick={() => { setMu(m); setEq(''); reset() }}>{chipLabel(m)}</button>)}
+    <div className="chips" style={{ margin: '12px 0 14px' }}>
+      <button className={'chip nocap' + (!mu ? ' on' : '')} onClick={() => { setMu(''); reset() }}>{t('All')}</button>
+      {muscleChips(all).map(m => <button key={m} className={'chip' + (mu === m ? ' on' : '')} onClick={() => { setMu(m); reset() }}>{chipLabel(m)}</button>)}
     </div>
-    {eqOpts.length > 1 && <div className="chips" style={{ marginBottom: 10 }}>
-      <button className={'chip nocap' + (!eqOn ? ' on' : '')} onClick={() => { setEq(''); reset() }}>{t('Any equipment')}</button>
-      {eqOpts.map(x => <button key={x} className={'chip' + (eqOn === x ? ' on' : '')} onClick={() => { setEq(x); reset() }}>{t(x)}</button>)}
-    </div>}
-    {st.gymEq && (hidden > 0 || allKit) && <div className="small dim row" style={{ gap: 5, margin: '0 2px 10px' }}>
-      <Icon name="dumbbell" style={{ fontSize: 13, flex: 'none' }} />
-      <span className="grow">{allKit ? t('Showing all equipment.') : t('{0} hidden — your gym doesn’t have the equipment.', hidden)}</span>
-      <button className="accent" style={{ flex: 'none', whiteSpace: 'nowrap' }} onClick={() => { setAllKit(v => !v); reset() }}>{allKit ? t('Only my gym') : t('Show all')}</button>
-    </div>}
-    {recent.length > 0 && <>
-      <h4 className="sec">{t('Recent')}</h4>
-      <div className="list" style={{ marginBottom: 14 }}>
-        {recent.map(e => <PickRow key={e.id} ex={e} onPick={pick} inList={inList.has(e.id)} where={where} />)}
-      </div>
-      <h4 className="sec">{t('All exercises')}</h4>
-    </>}
     <div className="list">
-      {rest.slice(0, shown).map(e => <PickRow key={e.id} ex={e} onPick={pick} inList={inList.has(e.id)} where={where} />)}
-      {f.length === 0 && <div className="empty"><div className="ico"><Icon name="magnifier" /></div>{t('No match')}</div>}
+      {f.slice(0, shown).map(e => <PickRow key={e.id} ex={e} onPick={pick} inList={inList.has(e.id)} />)}
+      {f.length === 0 && <div className="empty">{t('No match')}</div>}
+      {searching && hidden > 0 && <button className="pk-link" onClick={() => setAllKit(true)}>{t('Show {0} more for other gyms', hidden)}</button>}
       <div className="item" onClick={() => customExSheet(null, ex => pick(ex), q.trim())}>
-        <div className="thumb thumb-x"><Icon name="sparkles" /></div>
-        <div className="grow"><div className="tt">{q.trim() ? t('Create “{0}”', q.trim()) : t('Create your own exercise')}</div><div className="ss">{t('name + body part, no animation')}</div></div><Icon name="plus" className="chev" />
+        <div className="thumb thumb-x"><Icon name="plus" /></div>
+        <div className="grow"><div className="tt">{searching ? t('Create “{0}”', q.trim()) : t('Create your own exercise')}</div></div>
       </div>
     </div>
-    {rest.length > shown && <><div style={{ height: 8 }} /><Button onClick={() => setShown(s => s + 50)}>{t('Show more')}</Button></>}
+    {f.length > shown && <><div style={{ height: 8 }} /><Button variant="soft" onClick={() => setShown(s => s + 50)}>{t('Show more')}</Button></>}
   </>
 }
-// `opts.listOf(state)` → the [{ id }] being added to; `opts.where` = 'routine' | 'workout'.
+// `opts.listOf(state)` → the [{ id }] being added to.
 export const exercisePicker = (onPick, opts = {}) =>
-  ui().openSheet(close => <ExercisePicker onPick={onPick} close={close} listOf={opts.listOf} where={opts.where} />)
+  ui().openSheet(close => <ExercisePicker onPick={onPick} close={close} listOf={opts.listOf} />)
 
 /* ============================ my gym's equipment ============================ */
 // Every kind of kit in the catalogue, most exercises first, so the list reads "barbell,
@@ -328,25 +274,11 @@ export const gymEquipmentSheet = () => ui().openSheet(() => <GymEquipment />)
 // agreeing with you. Closest movement first ("barbell bench press" → "dumbbell bench press").
 function SwapPicker({ ex, exclude, onSwap, close }) {
   const st = useStore(s => s.S)
-  const [eq, setEq] = useState('')
-  const base = similarTo(ex, allExercises(st), { exclude, gymEq: st.gymEq, usage: usageOf(st) })
-  const eqOpts = equipmentOf(base)
-  const eqOn = eqOpts.includes(eq) ? eq : ''
-  const f = (eqOn ? base.filter(e => e.eq === eqOn) : base).slice(0, 30)
-  const p = primaryOf(ex)
+  const f = similarTo(ex, allExercises(st), { exclude, gymEq: st.gymEq, usage: usageOf(st) }).slice(0, 30)
   return <>
-    <h3 className="capitalize">{t('Swap “{0}”', ex.n)}</h3>
-    <div className="muted small" style={{ marginBottom: 10 }}>
-      {t('Same main muscle ({0}) — sets and reps stay as they are.', p ? t(MUSCLE_NAME[p]) : t('Cardio'))}</div>
-    {eqOpts.length > 1 && <div className="chips" style={{ marginBottom: 10 }}>
-      <button className={'chip nocap' + (!eqOn ? ' on' : '')} onClick={() => setEq('')}>{t('Any equipment')}</button>
-      {eqOpts.map(x => <button key={x} className={'chip' + (eqOn === x ? ' on' : '')} onClick={() => setEq(x)}>{t(x)}</button>)}
-    </div>}
+    <h3>{t('Swap for')}</h3>
     <div className="list">
-      {f.map(e => <div key={e.id} className="item" onClick={() => { close(); onSwap(e) }}>
-        <Thumb ex={e} /><div className="grow"><div className="tt capitalize">{e.n}</div><div className="ss">{muscleLine(e)}</div></div>
-        <Icon name="shuffle" className="chev" />
-      </div>)}
+      {f.map(e => <PickRow key={e.id} ex={e} icon="shuffle" onPick={alt => { close(); onSwap(alt) }} />)}
       {f.length === 0 && <div className="empty">{t('No match')}</div>}
     </div>
   </>
@@ -355,21 +287,20 @@ function SwapPicker({ ex, exclude, onSwap, close }) {
 export const swapSheet = (ex, exclude, onSwap) => ui().openSheet(close => <SwapPicker ex={ex} exclude={exclude} onSwap={onSwap} close={close} />)
 
 /* ============================ Peek: overlap ============================ */
-// Adding a third exercise for the same muscle is usually the same lift twice in different
-// clothes. Peek says so and offers a neglected neighbour instead — never blocks the add.
+// A third exercise for the exact same part of a muscle is usually the same lift twice in
+// different clothes. Peek says so in one line and offers something the list is missing —
+// it never blocks the add.
 function PeekOverlap({ ex, ctx, close }) {
   const st = useStore(s => s.S)
   const sug = suggestionFor(ctx.list, ex.id, allExercises(st), { gymEq: st.gymEq, usage: usageOf(st) })
   if (!sug) return null
-  const { overlap, muscle, ex: alt } = sug
-  const names = overlap.ids.map(id => '“' + exOr(id).n + '”')
+  const { overlap, ex: alt } = sug
   return <div className="pk-coach pk-overlap">
-    {/* a light orb on the dark sheet, the usual dark one on a light sheet */}
-    <Orb size={44} inverted={document.documentElement.dataset.theme !== 'light'} poke="surprised-left" />
+    <Orb size={44} inverted poke="surprised-left" />
     <div className="grow">
-      <p>{t('{0} already hit {1}: {2}.', t('{0} exercises', overlap.ids.length), t(MUSCLE_NAME[overlap.muscle]).toLowerCase(), names.join(', '))}
-        {alt && ' ' + t('{0} barely get any work — try “{1}”?', t(MUSCLE_NAME[muscle]), alt.n)}</p>
-      {alt && <Button size="sm" variant="primary" icon="shuffle" className="capitalize" onClick={() => { close(); ctx.retarget(alt) }}>{t('Use “{0}” instead', alt.n)}</Button>}
+      <p>{t('You already have {0} exercises for {1}.', overlap.ids.length, t(overlap.region).toLowerCase())}
+        {alt && <> {t('Try')} <b className="capitalize">{alt.n}</b> {t('instead.')}</>}</p>
+      {alt && <Button size="sm" variant="primary" onClick={() => { close(); ctx.retarget(alt) }}>{t('Use this instead')}</Button>}
     </div>
   </div>
 }
@@ -447,11 +378,7 @@ function ExConfig({ ex, existing, onSave, onDelete, close, routine, ctx }) {
   return <>
     <h3 className="capitalize">{ex.n}</h3>
     <Media ex={ex} />
-    <div className="row" style={{ gap: 6, flexWrap: 'wrap', margin: '10px 0 14px' }}>
-      {cardio && <span className="tag acc"><Icon name="figureRun" />{t('Cardio')}</span>}
-      <span className="tag"><Icon name="dumbbell" />{t(ex.eq)}</span>
-    </div>
-    <MusclesTrained ex={ex} />
+    <MuscleTags ex={ex} />
     {!existing && ctx && ctx.retarget && <PeekOverlap ex={ex} ctx={ctx} close={close} />}
     {ex.desc && <div className="exnote">{ex.desc}</div>}
     {!cardio && <div style={{ marginBottom: 14 }}>

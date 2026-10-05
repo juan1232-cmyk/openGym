@@ -427,7 +427,7 @@ function ActiveWorkout() {
     <Button variant="soft" icon="plus" onClick={() => exercisePicker((ex, ctx) => exConfigSheet(ex, null, cfg => update(s => {
       s.active.entries.push(entryFor(s, ex.id, cfg))
       s.active.cur = s.active.entries.length - 1
-    }), null, S.routines.find(r => r.id === A.routineId), ctx), { where: 'workout', listOf: st => st.active?.entries })}>{t('Add exercise')}</Button>
+    }), null, S.routines.find(r => r.id === A.routineId), ctx), { listOf: st => st.active?.entries })}>{t('Add exercise')}</Button>
     <button className="pk-link pk-discard" onClick={discard}>{t('Discard workout')}</button>
 
     {/* while a rest or a timed set runs, the timer bar (RestTimer) sits exactly here instead */}

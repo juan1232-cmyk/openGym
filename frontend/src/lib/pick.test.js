@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { EXDB, EXIDX } from './exercises.js'
 import {
   searchExercises, primaryOf, muscleChips, matchesMuscle, recentIds, usageOf, gymFilter,
-  overlapFor, suggestionFor, similarTo, OVERLAP_AT,
+  overlapFor, suggestionFor, similarTo, OVERLAP_AT, regionOf, browseOrder, STAPLES,
 } from './pick.js'
 
 // Real exercises out of the shipped catalogue, looked up by name so the tests read like the UI.
@@ -11,6 +11,7 @@ const names = list => list.map(e => e.n)
 const BENCH = byName('barbell bench press')
 const INCLINE = byName('dumbbell incline bench press')
 const FLY = byName('dumbbell fly')
+const DB_BENCH = byName('dumbbell bench press')
 
 describe('searchExercises', () => {
   it('matches words in any order', () => {
@@ -93,30 +94,85 @@ describe('gymFilter', () => {
   })
 })
 
+describe('regionOf', () => {
+  it('splits the chest by angle', () => {
+    expect(regionOf(BENCH)).toBe('Mid chest')
+    expect(regionOf(INCLINE)).toBe('Upper chest')
+    expect(regionOf(byName('barbell decline bench press'))).toBe('Lower chest')
+    expect(regionOf(byName('chest dip'))).toBe('Lower chest')
+  })
+
+  it('splits the shoulders into front, side and rear', () => {
+    expect(regionOf(byName('dumbbell seated shoulder press'))).toBe('Front delts')
+    expect(regionOf(byName('barbell front raise'))).toBe('Front delts')
+    expect(regionOf(byName('dumbbell lateral raise'))).toBe('Side delts')
+    expect(regionOf(byName('dumbbell rear fly'))).toBe('Rear delts')
+  })
+
+  it('splits abs and back, and names the rest plainly', () => {
+    expect(regionOf(byName('hanging leg raise'))).toBe('Lower abs')
+    expect(regionOf(byName('russian twist'))).toBe('Obliques')
+    expect(regionOf(byName('crunch floor'))).toBe('Upper abs')
+    expect(regionOf(byName('pull-up'))).toBe('Lats')
+    expect(regionOf(byName('barbell bent over row'))).toBe('Mid back')
+    expect(regionOf(byName('barbell curl'))).toBe('Biceps')
+    expect(regionOf(EXDB.find(e => e.bp === 'cardio'))).toBe('Cardio')
+  })
+})
+
+describe('browseOrder', () => {
+  const triceps = EXDB.filter(e => matchesMuscle(e, 'triceps'))
+  it('opens a muscle on its staple lifts, not on oddities', () => {
+    expect(browseOrder(triceps)[0].n).toBe('cable pushdown')
+  })
+  it('puts what you train first, most recent first', () => {
+    const kick = byName('dumbbell kickback')
+    expect(browseOrder(triceps, { recent: [kick.id] })[0]).toBe(kick)
+  })
+  it('sinks stretches to the bottom', () => {
+    const chest = browseOrder(EXDB.filter(e => matchesMuscle(e, 'chest')))
+    const firstStretch = chest.findIndex(e => /stretch/.test(e.n))
+    expect(chest.slice(firstStretch).every(e => /stretch|male|female|pov/.test(e.n))).toBe(true)
+  })
+  it('only names staples that exist in the dataset', () => {
+    expect(STAPLES.filter(n => !EXDB.some(e => e.n === n))).toEqual([])
+  })
+})
+
 describe('overlap', () => {
-  const two = [{ id: BENCH.id }, { id: INCLINE.id }]
-  it(`warns from the ${OVERLAP_AT + 1}th exercise for the same muscle, not before`, () => {
+  const two = [{ id: BENCH.id }, { id: DB_BENCH.id }]
+  it(`warns from the ${OVERLAP_AT + 1}th exercise for the same part of a muscle, not before`, () => {
     expect(overlapFor([{ id: BENCH.id }], FLY.id)).toBe(null)
-    expect(overlapFor(two, FLY.id)).toEqual({ muscle: 'chest', ids: [BENCH.id, INCLINE.id] })
+    expect(overlapFor(two, FLY.id)).toEqual({ region: 'Mid chest', muscle: 'chest', ids: [BENCH.id, DB_BENCH.id] })
+  })
+
+  it('does not call an incline press a repeat of two flat ones', () => {
+    expect(overlapFor(two, INCLINE.id)).toBe(null)
   })
 
   it('does not count the exercise against itself', () => {
-    expect(overlapFor([...two, { id: FLY.id }], BENCH.id).ids).toEqual([INCLINE.id, FLY.id])
+    expect(overlapFor([...two, { id: FLY.id }], BENCH.id).ids).toEqual([DB_BENCH.id, FLY.id])
   })
 
-  it('suggests a neglected muscle from the same day, within the gym\'s kit', () => {
+  it('suggests a part of the same muscle the list does not train yet', () => {
     const s = suggestionFor(two, FLY.id, EXDB)
-    expect(['deltoids', 'triceps']).toContain(s.muscle)
-    expect(primaryOf(s.ex)).toBe(s.muscle)
-    const dbOnly = suggestionFor(two, FLY.id, EXDB, { gymEq: ['dumbbell'] })
+    expect(primaryOf(s.ex)).toBe('chest')
+    expect(regionOf(s.ex)).toBe('Upper chest')
+  })
+
+  it('moves on to a neglected neighbour when the muscle has no other part, within the gym\'s kit', () => {
+    const curls = [{ id: byName('barbell curl').id }, { id: byName('dumbbell biceps curl').id }]
+    const hammer = byName('dumbbell hammer curl')
+    const s = suggestionFor(curls, hammer.id, EXDB)
+    expect(s.overlap.region).toBe('Biceps')
+    expect(['upper-back', 'trapezius']).toContain(primaryOf(s.ex))
+    const dbOnly = suggestionFor(curls, hammer.id, EXDB, { gymEq: ['dumbbell'] })
     expect(['dumbbell', 'body weight']).toContain(dbOnly.ex.eq)
   })
 
-  it('stays quiet about a muscle the list already trains', () => {
-    const tri = EXDB.filter(e => primaryOf(e) === 'triceps').slice(0, 2)
-    const sh = EXDB.filter(e => primaryOf(e) === 'deltoids').slice(0, 2)
-    const full = [...two, ...tri, ...sh].map(e => ({ id: e.id }))
-    expect(suggestionFor(full, FLY.id, EXDB)).toEqual({ overlap: expect.objectContaining({ muscle: 'chest' }) })
+  it('stays quiet about helpers a crowded day already trains', () => {
+    const full = [{ id: BENCH.id }, { id: DB_BENCH.id }, { id: INCLINE.id }, { id: byName('chest dip').id }]
+    expect(suggestionFor(full, FLY.id, EXDB)).toEqual({ overlap: expect.objectContaining({ region: 'Mid chest' }) })
   })
 
   it('returns null without an overlap', () => {
