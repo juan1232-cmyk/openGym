@@ -977,6 +977,9 @@ h4.sec{
 :root[data-skin="peek"] .btn.sm{ padding:9px 14px; font-size:14px; border-radius:99px }
 :root[data-skin="peek"] .btn.primary:active{ background:var(--acc-2) }
 :root[data-skin="peek"] .sheet h3{ font-size:22px; letter-spacing:-.03em }
+/* a selected chip is an ink pill, like the selected tab and the day picker — green stays for "go" */
+:root[data-skin="peek"] .chip.on{ background:var(--ink); color:var(--on-ink) }
+:root[data-skin="peek"] .search .input{ background:var(--surface) }
 :root[data-skin="peek"] .input,
 :root[data-skin="peek"] .field{ background:var(--surface); border-radius:var(--r); box-shadow:inset 0 0 0 1.5px transparent }
 :root[data-skin="peek"] .input:focus,

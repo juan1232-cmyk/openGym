@@ -43,15 +43,10 @@ function applyPrefs(theme, accent, skin, focus) {
   if (meta) meta.content = SKIN_BAR[skin] || (de.dataset.theme === 'light' ? '#f2f2f7' : '#000000')
 }
 
-// Which screens wear the "Peek" design skin. Scoped to the screens that design covers rather
-// than replacing the theme — it takes over one screen per PR (and has replaced the earlier
-// "Hairline" trial on the ones they shared). Login has no route of its own (Shell renders it
-// in place of <Routes>), so it is keyed on !authed instead of a pathname; the Goals
-// onboarding step is the same kind of screen.
-const PEEK_ROUTES = ['home', 'workout', 'exercise']
-function skinFor(cur, authed, onboarding) {
-  return !authed || onboarding || PEEK_ROUTES.includes(cur) ? 'peek' : ''
-}
+// Every screen wears the "Peek" design skin. It started on Home, Workout and an exercise's
+// progress page and took over one screen per PR; the rest followed in one go once the
+// exercise picker had moved over, so the app no longer switches look between tabs.
+const skinFor = () => 'peek'
 
 function Shell() {
   const navigate = useNavigate()
@@ -63,7 +58,7 @@ function Shell() {
   useEffect(() => { setNav(navigate) }, [navigate])
   const onboarding = !!authed && needsGoals(S, ready, pulling)
   const cur = loc.pathname.split('/')[1] || 'home'
-  const skin = skinFor(cur, authed, onboarding)
+  const skin = skinFor()
   // A running session is a focus screen, the way the design draws it: no tab bar, a ‹ back to
   // Home in its place (the session keeps running; Home and the Start tab both say Resume).
   // An exercise's progress page is a drill-down with its own ‹, drawn without one too.
