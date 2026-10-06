@@ -789,6 +789,23 @@ h4.sec{
    outline path of its own, so without this the body reads as one flat blob. */
 .bm-v path{stroke:var(--surface);stroke-width:2.5;stroke-linejoin:round}
 
+/* the exercise sheet: labels over the chip rows, and the "More options" fold */
+.cfg-lbl{font-size:13px;color:var(--label-2);margin:14px 2px 8px}
+.cfg-more{display:flex;align-items:center;justify-content:space-between;width:100%;padding:12px 2px;
+  font-size:15px;color:var(--label-2);border-top:1px solid var(--sep)}
+.cfg-more-b{padding-top:4px}
+
+/* sets / reps / weight as buttons on a routine row, and the chip rows that pick them */
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+/* on a routine row the pills take their own line under the name, past the reorder buttons */
+.item.has-pills{flex-wrap:wrap;row-gap:0}
+.item.has-pills > .pills{flex-basis:100%;margin:0 0 2px 62px}
+.pill{padding:6px 12px;border-radius:99px;background:var(--surface-2);color:var(--label);font-size:14px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill:active{background:var(--surface-3)}
+/* wraps rather than scrolls: six choices are few enough to all be in view */
+.chips.scheme-chips{flex-wrap:wrap;overflow:visible}
+.scheme-chips .chip{min-width:44px;text-align:center;font-variant-numeric:tabular-nums}
+
 .mrow{display:flex;align-items:center;gap:9px;padding:5px 0}
 .mrow .nm{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mrow .bar{width:74px;height:5px;border-radius:3px;background:var(--surface-2);flex:none;overflow:hidden}
@@ -1368,4 +1385,6 @@ button.pk-tile:active{background:var(--surface-2)}
 .pk-coach p{font-size:14px;line-height:1.4;text-wrap:pretty}
 .pk-overlap{align-items:flex-start;margin:0 0 14px}
 .pk-overlap .btn{margin-top:10px;width:auto}
+.pk-overlap .row .btn{margin-top:10px}
+.pk-dismiss{margin-top:10px;padding:9px 6px;font-size:14px;color:var(--on-ink-2)}
 .pk-prog > .btn{margin-top:2px}

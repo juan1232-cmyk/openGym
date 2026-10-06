@@ -7,7 +7,9 @@ import { searchExercises, browseOrder, usageOf, recentIds, regionOf, muscleChips
 import { MUSCLE_NAME } from '../lib/muscles.js'
 import Orb from '../components/Orb.jsx'
 import { fmtDate, fmtNum, uid, exCount } from '../lib/format.js'
-import { lastEntryFor, bestWeightFor, setLabel, defaultConfig, cleanupSg, modeOf, isBw, isPerSide, sideReps } from '../lib/history.js'
+import { lastEntryFor, bestWeightFor, setLabel, defaultConfig, cleanupSg, modeOf, isBw, isPerSide, sideReps, repRangeOf } from '../lib/history.js'
+import { withRepRange, applySuggestion } from '../lib/scheme.js'
+import { SetsChips, RepsChips } from '../components/Scheme.jsx'
 import { t, instrFor, getLang, INSTR_LANGS } from '../lib/i18n.js'
 import { nav } from '../lib/nav.js'
 import Media, { Thumb } from '../components/Media.jsx'
@@ -16,7 +18,7 @@ import Icon from '../components/Icon.jsx'
 import { Button, Switch, Segmented, SelectRow, Row, Section } from '../components/ui.jsx'
 import { glyphOf, DEFAULT_GLYPH } from '../lib/glyphs.js'
 import { estimate1RM, best1RM, REP_CAP } from '../lib/onerm.js'
-import { policyFor, defaultIncrement, POLICIES_FOR, POLICY_NAME, POLICY_DESC, MAX_BW_SETS } from '../lib/progression.js'
+import { policyFor, defaultIncrement, POLICIES_FOR, POLICY_NAME, POLICY_DESC } from '../lib/progression.js'
 import { S, update, ui, toast, confirmSheet } from './common.jsx'
 
 /* ============================ exercise detail ============================ */
@@ -326,8 +328,6 @@ function ProgressionFields({ ex, mode, c, setC, routine, unit }) {
     {active !== 'off' && <div className="row cfgrow" style={{ marginBottom: 18 }}>
       <Stepper label={mode === 'time' ? t('Step (seconds)') : t('Step ({0})', unit)} value={inc}
         step={mode === 'time' ? 5 : 1.25} decimal={mode !== 'time'} onChange={v => setC(x => ({ ...x, inc: v }))} />
-      {active === 'double' && <Stepper label={t('Reps from')} value={c.repsMin || Math.max(1, (c.reps || 10) - 2)}
-        step={1} decimal={false} onChange={v => setC(x => ({ ...x, repsMin: v }))} />}
     </div>}
   </>
 }
@@ -337,7 +337,12 @@ function ProgressionFields({ ex, mode, c, setC, routine, unit }) {
 function ExConfig({ ex, existing, onSave, onDelete, close, routine, ctx }) {
   const st = useStore(s => s.S)
   const cardio = isCardio(ex.id)
-  const [c, setC] = useState(existing || defaultConfig(ex.id))
+  // A new exercise starts on what Peek would suggest for the profile's goal, so most of the
+  // time adding one is just "Add to routine".
+  const [c, setC] = useState(() => existing || applySuggestion(defaultConfig(ex.id), ex, st.goal))
+  // Everything most adds never touch lives behind "More options"; an exercise already set up
+  // as a timed hold opens with it showing, since the Reps/Time switch is in there.
+  const [more, setMore] = useState(() => !!existing && modeOf({ ...existing, id: ex.id }) === 'time')
   // Cardio keeps its own duration+speed form; the reps/time choice (issue #16) is offered for
   // everything else, which is where the gap was — planks, hangs, wall sits, loaded carries.
   const mode = cardio ? 'cardio' : modeOf({ ...c, id: ex.id })
@@ -364,14 +369,11 @@ function ExConfig({ ex, existing, onSave, onDelete, close, routine, ctx }) {
     if (cardio) onSave({ sets, min: Math.max(1, Math.round(c.min) || 20), speed: Math.max(0, c.speed || 8) })
     else if (mode === 'time') onSave({ sets, mode: 'time', sec: Math.max(1, Math.round(c.sec) || 45), weight: Math.max(0, c.weight || 0), ...flags, ...prog })
     else {
-      // A unilateral target is stored even: the split has to divide, and a typed 15 would
-      // otherwise plan seven reps on one side and eight on the other, every session.
-      const typed = Math.max(1, Math.round(c.reps) || 10)
-      const reps = perSide ? Math.ceil(typed / 2) * 2 : typed
-      const out = { sets, mode: 'reps', reps, weight: Math.max(0, c.weight || 0), ...flags, ...(perSide ? { side: true } : {}), ...prog }
-      if (policyFor({ ...c, id: ex.id }, routine, 'reps') === 'double') out.repsMin = Math.min(reps, Math.max(1, Math.round(c.repsMin) || Math.max(1, reps - 2)))
-      // A ceiling below the working reps would tell you to add a set on day one.
-      if (bw && !(out.weight > 0) && c.repsMax > 0) out.repsMax = Math.max(reps, Math.round(c.repsMax))
+      // The range goes through withRepRange, which knows which fields carry it (repsMin for
+      // a loaded lift, repsMax for bodyweight) and keeps a per-side total even.
+      const { lo, hi } = repRangeOf({ ...c, id: ex.id })
+      const base = { id: ex.id, sets, mode: 'reps', reps: c.reps, weight: Math.max(0, c.weight || 0), ...flags, ...(perSide ? { side: true } : {}), ...prog }
+      const { id, ...out } = withRepRange(base, lo || 10, hi || lo || 10)
       onSave(out)
     }
   }
@@ -381,66 +383,66 @@ function ExConfig({ ex, existing, onSave, onDelete, close, routine, ctx }) {
     <MuscleTags ex={ex} />
     {!existing && ctx && ctx.retarget && <PeekOverlap ex={ex} ctx={ctx} close={close} />}
     {ex.desc && <div className="exnote">{ex.desc}</div>}
-    {!cardio && <div style={{ marginBottom: 14 }}>
-      <Segmented className="seg-range" value={mode} onChange={setMode}
-        options={[{ value: 'reps', label: t('Reps') }, { value: 'time', label: t('Time') }]} />
-    </div>}
-    <div className="row cfgrow" style={{ marginBottom: mode === 'time' ? 8 : 18 }}>
+    {mode === 'reps' ? <>
+      {/* the two things nearly every add changes, one tap each */}
+      <div className="cfg-lbl">{t('Sets')}</div>
+      <SetsChips value={c.sets} onPick={n => setC(x => ({ ...x, sets: n }))} />
+      <div className="cfg-lbl">{t('Reps')}</div>
+      <RepsChips cfg={{ ...c, id: ex.id }} onPick={(lo, hi) => setC(x => { const { id, ...y } = withRepRange({ ...x, id: ex.id }, lo, hi); return y })} />
+      {!bw && <div className="row cfgrow" style={{ margin: '16px 0 18px' }}>
+        <Stepper label={t('Weight ({0})', st.unit)} value={c.weight} step={2.5} onChange={v => setC(x => ({ ...x, weight: v }))} />
+      </div>}
+      {bw && <div style={{ height: 18 }} />}
+    </> : <div className="row cfgrow" style={{ marginBottom: mode === 'time' ? 8 : 18 }}>
       {cardio ? <>
         <Stepper label={t('Intervals')} value={c.sets} step={1} decimal={false} onChange={v => setC(x => ({ ...x, sets: v }))} />
         <Stepper label={t('Minutes')} value={c.min} step={1} decimal={false} onChange={v => setC(x => ({ ...x, min: v }))} />
         <Stepper label={t('Speed (km/h)')} value={c.speed} step={0.5} onChange={v => setC(x => ({ ...x, speed: v }))} />
-      </> : mode === 'time' ? <>
+      </> : <>
         <Stepper label={t('Sets')} value={c.sets} step={1} decimal={false} onChange={v => setC(x => ({ ...x, sets: v }))} />
         <Stepper label={t('Seconds')} value={c.sec} step={5} decimal={false} onChange={v => setC(x => ({ ...x, sec: v }))} />
         <Stepper label={t('Weight ({0})', st.unit)} value={c.weight} step={2.5} onChange={v => setC(x => ({ ...x, weight: v }))} />
-      </> : <>
-        <Stepper label={t('Sets')} value={c.sets} step={1} decimal={false} onChange={v => setC(x => ({ ...x, sets: v }))} />
-        <Stepper label={t('Reps')} value={c.reps} step={perSide ? 2 : 1} decimal={false} onChange={v => setC(x => ({ ...x, reps: v }))} />
-        {/* On bodyweight work the weight stepper is the click #32 is about, so it is not here
-            until there is a belt to describe — see the added-weight row below. */}
-        {!bw && <Stepper label={t('Weight ({0})', st.unit)} value={c.weight} step={2.5} onChange={v => setC(x => ({ ...x, weight: v }))} />}
       </>}
-    </div>
+    </div>}
     {mode === 'time' && !bw && <div className="small dim" style={{ marginBottom: 18 }}>
       {t('A timer runs while you hold the set. Leave the weight at 0 for bodyweight holds.')}
     </div>}
-    {/* ---------- bodyweight + per side (issues #31/#32/#33) ---------- */}
-    {!cardio && <div className="sect-b" style={{ marginBottom: 8 }}>
-      <Row icon="figureStrength" iconTint="var(--acc)" title={t('Bodyweight')}
-        subtitle={bw ? t('No weight to enter — just log the reps.') : t('Ask for a weight on every set.')}>
-        <Switch checked={bw} onChange={v => setC(x => ({ ...x, bodyweight: v, weight: v ? 0 : x.weight }))} />
-      </Row>
-      {mode === 'reps' && <Row icon="shuffle" iconTint="var(--blue)" title={t('Reps per side')}
-        subtitle={perSide ? t('You still log the total: {0} is {1} per side.', c.reps || 0, fmtNum(sideReps(c.reps))) : t('For lunges, single-arm rows and the like.')}>
-        {/* Turning it on rounds the target up to an even number, since half of an odd
-            total is a rep one side does not get. */}
-        <Switch checked={perSide} onChange={v => setC(x => ({ ...x, side: v || undefined, reps: v ? Math.ceil((x.reps || 0) / 2) * 2 : x.reps }))} />
-      </Row>}
-    </div>}
-    {/* A stepper is too wide to sit in a list row next to a label — it squeezes the text to
-        one word per line — so added weight gets the same full-width treatment as sets and
-        reps, with its explanation underneath. */}
-    {bw && <>
-      <div className="row cfgrow" style={{ marginBottom: 8 }}>
-        <Stepper label={t('Added ({0})', st.unit)} value={c.weight || 0} step={2.5}
-          onChange={v => setC(x => ({ ...x, weight: v }))} />
+    {!cardio && <button className="cfg-more" onClick={() => setMore(v => !v)} aria-expanded={more}>
+      <span>{t('More options')}</span><Icon name={more ? 'chevronUp' : 'chevronDown'} />
+    </button>}
+    {!cardio && more && <div className="cfg-more-b">
+      <div style={{ marginBottom: 14 }}>
+        <Segmented className="seg-range" value={mode} onChange={setMode}
+          options={[{ value: 'reps', label: t('Reps') }, { value: 'time', label: t('Time') }]} />
       </div>
-      <div className="small dim" style={{ marginBottom: 18 }}>
-        {t('For dips or pull-ups with a belt. Progression then follows the weight.')}
+      {/* ---------- bodyweight + per side (issues #31/#32/#33) ---------- */}
+      <div className="sect-b" style={{ marginBottom: 8 }}>
+        <Row icon="figureStrength" iconTint="var(--acc)" title={t('Bodyweight')}
+          subtitle={bw ? t('No weight to enter — just log the reps.') : t('Ask for a weight on every set.')}>
+          <Switch checked={bw} onChange={v => setC(x => ({ ...x, bodyweight: v, weight: v ? 0 : x.weight }))} />
+        </Row>
+        {mode === 'reps' && <Row icon="shuffle" iconTint="var(--blue)" title={t('Reps per side')}
+          subtitle={perSide ? t('You still log the total: {0} is {1} per side.', c.reps || 0, fmtNum(sideReps(c.reps))) : t('For lunges, single-arm rows and the like.')}>
+          {/* Turning it on rounds the target up to an even number, since half of an odd
+              total is a rep one side does not get. */}
+          <Switch checked={perSide} onChange={v => setC(x => ({ ...x, side: v || undefined, reps: v ? Math.ceil((x.reps || 0) / 2) * 2 : x.reps }))} />
+        </Row>}
       </div>
-    </>}
-    {/* The rep ceiling only means something when there is no load to add instead. */}
-    {mode === 'reps' && bw && !(c.weight > 0) && <div className="row cfgrow" style={{ marginBottom: 18 }}>
-      <Stepper label={t('Top of the range')} value={c.repsMax || 0} step={1} decimal={false}
-        onChange={v => setC(x => ({ ...x, repsMax: v }))} />
+      {/* A stepper is too wide to sit in a list row next to a label — it squeezes the text to
+          one word per line — so added weight gets the same full-width treatment as sets and
+          reps, with its explanation underneath. */}
+      {bw && <>
+        <div className="row cfgrow" style={{ marginBottom: 8 }}>
+          <Stepper label={t('Added ({0})', st.unit)} value={c.weight || 0} step={2.5}
+            onChange={v => setC(x => ({ ...x, weight: v }))} />
+        </div>
+        <div className="small dim" style={{ marginBottom: 18 }}>
+          {t('For dips or pull-ups with a belt. Progression then follows the weight.')}
+        </div>
+      </>}
+      <ProgressionFields ex={ex} mode={mode} c={c} setC={setC} routine={routine} unit={st.unit} />
     </div>}
-    {mode === 'reps' && bw && !(c.weight > 0) && <div className="small dim" style={{ marginTop: -10, marginBottom: 18 }}>
-      {c.repsMax > 0
-        ? t('Reps climb to {0}, then a set is added and the reps start over. At {1} sets it asks you to add weight instead.', c.repsMax, MAX_BW_SETS)
-        : t('Reps climb by one whenever every set was clean. Set a ceiling to add sets instead of reps forever.')}
-    </div>}
-    <ProgressionFields ex={ex} mode={mode} c={c} setC={setC} routine={routine} unit={st.unit} />
+    {!cardio && !more && <div style={{ height: 14 }} />}
     <Button variant="primary" onClick={save}>{existing ? t('Save') : t('Add to routine')}</Button>
     {existing && ctx && ctx.swap && <><div style={{ height: 8 }} /><Button icon="shuffle" onClick={() => { close(); swapSheet(ex, (ctx.list || []).map(e => e.id), ctx.swap) }}>{t('Swap for similar')}</Button></>}
     {ex.custom && <><div style={{ height: 8 }} /><Button icon="pencil" onClick={() => { close(); customExSheet(ex) }}>{t('Edit or delete this exercise')}</Button></>}
