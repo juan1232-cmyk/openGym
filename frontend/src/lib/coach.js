@@ -1,17 +1,18 @@
 // The coach behind the Peek orb: reads the profile's own training and decides how the orb
-// feels about it and what, if anything, it says. Pure — no React, no storage, no network.
+// feels about it and what it says. Pure — no React, no storage, no network.
 //
-// Deliberately not a lookup table. Several signals blend into one hidden score, the score
-// gets noise, the mood is a weighted pick from a band (now and then the neighbouring band),
-// and some turns it says nothing at all. The one rule a user can rely on: a PR gets
-// celebrated. Everything else should read as a mood, not as a trigger they can map.
+// What it thinks is not random: lib/verdict.js decides — the same log, the same verdict —
+// whether you're progressing, holding, slipping, stalled or away, and the mood always comes
+// from that verdict's own set of faces. The randomness is only in *which* face and *which*
+// line, so it doesn't sound like a report, never in what it's telling you. (It used to blur
+// the verdict on purpose — noise on a score, now and then the neighbouring mood — which is
+// exactly why it read as decoration rather than as something to check.)
 //
 // All the randomness comes from one seeded generator (see coachSeed), so the orb holds its
-// mood across re-renders and visits within a few hours, and shifts when the day moves on or
-// something new is logged — without it being obvious which of those did it.
+// face and line across re-renders and visits within a few hours.
 import { isoOf } from './format.js'
-import { effectiveRoutineId, modeOf } from './history.js'
-import { sessionsFor, stallCount } from './progression.js'
+import { effectiveRoutineId } from './history.js'
+import { progressVerdict } from './verdict.js'
 import { t } from './i18n.js'
 
 const DAY = 864e5
@@ -40,20 +41,10 @@ export function coachSignals(state, now = new Date(), nameOf = id => id) {
     if (!done.has(iso)) missed++
   }
 
-  const vol = (a, b) => recent(a, b).reduce((n, w) => n + (w.vol || 0), 0)
-  const before = vol(14, 28)
-
   const prWs = recent(0, 14).filter(w => w.prs && w.prs.length).sort((a, b) => dayNum(b.d) - dayNum(a.d))
   const fresh = prWs.find(w => ago(w) <= 2)
 
-  // lifts in the plan that missed their target two sessions running and are still trained
-  const seen = new Set(), stalled = []
-  S.routines.forEach(r => (r.ex || []).forEach(e => {
-    if (seen.has(e.id) || modeOf(e) === 'cardio' || !(e.reps || e.sec)) return
-    seen.add(e.id)
-    const ss = sessionsFor(S, e.id, e)
-    if (ss.length && today - dayNum(ss[ss.length - 1].d) < 21 && stallCount(ss) >= 2) stalled.push(nameOf(e.id))
-  }))
+  const verdict = progressVerdict(S, now, nameOf)
 
   const todayId = effectiveRoutineId(S, isoOf(now))
   const todayRoutine = todayId ? S.routines.find(r => r.id === todayId) : null
@@ -63,28 +54,12 @@ export function coachSignals(state, now = new Date(), nameOf = id => id) {
     daysOff,
     trainedToday: daysOff === 0,
     planned, missed,
-    week: recent(0, 7).length,
-    active4: new Set(recent(0, 28).map(w => Math.floor(ago(w) / 7))).size,
-    volTrend: before > 0 ? vol(0, 14) / before : null,
     prs: prWs.reduce((n, w) => n + w.prs.length, 0),
     freshPR: fresh ? nameOf(fresh.prs[fresh.prs.length - 1]) : null,
-    stalled,
+    verdict,
     today: todayRoutine ? todayRoutine.name : null,
     hour: now.getHours()
   }
-}
-
-/** -1..1: how proud of you it is. Effort and progress push it up; gaps, skips and stalls down. */
-export function coachScore(s) {
-  if (!s.total) return 0
-  let x = s.daysOff <= 1 ? 0.25 : s.daysOff <= 3 ? 0.05 : s.daysOff <= 6 ? -0.25 : s.daysOff <= 13 ? -0.55 : -0.85
-  x -= Math.min(3, s.missed) * 0.15
-  x += (s.active4 - 2) * 0.1
-  x += Math.min(3, s.prs) * 0.1
-  if (s.freshPR) x += 0.3
-  if (s.volTrend != null) x += s.volTrend > 1.1 ? 0.15 : s.volTrend < 0.7 ? -0.15 : 0
-  x -= Math.min(3, s.stalled.length) * 0.08
-  return Math.max(-1, Math.min(1, x))
 }
 
 // mulberry32 over a string hash — small, and the same key always gives the same sequence
@@ -107,24 +82,23 @@ const pickW = (rng, table) => {
   for (const [k, w] of e) if ((r -= w) < 0) return k
   return e[e.length - 1][0]
 }
-const BANDS = {
-  high: { happy: 3, proud: 2, playful: 2, celebrate: 1, excited: 1 },
-  mid: { idle: 4, curious: 2, suspicious: 1, playful: 1 },
-  low: { angry: 3, suspicious: 2, disappointed: 2, bored: 1 }
+// Each verdict's own faces. Which one is random; which table it comes from never is.
+export const VERDICT_MOODS = {
+  progressing: { happy: 3, proud: 3, playful: 2, excited: 1 },
+  holding: { idle: 4, curious: 2, playful: 1 },
+  slipping: { disappointed: 3, suspicious: 2, angry: 1 },
+  stalled: { suspicious: 3, disappointed: 2, bored: 1 },
+  away: { angry: 3, disappointed: 2, bored: 1 },
+  new: { curious: 3, idle: 2, playful: 1 }
 }
-export const BAND_OF = { drowsy: 'late' }
-Object.entries(BANDS).forEach(([b, tb]) => Object.keys(tb).forEach(m => { BAND_OF[m] = BAND_OF[m] || b }))
 
 /** One of orb-rig MOODS. */
-export function coachMood(score, s, rng) {
+export function coachMood(s, rng) {
+  const v = s.verdict.state
   if (s.freshPR) return pickW(rng, { celebrate: 3, proud: 2, excited: 2 })
-  if ((s.hour >= 23 || s.hour < 5) && rng() < 0.35) return 'drowsy'
-  if (!s.total) return pickW(rng, { curious: 3, idle: 2, playful: 1 })
-  const nudge = (rng() - 0.5) * 0.3
-  let band = score + nudge > 0.35 ? 'high' : score + nudge < -0.25 ? 'low' : 'mid'
-  // now and then it's in a mood of its own: grumpy on a good week, soft on a bad one
-  if (rng() < 0.08) band = band === 'mid' ? (rng() < 0.5 ? 'high' : 'low') : 'mid'
-  return pickW(rng, band === 'low' && score < -0.6 ? { ...BANDS.low, angry: 6 } : BANDS[band])
+  // sleepy late at night — but only when that isn't covering up bad news
+  if ((s.hour >= 23 || s.hour < 5) && (v === 'progressing' || v === 'holding') && rng() < 0.35) return 'drowsy'
+  return pickW(rng, VERDICT_MOODS[v])
 }
 
 // Lines are [template, ...args] until the end, so a template is only ever filled by t().
@@ -136,41 +110,68 @@ const LINES = {
     ...(s.prs > 1 ? [['{0} PRs in two weeks. Who are you?', s.prs], ['New {0} PR. Again.', s.freshPR]] : [])
   ],
   late: () => [["It's late. Sleep is part of training."], ['Go to bed. Gains happen there.']],
-  new: () => [["Hey. I'm Peek. Log a workout and we'll talk."], ["Nothing logged yet. Show me what you've got."]],
-  high: s => [
-    ...(s.trainedToday ? [['Good session. That one counted.'], ['Done. Now go eat.']] : []),
-    ...(s.week >= 2 ? [["{0} sessions this week. That's how it's done.", s.week]] : []),
-    ...(s.volTrend > 1.1 ? [['Volume is up. I like where this is going.']] : []),
-    ...(s.active4 >= 4 ? [["Four weeks without a gap. Don't get comfy."]] : [])
+  new: s => s.total
+    ? [["A couple more sessions and I'll tell you how you're doing."], ["Keep logging. I'm still figuring you out."]]
+    : [["Hey. I'm Peek. Log a workout and we'll talk."], ["Nothing logged yet. Show me what you've got."]],
+  progressing: s => [
+    ...(s.verdict.up.length >= 3 ? [['{0} lifts going up. This is working.', s.verdict.up.length]] : []),
+    ...(s.verdict.up.length === 2 ? [['{0} and {1} are both going up.', s.verdict.up[0], s.verdict.up[1]]] : []),
+    ...(s.verdict.up.length === 1 ? [['{0} keeps climbing. I see it.', s.verdict.up[0]], ['{0} is going up. Keep pushing.', s.verdict.up[0]]] : []),
+    ...(!s.verdict.up.length && s.prs ? [['{0} PRs in two weeks. Keep them coming.', s.prs]] : []),
+    // naming what went up is the point; the skipped-days nag is only for when there's nothing to name
+    ...(!s.verdict.up.length && s.missed ? [["You're getting stronger. Now stop skipping days."]] : [])
   ],
-  highAny: () => [["You're actually doing it. Keep going."], ['Solid. Now do it again.']],
-  mid: s => [
+  progressingAny: () => [["You're getting stronger. Keep going."], ['Stronger than last month. Do it again.']],
+  holding: s => [
     ...(s.today && !s.trainedToday ? [['{0} today. You know what to do.', s.today], ['{0} is waiting.', s.today]] : []),
-    ...(s.trainedToday ? [['Done for today. Eat something with protein in it.'], ["Rest counts too. Don't skip it."]] : []),
-    ...(s.stalled.length ? [['{0} has been stubborn lately.', s.stalled[0]]] : [])
+    ...(s.trainedToday ? [['Done for today. Eat something with protein in it.']] : []),
+    ...(s.verdict.flat.length ? [['{0} is holding steady. Time to push it.', s.verdict.flat[0]]] : []),
+    ...(s.missed ? [["You skipped a planned day. Don't make it two."]] : [])
   ],
-  midAny: () => [["I'm watching. Casually."], ['Still here.'], ['Good day to lift something heavy.']],
-  low: s => [
-    ...(s.daysOff >= 3 ? [['{0} days. The bar misses you. Not really.', s.daysOff], ['{0} days without training. Get up.', s.daysOff], ["It's been {0} days. I've been counting.", s.daysOff]] : []),
-    ...(s.missed === 1 ? [["You skipped a planned day. Don't make it two."]] : []),
-    ...(s.missed > 1 ? [['You planned {0} sessions this week. You did {1}.', s.planned, s.planned - s.missed], ['{0} planned days skipped. Fix it today.', s.missed]] : []),
-    ...(s.stalled.length ? [['{0} is stuck. Something has to change.', s.stalled[0]]] : [])
+  holdingAny: () => [['Holding steady. Not worse, not better.'], ["I'm watching. Casually."], ['Good day to lift something heavy.']],
+  slipping: s => [
+    ...(s.verdict.down.length >= 2 ? [['{0} and {1} are both going down.', s.verdict.down[0], s.verdict.down[1]]] : []),
+    ...(s.verdict.down.length === 1 ? [['{0} is going backwards.', s.verdict.down[0]], ['{0} is dropping. Sleep, eat, then push.', s.verdict.down[0]]] : []),
+    ...(!s.verdict.down.length && s.missed > 1 ? [['You planned {0} sessions this week. You did {1}.', s.planned, s.planned - s.missed]] : [])
   ],
-  lowAny: () => [["I'm not mad. I'm disappointed. Also mad."], ['No excuses today.'], ['Less scrolling. More lifting.']]
+  slippingAny: () => [["You're slipping. Let's fix it today."]],
+  stalled: s => [
+    ['{0} and {1} are stuck.', s.verdict.stalled[0], s.verdict.stalled[1]],
+    ["{0} hasn't moved in a while. Something has to change.", s.verdict.stalled[0]]
+  ],
+  stalledAny: () => [['Stuck. Change something: reps, rest or sleep.']],
+  away: s => [
+    ['{0} days. The bar misses you. Not really.', s.daysOff],
+    ['{0} days without training. Get up.', s.daysOff],
+    ["It's been {0} days. I've been counting.", s.daysOff]
+  ],
+  awayAny: () => [["I'm not mad. I'm disappointed. Also mad."], ['No excuses today.']]
 }
 const say = ([tpl, ...args]) => { const v = t(tpl, ...args); return v.charAt(0).toUpperCase() + v.slice(1) }
 const one = (rng, arr) => arr[Math.floor(rng() * arr.length)]
 
-/** What it says in this mood, or null — silence is part of it. */
+/** What it says. Always something, except now and then on a plain holding day. */
 export function coachLine(mood, s, rng) {
   if (s.freshPR) return say(one(rng, LINES.pr(s)))
-  if (mood === 'drowsy') return rng() < 0.6 ? say(one(rng, LINES.late())) : null
-  if (!s.total) return say(one(rng, LINES.new()))
-  const band = BAND_OF[mood] || 'mid'
-  if (rng() < (band === 'mid' ? 0.2 : 0.08)) return null
-  // the specific lines win most of the time; the stock ones keep it from sounding like a report
-  const specific = LINES[band](s)
-  return say(one(rng, specific.length && rng() < 0.75 ? specific : LINES[band + 'Any']()))
+  if (mood === 'drowsy' && rng() < 0.6) return say(one(rng, LINES.late()))
+  const v = s.verdict.state
+  if (v === 'new') return say(one(rng, LINES.new(s)))
+  if (v === 'holding' && rng() < 0.2) return null
+  // the line naming the lift is the point; the stock ones are only for when there's none
+  const specific = LINES[v](s)
+  return say(one(rng, specific.length ? specific : LINES[v + 'Any']()))
+}
+
+/**
+ * Something else to say while you're looking at it — a tap, or it piping up on its own. Any of
+ * the verdict's lines, stock ones included, so it doesn't repeat the one line it led with;
+ * never a line from a different verdict. `not` is what it just said.
+ */
+export function coachAside(s, rng, not) {
+  if (s.freshPR) return say(one(rng, LINES.pr(s)))
+  const v = s.verdict.state
+  const all = (v === 'new' ? LINES.new(s) : [...LINES[v](s), ...LINES[v + 'Any']()]).map(say).filter(l => l !== not)
+  return all.length ? one(rng, all) : null
 }
 
 /** A burst of taps: `n` taps in the last few seconds. null = just a squish. */
@@ -183,8 +184,7 @@ export function pokeReaction(n, rng) {
 /** Everything Home needs in one call. */
 export function coach(S, now = new Date(), nameOf) {
   const signals = coachSignals(S, now, nameOf)
-  const score = coachScore(signals)
   const rng = seeded(coachSeed(S, now))
-  const mood = coachMood(score, signals, rng)
-  return { signals, score, mood, line: coachLine(mood, signals, rng) }
+  const mood = coachMood(signals, rng)
+  return { signals, verdict: signals.verdict.state, mood, line: coachLine(mood, signals, rng) }
 }

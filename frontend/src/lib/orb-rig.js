@@ -84,6 +84,9 @@ export function createOrbRig(opts) {
   let pool = opts.pool || POOL, holdR = MOODS.idle.hold, blinkR = MOODS.idle.blink
   let cur = 'neutral', from = EX.neutral, to = EX.neutral, frame = null, look = null
   let tStart = 0, trans = 500, hold = 1800, blinkAt = 2600, raf = 0, stopped = false
+  // where it's looking on top of the expression's own head pose ([pitch, yaw]) — eased toward
+  // `gazeTo` every frame, so following a finger reads as the head turning, not snapping
+  let gaze = [0, 0], gazeTo = [0, 0]
   const t0 = performance.now()
 
   const go = (name, now, tr, hd) => {
@@ -132,7 +135,8 @@ export function createOrbRig(opts) {
     const b = opts.still ? 0 : blink(now)
     const eye = s => { const e = frame[s]; return [lerp(e[0], CLOSED[s][0], b), lerp(e[1], CLOSED[s][1], b), e[2], lerp(e[3], 0, b)] }
     const sp = lerp(frame.sp, CLOSED.sp, b) * EYE_K
-    const [pi, ya, ro] = frame.h.map((v, i) => v + bias[i])
+    gaze = gaze.map((g, i) => g + (gazeTo[i] - g) * 0.12)
+    const [pi, ya, ro] = frame.h.map((v, i) => v + bias[i] + (i < 2 ? gaze[i] : 0))
     const H = mul(rotZ(ro * D), mul(rotY(ya * HEAD_K * D), rotX(pi * HEAD_K * D)))
     place(opts.left, eye('l'), -1, sp, H)
     place(opts.right, eye('r'), 1, sp, H)
@@ -152,6 +156,12 @@ export function createOrbRig(opts) {
       if (!opts.still) return go(pick(), now, 500, between(holdR))
       from = to = EX[pool[0]]; frame = null; cur = pool[0]; tStart = now - 1; trans = 1
       tick(performance.now())
+    },
+    // Turn the head toward something, in degrees (+pitch up, +yaw right); look() with no
+    // arguments goes back to wandering. A still orb keeps facing forward.
+    look(pitch = 0, yaw = 0) {
+      const cl = (v, m) => Math.max(-m, Math.min(m, v))
+      if (!opts.still) gazeTo = [cl(pitch, 22), cl(yaw, 32)]
     },
     stop() { stopped = true; cancelAnimationFrame(raf) }
   }

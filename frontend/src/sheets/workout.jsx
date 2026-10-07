@@ -19,6 +19,7 @@ import { loadOfWorkouts } from '../lib/muscles.js'
 import { parseImport, mergeImport } from '../lib/import-csv.js'
 import { is1RMRecord } from '../lib/onerm.js'
 import { nextPrescription, applyPrescription } from '../lib/progression.js'
+import { sessionVerdict } from '../lib/verdict.js'
 import { S, update, ui, toast, snd, confirmSheet } from './common.jsx'
 import { dayOverrideSheet } from './plan.jsx'
 
@@ -228,7 +229,12 @@ export const workoutCompleteSheet = () => ui().openSheet(close => <WorkoutComple
 // numbers, how it compares with the last time this routine was done, and any records. The
 // muscle map ("what you just trained") stays: the design has no room drawn for it, but it is
 // the one part of this screen that says something the numbers don't.
-const CHEER = ['joyful-wide', 'small-attentive', 'joyful-wide', 'neutral']
+//
+// The orb and headline say how this session went against the last one (sessionVerdict) rather
+// than cheering every time — a cheer for everything stops meaning anything. A lighter day gets
+// a shrug, not a scolding: you still showed up.
+const DONE_MOOD = { record: 'celebrate', more: 'happy', first: 'happy', same: 'proud', less: 'disappointed' }
+const DONE_BODY = { record: 'progressing', more: 'progressing', less: 'slipping' }
 function FinishSummary({ w, prs, e1prs = [], close }) {
   const st = useStore(s => s.S)
   const user = useStore(s => s.user)
@@ -238,6 +244,12 @@ function FinishSummary({ w, prs, e1prs = [], close }) {
   const entryOf = id => w.entries.find(e => e.id === id)
   const nameOf = id => (EXIDX[id] || {}).n || id
   const line = [w.name, ...durPart(w.end - w.start), t('{0} sets', setsDone(w))].join(' · ')
+  const sv = sessionVerdict({ prs, e1prs, vol: w.vol || 0, prevVol: prev ? prev.vol || 0 : null })
+  const headline = sv === 'record' ? t('New best on {0}.', nameOf(prs.length ? prs[0] : e1prs[0].id))
+    : sv === 'more' ? t('More than last time.')
+      : sv === 'same' ? t('Held it. That counts.')
+        : sv === 'less' ? t('Lighter than last time. It happens.')
+          : user ? t('Nice work, {0}.', user.name) : t('Nice work.')
   const done = () => { close(); nav('/home') }
   // the system share sheet where there is one, the clipboard where there isn't
   const share = async () => {
@@ -248,9 +260,9 @@ function FinishSummary({ w, prs, e1prs = [], close }) {
     } catch (e) { if (e.name !== 'AbortError') toast(t('Could not share')) }
   }
   return <div className="pk-done">
-    <div className="pk-done-orb"><Orb size={180} pool={CHEER} poke="joyful-wide" /></div>
+    <div className="pk-done-orb"><Orb size={180} mood={DONE_MOOD[sv]} verdict={DONE_BODY[sv]} poke="joyful-wide" /></div>
     <div className="pk-done-h">
-      <h1>{user ? t('Nice work, {0}.', user.name) : t('Nice work.')}</h1>
+      <h1>{headline}</h1>
       <p>{line}</p>
     </div>
     <div className="pk-done-tiles">
