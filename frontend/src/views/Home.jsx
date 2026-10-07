@@ -5,7 +5,7 @@ import { effectiveRoutine, effectiveRoutineId, streakWeeks, lastBW } from '../li
 import { fmtNum, fmtDate, todayISO, isoOf, durPart } from '../lib/format.js'
 import { t, dateLocale } from '../lib/i18n.js'
 import { weeklyVolumes, volumeBars, partOfDay } from '../lib/dashboard.js'
-import { coach, coachLine, pokeReaction } from '../lib/coach.js'
+import { coach, coachAside, pokeReaction } from '../lib/coach.js'
 import { EXIDX } from '../lib/exercises.js'
 import { bwSheet, goalSheet, dayOverrideSheet, calendarSheet, startFlow, loadStarterPlan, bwDeltaColor, workoutDetailSheet } from '../sheets.jsx'
 import LineChart from '../components/LineChart.jsx'
@@ -21,25 +21,102 @@ const VERDICT_LABEL = {
   stalled: 'Stalled', away: 'Away', new: 'Getting to know you'
 }
 
-// The orb as Home's hero: the verdict from lib/verdict.js as a label, a body that moves the way
-// that verdict feels, and a line naming what's behind it. The line takes a moment to show up
-// (it's reacting, not a tooltip), and it has a temper if you keep poking it. A tap's mood and
-// line only last a few seconds before it goes back to what it thinks of your training.
+const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+const TYPE_MS = 24
+const CHATTER_MS = 24000
+
+// The line, said rather than shown: typed a character at a time while the orb's body bobs like
+// a mouth, with a breath at each full stop. The untyped rest is laid out but invisible, so the
+// bubble is its final size from the first letter and nothing under it moves.
+function Say({ text, verdict, orb }) {
+  const [n, setN] = useState(reducedMotion() ? text.length : 0)
+  useEffect(() => {
+    if (reducedMotion()) return
+    let i = 0, tm = 0
+    const step = () => {
+      setN(++i)
+      if (i >= text.length) return orb.current?.talk(false)
+      const c = text[i - 1], pause = '.!?'.includes(c) ? 280 : c === ',' ? 140 : 0
+      orb.current?.talk(!pause)
+      tm = setTimeout(step, pause || TYPE_MS)
+    }
+    tm = setTimeout(step, TYPE_MS)
+    return () => { clearTimeout(tm); orb.current?.talk(false) }
+  }, [text])
+  return <div className="pk-say" aria-hidden="true">
+    <span className={'pk-verdict ' + verdict}>{t(VERDICT_LABEL[verdict])}</span>
+    <p>{text.slice(0, n)}<span className="rest">{text.slice(n)}</span></p>
+  </div>
+}
+
+// The orb as coach, at the top of Home: the verdict from lib/verdict.js in what it says and in
+// how its whole body moves (and the glow behind it), a line naming what's behind it said into a
+// speech bubble. It drops in when you arrive, follows your finger with its eyes, pipes up again
+// every so often while you're here, answers every tap, and has a temper if you keep poking it.
+// What a tap or an aside says only lasts a few seconds before it goes back to its main line.
 function Coach({ S }) {
   const base = useMemo(() => coach(S, new Date(), nameOf), [S])
   const [over, setOver] = useState(null)
   const [shown, setShown] = useState(false)
-  const orb = useRef(null), pokes = useRef([]), calm = useRef(0)
+  const orb = useRef(null), pokes = useRef([]), calm = useRef(0), gaze = useRef(0), first = useRef(true)
   const mood = (over && over.mood) || base.mood
   const line = over ? over.line : base.line
+
+  const hold = ms => {
+    clearTimeout(calm.current)
+    calm.current = setTimeout(() => { setOver(null); pokes.current = [] }, ms)
+  }
 
   useEffect(() => {
     setShown(false)
     if (!line) return
-    const tm = setTimeout(() => setShown(true), over ? 200 : 500 + Math.random() * 600)
+    // the first line waits for the landing; anything it says on its own gets a hop first, so
+    // you look up — an answer to a tap doesn't need one, the tap already got a squish
+    const lead = first.current ? 1000 : over && !over.aside ? 150 : 450
+    first.current = false
+    const tm = setTimeout(() => { if (!over || over.aside) orb.current?.bump('hop'); setShown(true) }, lead)
     return () => clearTimeout(tm)
   }, [line])
-  useEffect(() => () => clearTimeout(calm.current), [])
+
+  // arriving: a happy look up at you once it has landed
+  useEffect(() => {
+    const tm = setTimeout(() => orb.current?.react('joyful-wide', 900), 650)
+    return () => { clearTimeout(tm); clearTimeout(calm.current) }
+  }, [])
+
+  // its eyes follow your finger (or the mouse), and drift down to the page while you scroll
+  useEffect(() => {
+    const at = (x, y) => {
+      orb.current?.lookAt(x, y)
+      clearTimeout(gaze.current)
+      gaze.current = setTimeout(() => orb.current?.lookAt(), 1500)
+    }
+    const down = e => at(e.clientX, e.clientY)
+    const move = e => { if (e.pointerType === 'mouse' || e.buttons) at(e.clientX, e.clientY) }
+    const scroll = () => at(innerWidth / 2, innerHeight)
+    addEventListener('pointerdown', down)
+    addEventListener('pointermove', move, { passive: true })
+    addEventListener('scroll', scroll, { passive: true })
+    return () => {
+      removeEventListener('pointerdown', down); removeEventListener('pointermove', move); removeEventListener('scroll', scroll)
+      clearTimeout(gaze.current)
+    }
+  }, [])
+
+  // every so often it has something else to say — never over an answer to a tap
+  const overNow = useRef(null)
+  overNow.current = over
+  useEffect(() => {
+    const iv = setInterval(() => {
+      const o = overNow.current
+      if (document.hidden || (o && !o.aside)) return
+      const l = coachAside(base.signals, Math.random, o ? o.line : base.line)
+      if (!l) return
+      setOver({ mood: base.mood, line: l, aside: true })
+      hold(8000)
+    }, CHATTER_MS)
+    return () => clearInterval(iv)
+  }, [base])
 
   const onPoke = () => {
     const now = Date.now()
@@ -48,18 +125,16 @@ function Coach({ S }) {
     if (r) setOver({ mood: r.mood, line: r.line || line })
     else {
       orb.current?.react(TAPS[Math.floor(Math.random() * TAPS.length)], 900)
-      const l = Math.random() < 0.4 ? coachLine(base.mood, base.signals, Math.random) : null
-      if (l && l !== line) setOver({ mood: base.mood, line: l })
+      const l = coachAside(base.signals, Math.random, line)
+      if (l) setOver({ mood: base.mood, line: l })
     }
-    clearTimeout(calm.current)
-    calm.current = setTimeout(() => { setOver(null); pokes.current = [] }, 6000)
+    hold(6000)
   }
 
-  return <div className="pk-hero-coach">
-    <Orb ref={orb} size={132} mood={mood} verdict={base.verdict} onPoke={onPoke} />
-    <span className={'pk-verdict ' + base.verdict}>{t(VERDICT_LABEL[base.verdict])}</span>
-    {/* the space is kept while the line is on its way, so the page doesn't jump when it lands */}
-    <p className="pk-say" aria-live="polite">{shown && line ? <span key={line} className="pk-say-in">{line}</span> : null}</p>
+  return <div className="pk-coachtop">
+    <Orb ref={orb} size={104} mood={mood} verdict={base.verdict} onPoke={onPoke} />
+    {shown && line && <Say key={line} text={line} verdict={base.verdict} orb={orb} />}
+    <span className="sr-only" aria-live="polite">{shown && line ? t(VERDICT_LABEL[base.verdict]) + '. ' + line : ''}</span>
   </div>
 }
 

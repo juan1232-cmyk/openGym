@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { coachSignals, coachMood, coachLine, coach, seeded, pokeReaction, VERDICT_MOODS } from './coach.js'
+import { coachSignals, coachMood, coachLine, coachAside, coach, seeded, pokeReaction, VERDICT_MOODS } from './coach.js'
 import { MOODS } from './orb-rig.js'
 import { isoOf } from './format.js'
 
@@ -120,6 +120,19 @@ describe('coach', () => {
       return coach(steady, d).mood + '|' + coach(steady, d).line
     }))
     expect(moods.size).toBeGreaterThan(1)
+  })
+})
+
+describe('coachAside', () => {
+  it("says something other than what it just said, and stays on the verdict's subject", () => {
+    const s = coachSignals(skipping, TODAY)
+    const first = coachLine('angry', s, seeded('a'))
+    for (let i = 0; i < 200; i++) {
+      const l = coachAside(s, seeded('a' + i), first)
+      expect(l).toBeTruthy()
+      expect(l).not.toBe(first)
+      expect(l).not.toMatch(/\{\d\}|undefined|null|NaN|going up|stronger/)
+    }
   })
 })
 

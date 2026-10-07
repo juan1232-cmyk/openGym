@@ -162,6 +162,18 @@ export function coachLine(mood, s, rng) {
   return say(one(rng, specific.length ? specific : LINES[v + 'Any']()))
 }
 
+/**
+ * Something else to say while you're looking at it — a tap, or it piping up on its own. Any of
+ * the verdict's lines, stock ones included, so it doesn't repeat the one line it led with;
+ * never a line from a different verdict. `not` is what it just said.
+ */
+export function coachAside(s, rng, not) {
+  if (s.freshPR) return say(one(rng, LINES.pr(s)))
+  const v = s.verdict.state
+  const all = (v === 'new' ? LINES.new(s) : [...LINES[v](s), ...LINES[v + 'Any']()]).map(say).filter(l => l !== not)
+  return all.length ? one(rng, all) : null
+}
+
 /** A burst of taps: `n` taps in the last few seconds. null = just a squish. */
 export function pokeReaction(n, rng) {
   if (n >= 6) return { mood: 'angry', line: say(one(rng, [['Stop poking me. Go lift.'], ['Poke me again. I dare you.'], ["That's it. I'm mad now."]])) }
