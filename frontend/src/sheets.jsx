@@ -5,7 +5,7 @@ export { confirmSheet } from './sheets/common.jsx'
 export { bwSheet, goalSheet, bwDeltaColor } from './sheets/bodyweight.jsx'
 export {
   exerciseDetailSheet, addToRoutineSheet, customExSheet, deleteCustomEx,
-  exercisePicker, exConfigSheet
+  exercisePicker, exConfigSheet, swapSheet, muscleLine, chipLabel, gymEquipmentSheet, gymEqLabel
 } from './sheets/exercise.jsx'
 export {
   loadStarterPlan, glyphPicker, planToolsSheet, planImportSheet,

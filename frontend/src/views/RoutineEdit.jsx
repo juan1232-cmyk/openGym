@@ -4,15 +4,40 @@ import { useStore } from '../store/useStore.js'
 import { exOr } from '../lib/exercises.js'
 import { uid } from '../lib/format.js'
 import { t } from '../lib/i18n.js'
-import { supersetUnits, cleanupSg, exLine } from '../lib/history.js'
+import { supersetUnits, cleanupSg, exLine, modeOf } from '../lib/history.js'
+import { followsSuggestion, applySuggestion } from '../lib/scheme.js'
+import { SchemePills } from '../components/Scheme.jsx'
+import Orb from '../components/Orb.jsx'
 import { Thumb } from '../components/Media.jsx'
 import { glyphPicker, exercisePicker, exConfigSheet, confirmSheet } from '../sheets.jsx'
+import { toast } from '../sheets/common.jsx'
 import Icon from '../components/Icon.jsx'
 import { glyphOf } from '../lib/glyphs.js'
 import { Button, SelectRow } from '../components/ui.jsx'
 import { POLICIES_FOR, POLICY_NAME, POLICY_DESC } from '../lib/progression.js'
 import BodyMap from '../components/BodyMap.jsx'
 import { loadOfRoutine, rankOf, MUSCLE_NAME } from '../lib/muscles.js'
+
+// Peek's take on sets and reps for the profile's goal, while any exercise here differs from
+// it. One tap rewrites them all (weights untouched); × hides it for this routine.
+const GOAL_LINE = {
+  muscle: 'For building muscle I’d do 6–8 reps on big lifts and 10–15 on the rest.',
+  strength: 'For getting stronger I’d do 5 × 5 on big lifts and 8–12 reps on the rest.',
+  fat: 'For losing fat I’d do 8–12 reps on big lifts and 12–15 on the rest.',
+}
+function PeekSuggest({ r, goal, edit, hide }) {
+  if (r.hideSuggest || r.ex.every(e => followsSuggestion(e, exOr(e.id), goal))) return null
+  return <div className="pk-coach pk-overlap">
+    <Orb size={44} inverted poke="joyful-wide" />
+    <div className="grow">
+      <p>{t(GOAL_LINE[goal] || 'I’d do 3 sets of 8–12 reps on everything here.')}</p>
+      <div className="row" style={{ gap: 8 }}>
+        <Button size="sm" variant="primary" onClick={() => edit(x => x.forEach((e, i) => { x[i] = applySuggestion(e, exOr(e.id), goal) }))}>{t('Apply to all')}</Button>
+        <button className="pk-dismiss" onClick={hide}>{t('No thanks')}</button>
+      </div>
+    </div>
+  </div>
+}
 
 export default function RoutineEdit() {
   const nav = useNavigate()
@@ -56,18 +81,31 @@ export default function RoutineEdit() {
       {t('Applies to every exercise in this routine that does not set its own rule.')}
     </div>
 
+    <PeekSuggest r={r} goal={S.goal} edit={edit} hide={() => update(s => { s.routines.find(x => x.id === id).hideSuggest = true })} />
+
     {r.ex.length ? <div className="list">{r.ex.map((e, i) => {
       // An unresolvable id is shown rather than skipped — hiding it left an entry you
       // could neither see nor delete, but that still turned up in the workout.
       const ex = exOr(e.id)
       const linkedPrev = i > 0 && e.sg && r.ex[i - 1].sg === e.sg
+      // reps work is adjusted right on the row; holds and cardio keep their summary line
+      const pills = modeOf(e) === 'reps' && !ex.missing
       return <div key={i}>
         {unitFirst.has(i) && <div className="ss-label"><Icon name="link" />{t('Superset')}</div>}
-        <div className={'item' + (inSS.has(i) ? ' in-ss' : '')} onClick={() => {
-          exConfigSheet(ex, e, cfg => edit(x => { x[i] = { id: x[i].id, sg: x[i].sg, ...cfg } }), () => edit(x => { x.splice(i, 1); cleanupSg(x) }), r)
+        <div className={'item' + (inSS.has(i) ? ' in-ss' : '') + (pills ? ' has-pills' : '')} onClick={() => {
+          exConfigSheet(ex, e, cfg => edit(x => { x[i] = { id: x[i].id, sg: x[i].sg, ...cfg } }), () => edit(x => { x.splice(i, 1); cleanupSg(x) }), r, {
+            list: r.ex,
+            // Sets, reps and progression carry over; the load does not — 60 kg on a barbell
+            // means nothing on dumbbells — and bodyweight re-derives from the new exercise.
+            swap: alt => {
+              edit(x => { const { weight, bodyweight, ...keep } = x[i]; x[i] = { ...keep, id: alt.id, weight: 0 } })
+              toast(t('Swapped to “{0}”', alt.n))
+            },
+          })
         }}>
           <Thumb ex={ex} />
-          <div className="grow"><div className="tt capitalize">{ex.n}</div><div className="ss">{exLine(e, S.unit)}</div></div>
+          <div className="grow"><div className="tt capitalize">{ex.n}</div>
+            {!pills && <div className="ss">{exLine(e, S.unit)}</div>}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 'none', alignItems: 'center' }}>
             {i > 0 && <button className={'iconbtn' + (linkedPrev ? ' on-ss' : '')} title={t('Superset with exercise above')} style={{ width: 32, height: 28, borderRadius: 8, fontSize: 15 }} onClick={ev => { ev.stopPropagation(); toggleLink(i) }}><Icon name="link" /></button>}
             <div style={{ display: 'flex', gap: 2 }}>
@@ -75,6 +113,7 @@ export default function RoutineEdit() {
               <button className="iconbtn" aria-label="Move down" style={{ width: 28, height: 24, borderRadius: 7, fontSize: 12 }} onClick={ev => { ev.stopPropagation(); move(i, 1) }}><Icon name="chevronDown" /></button>
             </div>
           </div>
+          {pills && <SchemePills cfg={e} unit={S.unit} onChange={cfg => edit(x => { x[i] = cfg })} />}
         </div>
       </div>
     })}</div> : <div className="empty"><div className="ico"><Icon name="dumbbell" /></div>{t('No exercises yet — add your first one.')}</div>}
@@ -94,7 +133,7 @@ export default function RoutineEdit() {
     })()}
 
     <div className="small dim row" style={{ margin: '10px 2px', gap: 5 }}><Icon name="link" style={{ fontSize: 13 }} />{t('Tap the link button on an exercise to superset it with the one above — you’ll do them back-to-back.')}</div>
-    <Button variant="primary" onClick={() => exercisePicker(ex => exConfigSheet(ex, null, cfg => edit(x => { x.push({ id: ex.id, ...cfg }) }), null, r))} icon="plus">{t('Add exercise')}</Button>
+    <Button variant="primary" onClick={() => exercisePicker((ex, ctx) => exConfigSheet(ex, null, cfg => edit(x => { x.push({ id: ex.id, ...cfg }) }), null, r, ctx), { listOf: st => st.routines.find(x => x.id === id)?.ex })} icon="plus">{t('Add exercise')}</Button>
     <div style={{ height: 10 }} />
     <Button variant="danger" onClick={() => confirmSheet({
       title: t('Delete routine?'), message: t('“{0}” and its exercises will be removed.', r.name), confirmText: t('Delete'), danger: true,

@@ -36,6 +36,19 @@ export const isPerSide = cfg => !!(cfg && cfg.side)
 // What one side did, for display only. Half of an odd total is shown as it falls (8.5) rather
 // than rounded away: it means the sides were not even, which is worth seeing.
 export const sideReps = reps => (reps || 0) / 2
+// The rep target as a range (issue: rep ranges in the routine editor). Two existing fields
+// already carry one, depending on what kind of lift it is, and nothing new is stored:
+//   loaded lift — double progression works from `repsMin` up to `reps` (progression.js)
+//   bodyweight  — `reps` climbs to the `repsMax` ceiling, then a set is added
+// Anything else is a single number, lo === hi.
+export function repRangeOf(cfg) {
+  const reps = (cfg && cfg.reps) || 0
+  if (isBw(cfg) && !(cfg.weight > 0) && cfg.repsMax > reps) return { lo: reps, hi: cfg.repsMax }
+  if (cfg && cfg.repsMin > 0 && cfg.repsMin < reps) return { lo: cfg.repsMin, hi: reps }
+  return { lo: reps, hi: reps }
+}
+const rangeText = (lo, hi) => (lo === hi ? fmtNum(lo) : fmtNum(lo) + '–' + fmtNum(hi))
+
 // Unilateral work moves in pairs, so its rep target steps by two — 16, 18, 20 — and a total
 // that stayed odd would put a rep on one side and not the other.
 export const repStep = cfg => (isPerSide(cfg) ? 2 : 1)
@@ -127,8 +140,9 @@ export function exLine(cfg, unit) {
   if (mode === 'cardio') return `${n} × ${cfg.min || 20} min @ ${fmtNum(cfg.speed || 8)} km/h`
   if (mode === 'time') return `${n} × ${fmtSec(cfg.sec || 45)}${load}`
   // This is the line with room for it, so the split is spelled out: "3 × 16 · 8/side".
-  const split = isPerSide(cfg) ? ' · ' + t('{0}/side', fmtNum(sideReps(cfg.reps))) : ''
-  return `${n} × ${cfg.reps}${load}${split}`
+  const { lo, hi } = repRangeOf(cfg)
+  const split = isPerSide(cfg) ? ' · ' + t('{0}/side', rangeText(sideReps(lo), sideReps(hi))) : ''
+  return `${n} × ${rangeText(lo, hi)}${load}${split}`
 }
 
 // Drop superset ids that no longer have an adjacent partner (after unlink/reorder/remove).

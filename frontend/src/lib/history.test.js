@@ -332,6 +332,11 @@ describe('exLine', () => {
     expect(exLine({ id: LIFT, sets: 2, sec: 90, weight: 20, mode: 'time' }, 'kg')).toBe('2 × 1:30 · 20 kg')
     expect(exLine({ id: CARDIO, sets: 1, min: 20, speed: 8 }, 'kg')).toBe('1 × 20 min @ 8 km/h')
   })
+  it('shows a rep range, whichever field carries it', () => {
+    expect(exLine({ id: LIFT, sets: 3, reps: 12, repsMin: 8, prog: 'double', weight: 60 }, 'kg')).toBe('3 × 8–12 · 60 kg')
+    expect(exLine({ id: BW, sets: 3, reps: 8, repsMax: 15 }, 'kg')).toBe('3 × 8–15')
+    expect(exLine({ id: LIFT, sets: 3, reps: 16, repsMin: 12, side: true }, 'kg')).toBe('3 × 12–16 · 6–8/side')
+  })
 })
 
 const emptyS = { workouts: [], exWeights: {} }

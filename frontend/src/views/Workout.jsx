@@ -9,7 +9,7 @@ import { beep, vibrate } from '../lib/sound.js'
 import { t } from '../lib/i18n.js'
 import { api } from '../lib/api.js'
 import { Thumb } from '../components/Media.jsx'
-import { startFlow, exercisePicker, exConfigSheet, exerciseDetailSheet, finishWorkout, workoutCompleteSheet, confirmSheet } from '../sheets.jsx'
+import { startFlow, exercisePicker, exConfigSheet, swapSheet, exerciseDetailSheet, finishWorkout, workoutCompleteSheet, confirmSheet } from '../sheets.jsx'
 import Icon from '../components/Icon.jsx'
 import Orb from '../components/Orb.jsx'
 import { Button, Check, NumberField } from '../components/ui.jsx'
@@ -107,6 +107,14 @@ function SetGrid({ entryIdx, onToggle, onField, onStartTimed }) {
   </div>
 }
 
+// A fresh workout entry for `id` with config `cfg`, prescribed the way the routine would —
+// shared by adding an exercise mid-workout and swapping one for another.
+function entryFor(s, id, cfg) {
+  const full = { ...cfg, id }
+  const plan = nextPrescription(s, full, s.routines.find(r => r.id === s.active.routineId))
+  return { id, target: { ...cfg }, plan, sets: applyPrescription(buildSets(s, full), plan) }
+}
+
 /* ---------- one exercise inside an open card ---------- */
 function ExerciseBody({ entryIdx, inSuperset, onToggle, onField, onAddSet, onRemoveSet, onStartTimed }) {
   const S = useStore(s => s.S)
@@ -117,6 +125,12 @@ function ExerciseBody({ entryIdx, inSuperset, onToggle, onField, onAddSet, onRem
   // What the progression policy decided for this session, and why (issue #17). Computed when
   // the session was built so the reason matches the numbers already in the rows.
   const plan = entry.plan
+  const update = useStore(s => s.update)
+  const swap = () => swapSheet(ex, S.active.entries.map(e => e.id), alt => update(s => {
+    const e = s.active.entries[entryIdx]
+    const { weight, bodyweight, ...keep } = e.target || {}
+    s.active.entries[entryIdx] = { ...entryFor(s, alt.id, { ...keep, id: alt.id, weight: 0 }), sg: e.sg }
+  }))
   return <div className="pk-ex-part">
     {inSuperset && <div className="pk-ex-sub">{ex.n}</div>}
     <div className="pk-ex-meta">
@@ -127,6 +141,9 @@ function ExerciseBody({ entryIdx, inSuperset, onToggle, onField, onAddSet, onRem
       {/* You log the total; this is the split, so the set in front of you is unambiguous
           without the rep count having to mean two different things (issue #31). */}
       {mode === 'reps' && isPerSide(cfg) && <span className="tag acc nocap"><Icon name="shuffle" />{t('{0} per side', fmtNum(sideReps(entry.sets.find(s => !s.done)?.r ?? entry.sets[0]?.r)))}</span>}
+      {/* Only before the first set is ticked: once something is logged under this exercise,
+          changing what it was would rewrite history rather than the plan. */}
+      {!entry.sets.some(s => s.done) && <button className="pk-info" onClick={swap}><Icon name="shuffle" />{t('Swap')}</button>}
       <button className="pk-info" onClick={() => exerciseDetailSheet(ex)}><Icon name="info" />{t('Details')}</button>
     </div>
     {plan && plan.why && plan.kind !== 'off' && <div className={'progline' + (plan.kind === 'deload' ? ' warn' : '')}>
@@ -407,12 +424,10 @@ function ActiveWorkout() {
     </div> : <div className="empty"><div className="ico"><Icon name="shuffle" /></div>{t('Freestyle workout — add your first exercise.')}</div>}
 
     <div style={{ height: 12 }} />
-    <Button variant="soft" icon="plus" onClick={() => exercisePicker(ex => exConfigSheet(ex, null, cfg => update(s => {
-      const full = { ...cfg, id: ex.id }
-      const plan = nextPrescription(s, full, s.routines.find(r => r.id === s.active.routineId))
-      s.active.entries.push({ id: ex.id, target: { ...cfg }, plan, sets: applyPrescription(buildSets(s, full), plan) })
+    <Button variant="soft" icon="plus" onClick={() => exercisePicker((ex, ctx) => exConfigSheet(ex, null, cfg => update(s => {
+      s.active.entries.push(entryFor(s, ex.id, cfg))
       s.active.cur = s.active.entries.length - 1
-    }), null, S.routines.find(r => r.id === A.routineId)))}>{t('Add exercise')}</Button>
+    }), null, S.routines.find(r => r.id === A.routineId), ctx), { listOf: st => st.active?.entries })}>{t('Add exercise')}</Button>
     <button className="pk-link pk-discard" onClick={discard}>{t('Discard workout')}</button>
 
     {/* while a rest or a timed set runs, the timer bar (RestTimer) sits exactly here instead */}

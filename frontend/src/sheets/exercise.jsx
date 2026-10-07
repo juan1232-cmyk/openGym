@@ -2,18 +2,23 @@
 // sets/reps/progression config, the exercise picker, and custom (user-created) exercises.
 import { useState } from 'react'
 import { useStore } from '../store/useStore.js'
-import { EXIDX, BODYPARTS, isCardio, isBodyweightEq, allExercises, equipmentOf } from '../lib/exercises.js'
+import { EXDB, EXIDX, BODYPARTS, isCardio, isBodyweightEq, allExercises } from '../lib/exercises.js'
+import { searchExercises, browseOrder, usageOf, recentIds, regionOf, muscleChips, matchesMuscle, suggestionFor, similarTo, gymFilter } from '../lib/pick.js'
+import { MUSCLE_NAME } from '../lib/muscles.js'
+import Orb from '../components/Orb.jsx'
 import { fmtDate, fmtNum, uid, exCount } from '../lib/format.js'
-import { lastEntryFor, bestWeightFor, setLabel, defaultConfig, cleanupSg, modeOf, isBw, isPerSide, sideReps } from '../lib/history.js'
+import { lastEntryFor, bestWeightFor, setLabel, defaultConfig, cleanupSg, modeOf, isBw, isPerSide, sideReps, repRangeOf } from '../lib/history.js'
+import { withRepRange, applySuggestion } from '../lib/scheme.js'
+import { SetsChips, RepsChips } from '../components/Scheme.jsx'
 import { t, instrFor, getLang, INSTR_LANGS } from '../lib/i18n.js'
 import { nav } from '../lib/nav.js'
 import Media, { Thumb } from '../components/Media.jsx'
 import Stepper from '../components/Stepper.jsx'
 import Icon from '../components/Icon.jsx'
-import { Button, Switch, Segmented, SelectRow, Row } from '../components/ui.jsx'
+import { Button, Switch, Segmented, SelectRow, Row, Section } from '../components/ui.jsx'
 import { glyphOf, DEFAULT_GLYPH } from '../lib/glyphs.js'
 import { estimate1RM, best1RM, REP_CAP } from '../lib/onerm.js'
-import { policyFor, defaultIncrement, POLICIES_FOR, POLICY_NAME, POLICY_DESC, MAX_BW_SETS } from '../lib/progression.js'
+import { policyFor, defaultIncrement, POLICIES_FOR, POLICY_NAME, POLICY_DESC } from '../lib/progression.js'
 import { S, update, ui, toast, confirmSheet } from './common.jsx'
 
 /* ============================ exercise detail ============================ */
@@ -45,6 +50,14 @@ function OneRM({ ex }) {
   </>
 }
 
+// What an exercise trains, in one line: the specific muscle ("Upper chest") and the kit.
+function MuscleTags({ ex }) {
+  return <div className="row" style={{ gap: 6, flexWrap: 'wrap', margin: '12px 0 14px' }}>
+    <span className="tag acc">{muscleLine(ex)}</span>
+    {ex.eq && ex.eq !== 'custom' && <span className="tag"><Icon name="dumbbell" />{t(ex.eq)}</span>}
+  </div>
+}
+
 function ExerciseDetail({ ex, close }) {
   const st = useStore(s => s.S)
   const last = lastEntryFor(st, ex.id)
@@ -53,12 +66,7 @@ function ExerciseDetail({ ex, close }) {
   return <>
     <h3 className="capitalize">{ex.n}</h3>
     <Media ex={ex} />
-    <div className="row" style={{ gap: 6, flexWrap: 'wrap', margin: '10px 0' }}>
-      <span className="tag acc">{t(ex.bp)}</span>
-      {ex.tg && <span className="tag"><Icon name="target" />{t(ex.tg)}</span>}
-      <span className="tag"><Icon name="dumbbell" />{t(ex.eq)}</span>
-      {(ex.sm || []).slice(0, 3).map((s, i) => <span key={i} className="tag">{t(s)}</span>)}
-    </div>
+    <MuscleTags ex={ex} />
     {ex.desc && <div className="exnote">{ex.desc}</div>}
     {best > 0 && <div className="small row" style={{ marginBottom: 6, gap: 5 }}><Icon name="trophy" style={{ fontSize: 14, color: 'var(--yellow)' }} />{t('Best:')} <b className="accent">{fmtNum(best)} {st.unit}</b>{last ? ` · ${t('last')} ${fmtDate(last.d)}: ${last.sets.map(s => setLabel(ex.id, s, last.target)).join(', ')}` : ''}</div>}
     {/* the progress page, unless that's where this sheet was opened from */}
@@ -169,59 +177,135 @@ export function deleteCustomEx(ex, afterDelete) {
 }
 
 /* ============================ exercise picker ============================ */
-// Exercises already used in your routines or past workouts (for the "Chosen" filter + a marker).
-function usageMap(st) {
-  const u = {}
-  st.routines.forEach(r => r.ex.forEach(e => { u[e.id] = (u[e.id] || 0) + 1 }))
-  st.workouts.forEach(w => w.entries.forEach(e => { u[e.id] = (u[e.id] || 0) + 1 }))
-  return u
+// The one thing a row says besides the name: which part of which muscle ("Upper chest").
+export const muscleLine = ex => t(regionOf(ex) || ex.tg || ex.bp || '')
+export const chipLabel = m => (m === 'cardio' ? t('Cardio') : t(MUSCLE_NAME[m]))
+
+function PickRow({ ex, onPick, inList, icon = 'plus' }) {
+  return <div className="item" onClick={() => onPick(ex)}>
+    <Thumb ex={ex} /><div className="grow"><div className="tt capitalize">{ex.n}</div><div className="ss">{muscleLine(ex)}</div></div>
+    <Icon name={inList ? 'check' : icon} className={'chev' + (inList ? ' accent' : '')} />
+  </div>
 }
-function ExercisePicker({ onPick, close }) {
+
+// Deliberately bare: a search field, one row of muscles, the list. Without a search, what
+// you already train comes first, then the staple lifts (lib/pick.js browseOrder).
+// `listOf` reads the routine / workout being added to out of the live state, so the check
+// marks keep up while the picker stays open under each config sheet.
+function ExercisePicker({ onPick, close, listOf }) {
   const st = useStore(s => s.S)
-  const usage = usageMap(st)
+  const list = (listOf && listOf(st)) || []
+  const inList = new Set(list.map(e => e.id))
   const [q, setQ] = useState('')
-  const [bp, setBp] = useState('')          // '' = all, '★' = chosen, else a body part
-  const [eq, setEq] = useState('')          // '' = any equipment
+  const [mu, setMu] = useState('')          // '' = every muscle, else a muscle slug or 'cardio'
   const [shown, setShown] = useState(50)
-  const ql = q.toLowerCase().trim()
+  const [allKit, setAllKit] = useState(false)
+  const reset = () => setShown(50)
   const all = allExercises(st)
-  let base = all.filter(e =>
-    (bp === '★' ? usage[e.id] : (!bp || e.bp === bp)) &&
-    (!ql || e.n.toLowerCase().includes(ql) || e.tg.includes(ql) || e.eq.includes(ql) || (e.desc || '').toLowerCase().includes(ql)))
-  if (bp === '★') base = [...base].sort((a, b) => (usage[b.id] - usage[a.id]) || (a.n < b.n ? -1 : 1))
-  const eqOpts = equipmentOf(base)
-  // Drop the equipment filter if the search narrowed it away, so you never hit a dead end.
-  const eqOn = eqOpts.includes(eq) ? eq : ''
-  const f = eqOn ? base.filter(e => e.eq === eqOn) : base
-  const chosenCount = Object.keys(usage).length
+  const searching = !!q.trim()
+  const pool = all.filter(e => matchesMuscle(e, mu))
+  const found = searching ? searchExercises(pool, q, { usage: usageOf(st) }) : browseOrder(pool, { recent: recentIds(st) })
+  // The gym profile hides what you can't do there — with a way out while searching, so a
+  // machine your gym lacks still turns up instead of looking like the app doesn't know it.
+  const f = st.gymEq && !allKit ? gymFilter(found, st.gymEq) : found
+  const hidden = found.length - f.length
+  const pick = ex => onPick(ex, { list, retarget: alt => onPick(alt, { list: (listOf && listOf(S())) || [] }) })
   return <>
-    <h3>{t('Add exercise')}</h3>
+    <div className="row between" style={{ marginBottom: 14 }}>
+      <h3 style={{ margin: 0 }}>{t('Add exercise')}</h3>
+      <Button size="sm" variant="primary" onClick={close}>{t('Done')}</Button>
+    </div>
     <div className="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-      <input className="input" placeholder={t('Search {0} exercises…', all.length)} value={q} onChange={e => { setQ(e.target.value); setShown(50) }} /></div>
-    <div className="chips" style={{ margin: eqOpts.length > 1 ? '10px 0 6px' : '10px 0' }}>
-      {chosenCount > 0 && <button className={'chip' + (bp === '★' ? ' on' : '')} onClick={() => { setBp('★'); setEq(''); setShown(50) }}><Icon name="starFill" style={{ fontSize: 12, display: 'inline-block', marginRight: 4, verticalAlign: '-1px' }} />{t('Chosen')} ({chosenCount})</button>}
-      <button className={'chip nocap' + (!bp ? ' on' : '')} onClick={() => { setBp(''); setEq(''); setShown(50) }}>{t('All')}</button>
-      {BODYPARTS.map(b => <button key={b} className={'chip' + (bp === b ? ' on' : '')} onClick={() => { setBp(b); setEq(''); setShown(50) }}>{t(b)}</button>)}
+      <input className="input" placeholder={t('Search')} value={q} onChange={e => { setQ(e.target.value); reset() }} />
+      {q && <button className="search-x" aria-label={t('Clear')} onClick={() => { setQ(''); reset() }}><Icon name="xmark" /></button>}</div>
+    <div className="chips" style={{ margin: '12px 0 14px' }}>
+      <button className={'chip nocap' + (!mu ? ' on' : '')} onClick={() => { setMu(''); reset() }}>{t('All')}</button>
+      {muscleChips(all).map(m => <button key={m} className={'chip' + (mu === m ? ' on' : '')} onClick={() => { setMu(m); reset() }}>{chipLabel(m)}</button>)}
     </div>
-    {eqOpts.length > 1 && <div className="chips" style={{ marginBottom: 10 }}>
-      <button className={'chip nocap' + (!eqOn ? ' on' : '')} onClick={() => { setEq(''); setShown(50) }}>{t('Any equipment')}</button>
-      {eqOpts.map(x => <button key={x} className={'chip' + (eqOn === x ? ' on' : '')} onClick={() => { setEq(x); setShown(50) }}>{t(x)}</button>)}
-    </div>}
     <div className="list">
-      {bp !== '★' && <div className="item" onClick={() => customExSheet(null, ex => onPick(ex), q.trim())}>
-        <div className="thumb thumb-x"><Icon name="sparkles" /></div>
-        <div className="grow"><div className="tt">{t('Create your own exercise')}</div><div className="ss">{t('name + body part, no animation')}</div></div><Icon name="plus" className="chev" />
-      </div>}
-      {f.slice(0, shown).map(e => <div key={e.id} className="item" onClick={() => onPick(e)}>
-        <Thumb ex={e} /><div className="grow"><div className="tt capitalize">{e.n}</div><div className="ss capitalize">{t(e.tg || e.bp)} · {t(e.eq)}</div></div>
-        {usage[e.id] && <span className="tag acc"><Icon name="starFill" /></span>}<Icon name="plus" className="chev" />
-      </div>)}
-      {f.length === 0 && bp === '★' && <div className="empty">{t('Nothing chosen yet — add exercises and they’ll show up here.')}</div>}
+      {f.slice(0, shown).map(e => <PickRow key={e.id} ex={e} onPick={pick} inList={inList.has(e.id)} />)}
+      {f.length === 0 && <div className="empty">{t('No match')}</div>}
+      {searching && hidden > 0 && <button className="pk-link" onClick={() => setAllKit(true)}>{t('Show {0} more for other gyms', hidden)}</button>}
+      <div className="item" onClick={() => customExSheet(null, ex => pick(ex), q.trim())}>
+        <div className="thumb thumb-x"><Icon name="plus" /></div>
+        <div className="grow"><div className="tt">{searching ? t('Create “{0}”', q.trim()) : t('Create your own exercise')}</div></div>
+      </div>
     </div>
-    {f.length > shown && <><div style={{ height: 8 }} /><Button onClick={() => setShown(s => s + 50)}>{t('Show more')}</Button></>}
+    {f.length > shown && <><div style={{ height: 8 }} /><Button variant="soft" onClick={() => setShown(s => s + 50)}>{t('Show more')}</Button></>}
   </>
 }
-export const exercisePicker = onPick => ui().openSheet(close => <ExercisePicker onPick={onPick} close={close} />)
+// `opts.listOf(state)` → the [{ id }] being added to.
+export const exercisePicker = (onPick, opts = {}) =>
+  ui().openSheet(close => <ExercisePicker onPick={onPick} close={close} listOf={opts.listOf} />)
+
+/* ============================ my gym's equipment ============================ */
+// Every kind of kit in the catalogue, most exercises first, so the list reads "barbell,
+// dumbbell, cable…" before the one-off tire and hammer.
+const KIT_ALL = (() => {
+  const c = {}
+  EXDB.forEach(e => { c[e.eq] = (c[e.eq] || 0) + 1 })
+  return Object.keys(c).filter(k => k !== 'body weight').sort((a, b) => c[b] - c[a]).map(k => ({ eq: k, n: c[k] }))
+})()
+export const gymEqLabel = gymEq => (gymEq ? t('{0} of {1}', gymEq.length, KIT_ALL.length) : t('All'))
+
+function GymEquipment() {
+  const gymEq = useStore(s => s.S.gymEq)
+  const on = k => !gymEq || gymEq.includes(k)
+  // Stored as the list you have; ticking everything back stores null, so "all" stays the
+  // plain default rather than a list that quietly misses kit a future dataset adds.
+  const set = list => update(s => { s.gymEq = list.length >= KIT_ALL.length ? null : list })
+  const toggle = (k, v) => set(v ? [...(gymEq || []), k] : KIT_ALL.map(x => x.eq).filter(x => x !== k && on(x)))
+  return <>
+    <h3>{t('My gym’s equipment')}</h3>
+    <div className="muted small" style={{ marginBottom: 12 }}>{t('The exercise picker hides what your gym can’t do. Bodyweight and your own exercises always show.')}</div>
+    <div className="row" style={{ gap: 8, marginBottom: 12 }}>
+      <Button size="sm" variant="tinted" onClick={() => set(KIT_ALL.map(x => x.eq))}>{t('Select all')}</Button>
+      <Button size="sm" onClick={() => update(s => { s.gymEq = [] })}>{t('Bodyweight only')}</Button>
+    </div>
+    <Section>
+      {KIT_ALL.map(({ eq, n }) => <Row key={eq} title={<span className="capitalize">{t(eq)}</span>} subtitle={exCount(n)}>
+        <Switch checked={on(eq)} onChange={v => toggle(eq, v)} />
+      </Row>)}
+    </Section>
+  </>
+}
+export const gymEquipmentSheet = () => ui().openSheet(() => <GymEquipment />)
+
+/* ============================ swap for similar ============================ */
+// Same main muscle, different exercise — for when the rack is taken, or a lift stops
+// agreeing with you. Closest movement first ("barbell bench press" → "dumbbell bench press").
+function SwapPicker({ ex, exclude, onSwap, close }) {
+  const st = useStore(s => s.S)
+  const f = similarTo(ex, allExercises(st), { exclude, gymEq: st.gymEq, usage: usageOf(st) }).slice(0, 30)
+  return <>
+    <h3>{t('Swap for')}</h3>
+    <div className="list">
+      {f.map(e => <PickRow key={e.id} ex={e} icon="shuffle" onPick={alt => { close(); onSwap(alt) }} />)}
+      {f.length === 0 && <div className="empty">{t('No match')}</div>}
+    </div>
+  </>
+}
+// `exclude` = ids already in the routine/workout, so a swap never makes a duplicate.
+export const swapSheet = (ex, exclude, onSwap) => ui().openSheet(close => <SwapPicker ex={ex} exclude={exclude} onSwap={onSwap} close={close} />)
+
+/* ============================ Peek: overlap ============================ */
+// A third exercise for the exact same part of a muscle is usually the same lift twice in
+// different clothes. Peek says so in one line and offers something the list is missing —
+// it never blocks the add.
+function PeekOverlap({ ex, ctx, close }) {
+  const st = useStore(s => s.S)
+  const sug = suggestionFor(ctx.list, ex.id, allExercises(st), { gymEq: st.gymEq, usage: usageOf(st) })
+  if (!sug) return null
+  const { overlap, ex: alt } = sug
+  return <div className="pk-coach pk-overlap">
+    <Orb size={44} inverted poke="surprised-left" />
+    <div className="grow">
+      <p>{t('You already have {0} exercises for {1}.', overlap.ids.length, t(overlap.region).toLowerCase())}
+        {alt && <> {t('Try')} <b className="capitalize">{alt.n}</b> {t('instead.')}</>}</p>
+      {alt && <Button size="sm" variant="primary" onClick={() => { close(); ctx.retarget(alt) }}>{t('Use this instead')}</Button>}
+    </div>
+  </div>
+}
 
 /* ============================ exercise config ============================ */
 // Progression settings for one exercise (issue #17). Shown inside the config sheet because
@@ -244,16 +328,21 @@ function ProgressionFields({ ex, mode, c, setC, routine, unit }) {
     {active !== 'off' && <div className="row cfgrow" style={{ marginBottom: 18 }}>
       <Stepper label={mode === 'time' ? t('Step (seconds)') : t('Step ({0})', unit)} value={inc}
         step={mode === 'time' ? 5 : 1.25} decimal={mode !== 'time'} onChange={v => setC(x => ({ ...x, inc: v }))} />
-      {active === 'double' && <Stepper label={t('Reps from')} value={c.repsMin || Math.max(1, (c.reps || 10) - 2)}
-        step={1} decimal={false} onChange={v => setC(x => ({ ...x, repsMin: v }))} />}
     </div>}
   </>
 }
 
-function ExConfig({ ex, existing, onSave, onDelete, close, routine }) {
+// `ctx` comes from the caller: { list } is what is being added to (for Peek's overlap
+// check), { retarget } re-runs the add with another exercise, { swap } replaces this one.
+function ExConfig({ ex, existing, onSave, onDelete, close, routine, ctx }) {
   const st = useStore(s => s.S)
   const cardio = isCardio(ex.id)
-  const [c, setC] = useState(existing || defaultConfig(ex.id))
+  // A new exercise starts on what Peek would suggest for the profile's goal, so most of the
+  // time adding one is just "Add to routine".
+  const [c, setC] = useState(() => existing || applySuggestion(defaultConfig(ex.id), ex, st.goal))
+  // Everything most adds never touch lives behind "More options"; an exercise already set up
+  // as a timed hold opens with it showing, since the Reps/Time switch is in there.
+  const [more, setMore] = useState(() => !!existing && modeOf({ ...existing, id: ex.id }) === 'time')
   // Cardio keeps its own duration+speed form; the reps/time choice (issue #16) is offered for
   // everything else, which is where the gap was — planks, hangs, wall sits, loaded carries.
   const mode = cardio ? 'cardio' : modeOf({ ...c, id: ex.id })
@@ -280,88 +369,84 @@ function ExConfig({ ex, existing, onSave, onDelete, close, routine }) {
     if (cardio) onSave({ sets, min: Math.max(1, Math.round(c.min) || 20), speed: Math.max(0, c.speed || 8) })
     else if (mode === 'time') onSave({ sets, mode: 'time', sec: Math.max(1, Math.round(c.sec) || 45), weight: Math.max(0, c.weight || 0), ...flags, ...prog })
     else {
-      // A unilateral target is stored even: the split has to divide, and a typed 15 would
-      // otherwise plan seven reps on one side and eight on the other, every session.
-      const typed = Math.max(1, Math.round(c.reps) || 10)
-      const reps = perSide ? Math.ceil(typed / 2) * 2 : typed
-      const out = { sets, mode: 'reps', reps, weight: Math.max(0, c.weight || 0), ...flags, ...(perSide ? { side: true } : {}), ...prog }
-      if (policyFor({ ...c, id: ex.id }, routine, 'reps') === 'double') out.repsMin = Math.min(reps, Math.max(1, Math.round(c.repsMin) || Math.max(1, reps - 2)))
-      // A ceiling below the working reps would tell you to add a set on day one.
-      if (bw && !(out.weight > 0) && c.repsMax > 0) out.repsMax = Math.max(reps, Math.round(c.repsMax))
+      // The range goes through withRepRange, which knows which fields carry it (repsMin for
+      // a loaded lift, repsMax for bodyweight) and keeps a per-side total even.
+      const { lo, hi } = repRangeOf({ ...c, id: ex.id })
+      const base = { id: ex.id, sets, mode: 'reps', reps: c.reps, weight: Math.max(0, c.weight || 0), ...flags, ...(perSide ? { side: true } : {}), ...prog }
+      const { id, ...out } = withRepRange(base, lo || 10, hi || lo || 10)
       onSave(out)
     }
   }
   return <>
     <h3 className="capitalize">{ex.n}</h3>
     <Media ex={ex} />
-    <div className="row" style={{ gap: 6, flexWrap: 'wrap', margin: '10px 0 14px' }}>
-      {cardio && <span className="tag acc"><Icon name="figureRun" />{t('Cardio')}</span>}
-      <span className="tag">{t(ex.tg || ex.bp)}</span><span className="tag">{t(ex.eq)}</span>
-    </div>
+    <MuscleTags ex={ex} />
+    {!existing && ctx && ctx.retarget && <PeekOverlap ex={ex} ctx={ctx} close={close} />}
     {ex.desc && <div className="exnote">{ex.desc}</div>}
-    {!cardio && <div style={{ marginBottom: 14 }}>
-      <Segmented className="seg-range" value={mode} onChange={setMode}
-        options={[{ value: 'reps', label: t('Reps') }, { value: 'time', label: t('Time') }]} />
-    </div>}
-    <div className="row cfgrow" style={{ marginBottom: mode === 'time' ? 8 : 18 }}>
+    {mode === 'reps' ? <>
+      {/* the two things nearly every add changes, one tap each */}
+      <div className="cfg-lbl">{t('Sets')}</div>
+      <SetsChips value={c.sets} onPick={n => setC(x => ({ ...x, sets: n }))} />
+      <div className="cfg-lbl">{t('Reps')}</div>
+      <RepsChips cfg={{ ...c, id: ex.id }} onPick={(lo, hi) => setC(x => { const { id, ...y } = withRepRange({ ...x, id: ex.id }, lo, hi); return y })} />
+      {!bw && <div className="row cfgrow" style={{ margin: '16px 0 18px' }}>
+        <Stepper label={t('Weight ({0})', st.unit)} value={c.weight} step={2.5} onChange={v => setC(x => ({ ...x, weight: v }))} />
+      </div>}
+      {bw && <div style={{ height: 18 }} />}
+    </> : <div className="row cfgrow" style={{ marginBottom: mode === 'time' ? 8 : 18 }}>
       {cardio ? <>
         <Stepper label={t('Intervals')} value={c.sets} step={1} decimal={false} onChange={v => setC(x => ({ ...x, sets: v }))} />
         <Stepper label={t('Minutes')} value={c.min} step={1} decimal={false} onChange={v => setC(x => ({ ...x, min: v }))} />
         <Stepper label={t('Speed (km/h)')} value={c.speed} step={0.5} onChange={v => setC(x => ({ ...x, speed: v }))} />
-      </> : mode === 'time' ? <>
+      </> : <>
         <Stepper label={t('Sets')} value={c.sets} step={1} decimal={false} onChange={v => setC(x => ({ ...x, sets: v }))} />
         <Stepper label={t('Seconds')} value={c.sec} step={5} decimal={false} onChange={v => setC(x => ({ ...x, sec: v }))} />
         <Stepper label={t('Weight ({0})', st.unit)} value={c.weight} step={2.5} onChange={v => setC(x => ({ ...x, weight: v }))} />
-      </> : <>
-        <Stepper label={t('Sets')} value={c.sets} step={1} decimal={false} onChange={v => setC(x => ({ ...x, sets: v }))} />
-        <Stepper label={t('Reps')} value={c.reps} step={perSide ? 2 : 1} decimal={false} onChange={v => setC(x => ({ ...x, reps: v }))} />
-        {/* On bodyweight work the weight stepper is the click #32 is about, so it is not here
-            until there is a belt to describe — see the added-weight row below. */}
-        {!bw && <Stepper label={t('Weight ({0})', st.unit)} value={c.weight} step={2.5} onChange={v => setC(x => ({ ...x, weight: v }))} />}
       </>}
-    </div>
+    </div>}
     {mode === 'time' && !bw && <div className="small dim" style={{ marginBottom: 18 }}>
       {t('A timer runs while you hold the set. Leave the weight at 0 for bodyweight holds.')}
     </div>}
-    {/* ---------- bodyweight + per side (issues #31/#32/#33) ---------- */}
-    {!cardio && <div className="sect-b" style={{ marginBottom: 8 }}>
-      <Row icon="figureStrength" iconTint="var(--acc)" title={t('Bodyweight')}
-        subtitle={bw ? t('No weight to enter — just log the reps.') : t('Ask for a weight on every set.')}>
-        <Switch checked={bw} onChange={v => setC(x => ({ ...x, bodyweight: v, weight: v ? 0 : x.weight }))} />
-      </Row>
-      {mode === 'reps' && <Row icon="shuffle" iconTint="var(--blue)" title={t('Reps per side')}
-        subtitle={perSide ? t('You still log the total: {0} is {1} per side.', c.reps || 0, fmtNum(sideReps(c.reps))) : t('For lunges, single-arm rows and the like.')}>
-        {/* Turning it on rounds the target up to an even number, since half of an odd
-            total is a rep one side does not get. */}
-        <Switch checked={perSide} onChange={v => setC(x => ({ ...x, side: v || undefined, reps: v ? Math.ceil((x.reps || 0) / 2) * 2 : x.reps }))} />
-      </Row>}
-    </div>}
-    {/* A stepper is too wide to sit in a list row next to a label — it squeezes the text to
-        one word per line — so added weight gets the same full-width treatment as sets and
-        reps, with its explanation underneath. */}
-    {bw && <>
-      <div className="row cfgrow" style={{ marginBottom: 8 }}>
-        <Stepper label={t('Added ({0})', st.unit)} value={c.weight || 0} step={2.5}
-          onChange={v => setC(x => ({ ...x, weight: v }))} />
+    {!cardio && <button className="cfg-more" onClick={() => setMore(v => !v)} aria-expanded={more}>
+      <span>{t('More options')}</span><Icon name={more ? 'chevronUp' : 'chevronDown'} />
+    </button>}
+    {!cardio && more && <div className="cfg-more-b">
+      <div style={{ marginBottom: 14 }}>
+        <Segmented className="seg-range" value={mode} onChange={setMode}
+          options={[{ value: 'reps', label: t('Reps') }, { value: 'time', label: t('Time') }]} />
       </div>
-      <div className="small dim" style={{ marginBottom: 18 }}>
-        {t('For dips or pull-ups with a belt. Progression then follows the weight.')}
+      {/* ---------- bodyweight + per side (issues #31/#32/#33) ---------- */}
+      <div className="sect-b" style={{ marginBottom: 8 }}>
+        <Row icon="figureStrength" iconTint="var(--acc)" title={t('Bodyweight')}
+          subtitle={bw ? t('No weight to enter — just log the reps.') : t('Ask for a weight on every set.')}>
+          <Switch checked={bw} onChange={v => setC(x => ({ ...x, bodyweight: v, weight: v ? 0 : x.weight }))} />
+        </Row>
+        {mode === 'reps' && <Row icon="shuffle" iconTint="var(--blue)" title={t('Reps per side')}
+          subtitle={perSide ? t('You still log the total: {0} is {1} per side.', c.reps || 0, fmtNum(sideReps(c.reps))) : t('For lunges, single-arm rows and the like.')}>
+          {/* Turning it on rounds the target up to an even number, since half of an odd
+              total is a rep one side does not get. */}
+          <Switch checked={perSide} onChange={v => setC(x => ({ ...x, side: v || undefined, reps: v ? Math.ceil((x.reps || 0) / 2) * 2 : x.reps }))} />
+        </Row>}
       </div>
-    </>}
-    {/* The rep ceiling only means something when there is no load to add instead. */}
-    {mode === 'reps' && bw && !(c.weight > 0) && <div className="row cfgrow" style={{ marginBottom: 18 }}>
-      <Stepper label={t('Top of the range')} value={c.repsMax || 0} step={1} decimal={false}
-        onChange={v => setC(x => ({ ...x, repsMax: v }))} />
+      {/* A stepper is too wide to sit in a list row next to a label — it squeezes the text to
+          one word per line — so added weight gets the same full-width treatment as sets and
+          reps, with its explanation underneath. */}
+      {bw && <>
+        <div className="row cfgrow" style={{ marginBottom: 8 }}>
+          <Stepper label={t('Added ({0})', st.unit)} value={c.weight || 0} step={2.5}
+            onChange={v => setC(x => ({ ...x, weight: v }))} />
+        </div>
+        <div className="small dim" style={{ marginBottom: 18 }}>
+          {t('For dips or pull-ups with a belt. Progression then follows the weight.')}
+        </div>
+      </>}
+      <ProgressionFields ex={ex} mode={mode} c={c} setC={setC} routine={routine} unit={st.unit} />
     </div>}
-    {mode === 'reps' && bw && !(c.weight > 0) && <div className="small dim" style={{ marginTop: -10, marginBottom: 18 }}>
-      {c.repsMax > 0
-        ? t('Reps climb to {0}, then a set is added and the reps start over. At {1} sets it asks you to add weight instead.', c.repsMax, MAX_BW_SETS)
-        : t('Reps climb by one whenever every set was clean. Set a ceiling to add sets instead of reps forever.')}
-    </div>}
-    <ProgressionFields ex={ex} mode={mode} c={c} setC={setC} routine={routine} unit={st.unit} />
+    {!cardio && !more && <div style={{ height: 14 }} />}
     <Button variant="primary" onClick={save}>{existing ? t('Save') : t('Add to routine')}</Button>
+    {existing && ctx && ctx.swap && <><div style={{ height: 8 }} /><Button icon="shuffle" onClick={() => { close(); swapSheet(ex, (ctx.list || []).map(e => e.id), ctx.swap) }}>{t('Swap for similar')}</Button></>}
     {ex.custom && <><div style={{ height: 8 }} /><Button icon="pencil" onClick={() => { close(); customExSheet(ex) }}>{t('Edit or delete this exercise')}</Button></>}
     {onDelete && <><div style={{ height: 8 }} /><Button variant="danger" onClick={() => { close(); onDelete() }}>{t('Remove from routine')}</Button></>}
   </>
 }
-export const exConfigSheet = (ex, existing, onSave, onDelete, routine) => ui().openSheet(close => <ExConfig ex={ex} existing={existing} onSave={onSave} onDelete={onDelete} routine={routine} close={close} />)
+export const exConfigSheet = (ex, existing, onSave, onDelete, routine, ctx) => ui().openSheet(close => <ExConfig ex={ex} existing={existing} onSave={onSave} onDelete={onDelete} routine={routine} ctx={ctx} close={close} />)

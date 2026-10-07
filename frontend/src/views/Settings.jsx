@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore, DEF, hasData } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
-import { ACCENTS, todayISO, localTZ } from '../lib/format.js'
+import { todayISO, localTZ } from '../lib/format.js'
 import { effortOf } from '../lib/history.js'
 import { api, webauthnOK, passkeyLogin, passkeyRegister, IS_ANDROID } from '../lib/api.js'
 import { pushSupported, enablePush, disablePush, sendTestPush } from '../lib/push.js'
 import { wakeLockSupported } from '../lib/wakelock.js'
 import { t, LANGS, INSTR_LANGS } from '../lib/i18n.js'
-import { loadStarterPlan, confirmSheet, importFromApp } from '../sheets.jsx'
+import { loadStarterPlan, confirmSheet, importFromApp, gymEquipmentSheet, gymEqLabel } from '../sheets.jsx'
 import Icon from '../components/Icon.jsx'
 import { Section, Row, SelectRow, Switch, Segmented, Button, TextField } from '../components/ui.jsx'
 
@@ -98,6 +98,11 @@ export default function Settings() {
       </Row>
     </Section>
 
+    {/* ---------- equipment ---------- */}
+    <Section title={t('Equipment')} footer={t('The exercise picker only offers what your gym has.')}>
+      <Row icon="dumbbell" iconTint="var(--acc)" title={t('My gym’s equipment')} value={gymEqLabel(S.gymEq)} accessory="chevron" onClick={gymEquipmentSheet} />
+    </Section>
+
     {/* ---------- during a workout ---------- */}
     <Section title={t('During a workout')} footer={wakeOK ? t('The screen stays on while a workout is running, so you don’t have to unlock your phone between sets.') : null}>
       <SelectRow icon="timer" iconTint="var(--orange)" title={t('Rest timer')}
@@ -124,15 +129,9 @@ export default function Settings() {
     {user && <PushCard S={S} update={update} toast={toast} />}
 
     {/* ---------- appearance ---------- */}
+    {/* Theme and accent colour are gone: the Peek design is one fixed look (light stone,
+        one green) on every screen now, so those switches would do nothing. */}
     <Section title={t('Appearance')} footer={t('synced with your profile')}>
-      <Row icon="moon" iconTint="var(--indigo)" title={t('Theme')}>
-        <Segmented
-          className="seg-inline"
-          options={[{ value: 'dark', icon: 'moon', label: t('Dark') }, { value: 'light', icon: 'sun', label: t('Light') }]}
-          value={S.theme === 'light' ? 'light' : 'dark'}
-          onChange={v => update(s => { s.theme = v })}
-        />
-      </Row>
       {/* Purely how the muscle map is drawn — nothing else in the app reads this. */}
       <Row icon="figureStrength" iconTint="var(--teal)" title={t('Body diagram')}>
         <Segmented
@@ -142,15 +141,6 @@ export default function Settings() {
           onChange={v => update(s => { s.body = v })}
         />
       </Row>
-      <div className="lrow" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 12, paddingTop: 13, paddingBottom: 14 }}>
-        <span className="lrow-t">{t('Accent color')}</span>
-        <div className="swatches">
-          {Object.entries(ACCENTS).map(([k, c]) => (
-            <button key={k} className={'swatch' + ((S.accent || 'lime') === k ? ' on' : '')}
-              style={{ background: c }} onClick={() => update(s => { s.accent = k })} aria-label={k} />
-          ))}
-        </div>
-      </div>
     </Section>
 
     {/* ---------- data: fill it, bring things over, back it up, wipe it ---------- */}
