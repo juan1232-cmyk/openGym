@@ -5,12 +5,14 @@ import { fmtNum, fmtDate, todayISO } from '../lib/format.js'
 import { fmtSec, setLabel } from '../lib/history.js'
 import { progressSeries, trendPer14 } from '../lib/progress.js'
 import { nextPrescription } from '../lib/progression.js'
+import { liftTrend, liftStalls, STALL_SESSIONS } from '../lib/verdict.js'
 import { t } from '../lib/i18n.js'
 import { exerciseDetailSheet } from '../sheets.jsx'
 import Icon from '../components/Icon.jsx'
 import Orb from '../components/Orb.jsx'
 import { Button } from '../components/ui.jsx'
 
+const PROGRESS_MOOD = { progressing: 'proud', holding: 'idle', slipping: 'disappointed', stalled: 'suspicious' }
 const LABEL = { e1rm: 'Estimated 1 rep max', weight: 'Heaviest set', reps: 'Most reps', sec: 'Longest hold', speed: 'Top speed' }
 const SHOWN = 10   // sessions on the chart — enough for a trend, few enough to read each step
 
@@ -59,9 +61,14 @@ export default function ExerciseProgress() {
   const next = rows.length ? nextPrescription(S, routine ? routine.ex.find(e => e.id === id) : { ...(lastRow.target || {}), id }, routine) : null
   const rate = trendPer14(top.slice(-8))
   const step = rate == null ? null : Math.round(Math.abs(rate) * 2) / 2
+  // The orb's own read of this lift — the same call Home's verdict makes, so the two agree.
+  // It goes by the estimated 1RM, which is why the bar weight can hold while the orb is pleased.
+  const trend = liftTrend(S, id)
+  const stuck = routine && liftStalls(S, routine.ex.find(e => e.id === id)) >= STALL_SESSIONS
+  const verdict = stuck ? 'stalled' : trend ? { up: 'progressing', flat: 'holding', down: 'slipping' }[trend.dir] : null
   const tip = [
     rate == null ? null
-      : step < 0.5 ? t('Holding steady at this weight lately.')
+      : step < 0.5 ? (trend && trend.dir === 'up' ? t("Same weight, more reps. That's progress.") : t('Holding steady at this weight lately.'))
         : rate > 0 ? t("You've added about {0} every two weeks.", fmtNum(step) + ' ' + unit)
           : t('Down about {0} every two weeks lately.', fmtNum(step) + ' ' + unit),
     // a deload says why (it's the surprising one); otherwise the number is the useful part
@@ -98,7 +105,7 @@ export default function ExerciseProgress() {
         <Spark points={shown} />
         <div className="axis"><span>{fmtDate(first.d)}</span><span>{cur.d === todayISO() ? t('Today') : fmtDate(cur.d)}</span></div>
       </div>
-      {tip && <div className="pk-coach"><Orb size={44} inverted poke="joyful-wide" /><p>{tip}</p></div>}
+      {tip && <div className="pk-coach"><Orb size={44} inverted mood={PROGRESS_MOOD[verdict]} verdict={verdict} poke="joyful-wide" /><p>{tip}</p></div>}
       <div className="card pk-list">
         <div className="pk-card-h"><b>{t('Sessions')}</b></div>
         {rows.slice(-12).reverse().map(row)}

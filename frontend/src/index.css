@@ -1019,12 +1019,29 @@ h4.sec{
   animation:ob-breathe 5s ease-in-out infinite;
   transition:background-color .5s ease;
 }
+/* How the whole body moves while idle says the verdict (lib/verdict.js) before any line does.
+   Above shake/drift on purpose: an expression's own body motion wins while it's showing. */
+@keyframes ob-bounce{0%,100%{transform:translateY(0) scale(1)}35%{transform:translateY(-10px) scale(.97,1.03)}55%{transform:translateY(-7px)}80%{transform:translateY(1px) scale(1.02,.98)}}
+@keyframes ob-sag{0%,100%{transform:translateY(5px) scale(1.03,.96)}50%{transform:translateY(2px) scale(1.01,.99)}}
+@keyframes ob-slump{0%,100%{transform:translateY(8px) scale(.97,.92)}50%{transform:translateY(6px) scale(.98,.94)}}
+@keyframes ob-pace{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px) rotate(-2deg)}75%{transform:translateX(5px) rotate(2deg)}}
+.orb.v-progressing{animation:ob-bounce 2.2s ease-in-out infinite}
+.orb.v-slipping{animation:ob-sag 6s ease-in-out infinite}
+.orb.v-stalled{animation:ob-pace 3.6s ease-in-out infinite}
+.orb.v-away{animation:ob-slump 8s ease-in-out infinite}
 .orb.shake{animation:ob-shake 160ms linear infinite}
 .orb.drift{animation:ob-drift 4.5s ease-in-out infinite}
 .orb i{position:absolute;top:0;left:0;width:0;height:0;border-radius:999px;background:#f3f2ee;transition:background-color .5s ease}
 .orb.inv{background:#f3f2ee}
 .orb.inv i{background:#0b0b0b}
 .orb.poke{animation:ob-squish 480ms cubic-bezier(.34,1.3,.64,1)!important}
+/* one-shot reactions (Orb `bump`): beat last time / matched it / fell short */
+@keyframes ob-hop{0%{transform:none}30%{transform:translateY(-18px) scale(.95,1.06)}62%{transform:translateY(0) scale(1.07,.92)}82%{transform:scale(.98,1.02)}100%{transform:none}}
+@keyframes ob-nod{0%,100%{transform:none}35%{transform:translateY(5px) scale(1.02,.98)}70%{transform:translateY(-2px)}}
+@keyframes ob-sink{0%{transform:none}45%{transform:translateY(9px) scale(1.04,.93)}100%{transform:none}}
+.orb.b-hop{animation:ob-hop 620ms cubic-bezier(.34,1.3,.64,1)!important}
+.orb.b-nod{animation:ob-nod 520ms ease-in-out!important}
+.orb.b-sink{animation:ob-sink 640ms ease-in-out!important}
 
 /* ------------------------------------------------------- full-bleed screen -- */
 /* Cancels #app's own padding so an orb can hang off the top edge of the screen — the
@@ -1106,20 +1123,30 @@ h4.sec{
 .pk-seg button.on{background:var(--ink);color:var(--on-ink);font-weight:600}
 
 /* D3 — dashboard (Home) */
-.pk-top{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 8px 0}
-.pk-top .iconbtn{background:var(--surface-2)}
-/* the orb and what it says: a white bubble whose tail points back at it */
-@keyframes pk-say-in{from{opacity:0;transform:translateY(4px) scale(.96)}to{opacity:1;transform:none}}
-.pk-coachtop{display:flex;align-items:flex-start;gap:12px;flex:1;min-width:0;margin-right:12px}
-.pk-say{
-  position:relative;margin-top:22px;max-width:230px;padding:10px 14px;border-radius:16px 16px 16px 4px;
-  background:var(--surface);color:var(--label);font-size:14px;line-height:1.35;text-wrap:pretty;
-  transform-origin:0 50%;animation:pk-say-in 260ms var(--spring) both;
+.pk-top{position:relative;padding:14px 8px 0}
+.pk-top .iconbtn{position:absolute;top:14px;right:8px;z-index:1;background:var(--surface-2)}
+/* The orb as Home's hero: the verdict as a label and what it says as the main line, ahead of
+   everything else on the screen — it's the answer to "am I getting anywhere?" */
+@keyframes pk-say-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.pk-hero-coach{display:flex;flex-direction:column;align-items:center;gap:12px;padding:8px 24px 6px;text-align:center}
+.pk-hero-coach .orb-wrap{padding:12px 0 6px}
+.pk-verdict{
+  display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:99px;
+  background:var(--surface);font-size:12px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:var(--label-2);
 }
-.pk-say::before{content:'';position:absolute;left:-6px;bottom:0;width:12px;height:12px;background:var(--surface);clip-path:polygon(100% 0,100% 100%,0 100%)}
-.pk-greet{display:flex;flex-direction:column;gap:6px;padding:22px 8px 22px}
+.pk-verdict::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--label-3)}
+.pk-verdict.progressing{color:var(--acc-ink)}
+.pk-verdict.progressing::before{background:var(--acc)}
+.pk-verdict.slipping::before,.pk-verdict.stalled::before{background:var(--orange)}
+.pk-verdict.away::before{background:var(--red)}
+.pk-say{
+  min-height:2.5em;max-width:300px;font-size:19px;line-height:1.3;font-weight:600;letter-spacing:-.02em;
+  color:var(--label);text-wrap:balance;
+}
+.pk-say-in{display:inline-block;animation:pk-say-in 300ms var(--spring) both}
+.pk-greet{display:flex;flex-direction:column;gap:6px;padding:14px 8px 20px}
 .pk-greet span{font-size:14px;color:var(--label-2)}
-.pk-greet h1{font-size:32px;line-height:1.05;font-weight:600;letter-spacing:-.045em;color:var(--label)}
+.pk-greet h1{font-size:26px;line-height:1.05;font-weight:600;letter-spacing:-.045em;color:var(--label)}
 .pk-home .card{border-radius:var(--r-card);padding:16px;margin-bottom:12px}
 .pk-today{display:flex;flex-direction:column;gap:14px}
 .pk-week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
@@ -1344,7 +1371,7 @@ button.pk-tile:active{background:var(--surface-2)}
 }
 .pk-done{min-height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;color:var(--label)}
 .pk-done-orb{flex:1;min-height:250px;display:flex;align-items:center;justify-content:center}
-.pk-done-orb .orb{animation-duration:4s}
+.pk-done-orb .orb:not([class*=' v-']){animation-duration:4s}
 .pk-done-h{text-align:center;display:flex;flex-direction:column;gap:8px}
 .pk-done-h h1{font-size:34px;line-height:1.05;font-weight:600;letter-spacing:-.045em}
 .pk-done-h p{font-size:16px;line-height:1.4;color:var(--label-2)}
@@ -1381,7 +1408,7 @@ button.pk-tile:active{background:var(--surface-2)}
 .pk-spark{display:block;width:100%;height:auto;margin-top:20px;overflow:visible}
 .pk-pcard .axis{display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--label-3)}
 .pk-coach{display:flex;align-items:center;gap:14px;margin-bottom:10px;padding:14px 16px;border-radius:var(--r-card);background:var(--ink);color:var(--on-ink)}
-.pk-coach .orb{animation:none}
+.pk-coach .orb:not([class*=' v-']){animation:none}
 .pk-coach p{font-size:14px;line-height:1.4;text-wrap:pretty}
 .pk-overlap{align-items:flex-start;margin:0 0 14px}
 .pk-overlap .btn{margin-top:10px;width:auto}

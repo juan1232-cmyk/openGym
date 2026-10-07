@@ -16,8 +16,14 @@ import { Button } from '../components/ui.jsx'
 const nameOf = id => (EXIDX[id] || {}).n || id
 const TAPS = ['joyful-wide', 'surprised-left', 'small-attentive', 'curious-left']
 
-// The orb as coach: a mood and maybe a line from lib/coach.js, a bubble that takes a moment to
-// show up (it's reacting, not a tooltip), and a temper if you keep poking it. A tap's mood and
+const VERDICT_LABEL = {
+  progressing: 'Progressing', holding: 'Holding', slipping: 'Slipping',
+  stalled: 'Stalled', away: 'Away', new: 'Getting to know you'
+}
+
+// The orb as Home's hero: the verdict from lib/verdict.js as a label, a body that moves the way
+// that verdict feels, and a line naming what's behind it. The line takes a moment to show up
+// (it's reacting, not a tooltip), and it has a temper if you keep poking it. A tap's mood and
 // line only last a few seconds before it goes back to what it thinks of your training.
 function Coach({ S }) {
   const base = useMemo(() => coach(S, new Date(), nameOf), [S])
@@ -30,7 +36,7 @@ function Coach({ S }) {
   useEffect(() => {
     setShown(false)
     if (!line) return
-    const tm = setTimeout(() => setShown(true), over ? 200 : 600 + Math.random() * 1400)
+    const tm = setTimeout(() => setShown(true), over ? 200 : 500 + Math.random() * 600)
     return () => clearTimeout(tm)
   }, [line])
   useEffect(() => () => clearTimeout(calm.current), [])
@@ -49,9 +55,11 @@ function Coach({ S }) {
     calm.current = setTimeout(() => { setOver(null); pokes.current = [] }, 6000)
   }
 
-  return <div className="pk-coachtop">
-    <Orb ref={orb} size={88} mood={mood} onPoke={onPoke} />
-    {shown && line && <p className="pk-say" aria-live="polite">{line}</p>}
+  return <div className="pk-hero-coach">
+    <Orb ref={orb} size={132} mood={mood} verdict={base.verdict} onPoke={onPoke} />
+    <span className={'pk-verdict ' + base.verdict}>{t(VERDICT_LABEL[base.verdict])}</span>
+    {/* the space is kept while the line is on its way, so the page doesn't jump when it lands */}
+    <p className="pk-say" aria-live="polite">{shown && line ? <span key={line} className="pk-say-in">{line}</span> : null}</p>
   </div>
 }
 
