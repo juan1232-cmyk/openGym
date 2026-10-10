@@ -103,6 +103,18 @@ describe('coachLine', () => {
   })
 })
 
+describe('night lines', () => {
+  it('goes quiet and lowercase after midnight, and still never leaves a placeholder', () => {
+    const night = new Date('2026-09-24T01:30:00')
+    const s = coachSignals(skipping, night)
+    const lines = new Set()
+    for (let i = 0; i < 300; i++) lines.add(coachLine('drowsy', s, seeded('n' + i)))
+    const deep = [...lines].filter(l => l && l === l.toLowerCase())
+    expect(deep.length).toBeGreaterThan(3)
+    deep.forEach(l => expect(l).not.toMatch(/\{\d\}|undefined|null|NaN/))
+  })
+})
+
 describe('coachMoment', () => {
   it('notices a first session, a round number and a comeback — only on the day', () => {
     const m = S => coachMoment(coachSignals(S, TODAY))

@@ -179,6 +179,25 @@ const LINES = {
     ['Keep caffeine before mid-afternoon tomorrow. Late coffee steals sleep.'],
     ...(s.trainedToday ? [['You trained today. Now give it 8 hours of sleep to pay off.']] : [])
   ],
+  // After midnight it goes quiet and a little cosmic, in the voice of Minecraft's End Poem
+  // (lowercase, second person, "the player"). Shown as written — no capital, see coachLine.
+  night: s => [
+    ['and the player slept, and while they slept, the muscle was rebuilt.'],
+    ['you lifted the iron today. the iron stayed the same. you did not.'],
+    ['every rep was a small promise. tonight, the body keeps it.'],
+    ['the dark is where the growing happens. close your eyes.'],
+    ['you think strength is made in the gym. it is only asked for there.'],
+    ['the world is quiet now. even the iron rests.'],
+    ['sleep, and the world will save your progress.'],
+    ['tomorrow is a new world. same seed. a stronger player.'],
+    ['the bar was heavy once. remember that, the next time it feels heavy.'],
+    ['somewhere, the you from day one is watching. they would not believe it.'],
+    ['you are not the numbers on the bar. but you wrote every one of them.'],
+    ['the player dreamed of heavier weights. and the dream was patient.'],
+    ...(s.total > 1 ? [['{0} sessions behind you, and every one of them is still in you.', s.total]] : []),
+    ...(s.trainedToday ? [['you showed up today. the universe noticed. now sleep.']] : []),
+    ...(s.daysOff >= 3 ? [['the world has waited {0} days for the player. it is patient. for now.', s.daysOff]] : [])
+  ],
   new: () => [
     ["Hey. I'm Peek. Log a workout and we'll talk."],
     ["Nothing logged yet. Show me what you've got."],
@@ -248,7 +267,11 @@ export function coachLine(mood, s, rng) {
   if (s.freshPR) return say(one(rng, LINES.pr(s)))
   const moment = coachMoment(s)
   if (moment) return say(one(rng, LINES[moment](s)))
-  if (mood === 'drowsy') return rng() < 0.6 ? say(one(rng, LINES.late(s))) : null
+  if (mood === 'drowsy') {
+    if (rng() >= 0.6) return null
+    if (rng() < 0.5) { const [tpl, ...args] = one(rng, LINES.night(s)); return t(tpl, ...args) }
+    return say(one(rng, LINES.late(s)))
+  }
   if (!s.total) return say(one(rng, LINES.new()))
   const band = BAND_OF[mood] || 'mid'
   if (rng() < (band === 'mid' ? 0.2 : 0.08)) return null
