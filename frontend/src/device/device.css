@@ -1,0 +1,81 @@
+/* The device page: an iPhone 15 Pro drawn at its real size (393×852 screen, 14px bezel) and
+   scaled to fit by device.js (--s). Below 640px wide it is a phone already, so the frame goes
+   and the app is the whole page. */
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{
+  font:15px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif;
+  color:#f3f2ee;background:radial-gradient(120% 90% at 30% 20%,#2a2a2e,#0d0d0f);
+}
+button{font:inherit;color:inherit;cursor:pointer}
+.dv{min-height:100%;display:flex;align-items:center;justify-content:center;gap:48px;padding:20px 16px}
+
+.dv-stage{width:calc(421px * var(--s,1));height:calc(880px * var(--s,1));flex:none}
+.dv-phone{
+  width:421px;height:880px;padding:14px;border-radius:68px;position:relative;
+  transform:scale(var(--s,1));transform-origin:0 0;
+  background:#1b1b1d;
+  box-shadow:inset 0 0 0 2px #3a3a3e,inset 0 0 0 5px #111,0 40px 80px -30px rgba(0,0,0,.8),0 0 0 1px #000;
+}
+/* the side buttons: action + volume on the left, power on the right */
+.dv-phone::before,.dv-phone::after{content:'';position:absolute;width:4px}
+.dv-phone::before{
+  left:-3px;top:150px;height:204px;
+  background:linear-gradient(#2c2c30,#2c2c30) 0 0/4px 34px no-repeat,linear-gradient(#2c2c30,#2c2c30) 0 60px/4px 64px no-repeat,
+    linear-gradient(#2c2c30,#2c2c30) 0 140px/4px 64px no-repeat;
+}
+.dv-phone::after{right:-3px;top:230px;height:100px;border-radius:2px;background:#2c2c30}
+.dv-screen{position:relative;width:393px;height:852px;border-radius:55px;overflow:hidden;background:#f3f2ee}
+.dv-screen iframe{display:block;width:100%;height:100%;border:0}
+
+/* the status bar and island sit over the app like iOS draws them; taps go through */
+.dv-status{
+  position:absolute;inset:0 0 auto;height:54px;display:flex;align-items:center;justify-content:space-between;
+  padding:4px 34px 0 50px;color:#0b0b0b;pointer-events:none;
+}
+.dv-time{font-weight:600;font-size:17px;letter-spacing:-.01em;width:54px;text-align:center}
+.dv-island{position:absolute;left:50%;top:11px;width:125px;height:37px;margin-left:-62.5px;border-radius:20px;background:#000}
+.dv-icons{display:flex;align-items:center;gap:6px}
+.dv-icons svg{fill:currentColor}
+.dv-home{position:absolute;left:50%;bottom:8px;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:#0b0b0b;pointer-events:none}
+
+.dv-panel{width:280px;display:flex;flex-direction:column;gap:12px}
+.dv-panel h1{font-size:26px;letter-spacing:-.03em;line-height:1.1}
+.dv-panel h1 span{display:block;font-size:14px;font-weight:500;letter-spacing:0;color:#a9a8a1;margin-top:4px}
+.dv-panel h2{margin-top:10px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#a9a8a1}
+.dv-build{font:12px/1.4 ui-monospace,'SF Mono',Menlo,Consolas,monospace;color:#8a8982;overflow-wrap:anywhere}
+.dv-scenes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dv-scenes button{
+  display:flex;align-items:center;gap:8px;padding:10px 12px;border:0;border-radius:12px;text-align:left;
+  background:#232326;box-shadow:inset 0 0 0 1px #333;transition:background .15s;
+}
+.dv-scenes button:hover{background:#2c2c30}
+.dv-scenes button.on{background:#f3f2ee;color:#0b0b0b;box-shadow:none}
+.dv-scenes button::before{content:'';width:8px;height:8px;border-radius:50%;flex:none;background:#8a8982}
+.dv-scenes button[data-verdict=progressing]::before{background:#12b76a}
+.dv-scenes button[data-verdict=slipping]::before,.dv-scenes button[data-verdict=stalled]::before{background:#e08600}
+.dv-scenes button[data-verdict=away]::before{background:#e5372b}
+.dv-note{font-size:13px;color:#a9a8a1}
+.dv-links{display:flex;align-items:center;gap:16px;margin-top:4px;font-size:14px}
+.dv-links button{border:0;padding:8px 14px;border-radius:99px;background:#f3f2ee;color:#0b0b0b;font-weight:600}
+.dv-links a{color:#f3f2ee}
+.dv-fab,.dv-close{display:none}
+
+@media (max-width:640px){
+  body{background:#f3f2ee}
+  .dv{display:block;padding:0}
+  .dv-stage,.dv-phone,.dv-screen{width:100%;height:100vh;height:100dvh;padding:0;border-radius:0;transform:none;box-shadow:none;background:none}
+  .dv-phone::before,.dv-phone::after,.dv-status,.dv-home{display:none}
+  .dv-panel{
+    position:fixed;inset:auto 0 0;width:auto;padding:20px 16px calc(20px + env(safe-area-inset-bottom));
+    border-radius:20px 20px 0 0;background:#161618;transform:translateY(105%);transition:transform .3s;z-index:2;
+  }
+  .dv-open .dv-panel{transform:none}
+  .dv-open .dv-fab{display:none}
+  .dv-close{display:block;position:absolute;top:12px;right:12px;width:36px;height:36px;border:0;border-radius:50%;background:#2c2c30;font-size:22px;line-height:1}
+  .dv-fab{
+    display:block;position:fixed;left:12px;bottom:calc(env(safe-area-inset-bottom) + 104px);z-index:3;
+    padding:7px 12px;border:0;border-radius:99px;background:rgba(11,11,11,.75);color:#f3f2ee;font-size:13px;font-weight:600;
+  }
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}

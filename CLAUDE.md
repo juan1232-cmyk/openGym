@@ -30,8 +30,18 @@ No Docker on this machine yet — develop against plain Node:
 cd api && npm install && npm start          # backend on :3000 (DATA_DIR defaults to /data;
                                              # override for local dev, e.g. DATA_DIR=./data)
 cd frontend && npm install && npm run dev   # Vite on :5173, proxies /api -> :3000 (vite.config.js)
-cd frontend && npm test                     # vitest — training logic only (src/lib/*.test.js)
+cd frontend && npm test                     # vitest — training logic (src/lib/*.test.js) + demo data (src/device/)
 ```
+
+**iPhone preview, no Mac needed.** `frontend/device.html` is a second Vite entry: the real app in
+an iframe inside a CSS-drawn iPhone 15 Pro, plus buttons that load demo profiles
+(`src/device/scenarios.js`, each held to its orb verdict by `scenarios.test.js`) into the app's
+localStorage. Locally: `npm run dev`, then `localhost:5173/device.html`. Hosted: Vercel is
+connected to the GitHub repo (`vercel.json` at the root), so every push to a branch that touches
+`frontend/` gets its own preview URL, and the Vercel bot links it on the PR. Add `/device.html`
+to that URL for the phone view. The hosted demo has no `/api` and no exercise media, so it runs
+in guest mode with placeholder thumbnails. It's built into the self-hosted image too, which
+does no harm.
 
 Full stack (needs Docker — not installed as of 2026-08-24):
 ```bash
