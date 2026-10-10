@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { coachSignals, coachScore, coachMood, coachLine, coach, seeded, pokeReaction, BAND_OF } from './coach.js'
+import { coachSignals, coachScore, coachMood, coachLine, coachMoment, coach, seeded, pokeReaction, BAND_OF } from './coach.js'
 import { MOODS } from './orb-rig.js'
 import { isoOf } from './format.js'
 
@@ -83,7 +83,8 @@ describe('coachMood', () => {
 describe('coachLine', () => {
   it('never leaves a placeholder unfilled', () => {
     const late = new Date('2026-09-23T23:30:00')
-    const cases = [steady, skipping, state([]), state([wk(0, { prs: ['bench'] }), wk(3, { prs: ['squat'] })])]
+    const cases = [steady, skipping, state([]), state([wk(0, { prs: ['bench'] }), wk(3, { prs: ['squat'] })]),
+      state([wk(0), wk(16)], PLAN), state([wk(0)]), state([wk(20), wk(25)], PLAN)]
     for (let i = 0; i < 300; i++) {
       for (const S of cases) {
         for (const now of [TODAY, late]) {
@@ -99,6 +100,31 @@ describe('coachLine', () => {
     const lines = new Set()
     for (let i = 0; i < 200; i++) lines.add(coachLine('angry', s, seeded('l' + i)))
     expect([...lines].some(l => l && l.includes('10 days'))).toBe(true)
+  })
+})
+
+describe('coachMoment', () => {
+  it('notices a first session, a round number and a comeback — only on the day', () => {
+    const m = S => coachMoment(coachSignals(S, TODAY))
+    expect(m(state([wk(0)]))).toBe('first')
+    expect(m(state([wk(1)]))).toBe(null)
+    expect(m(state(Array.from({ length: 10 }, (_, i) => wk(i * 2))))).toBe('milestone')
+    expect(m(state([wk(0), wk(9), wk(11)]))).toBe('comeback')
+    expect(m(state([wk(0), wk(2), wk(4)]))).toBe(null)
+  })
+
+  it('says the gap out loud on a comeback, and is in a good mood about it', () => {
+    const S = state([wk(0), wk(16), wk(18)], PLAN)
+    expect(spread(S).high).toBe(400)
+    const s = coachSignals(S, TODAY)
+    const lines = new Set()
+    for (let i = 0; i < 200; i++) lines.add(coachLine('happy', s, seeded('c' + i)))
+    expect([...lines].some(l => l.includes('16 days'))).toBe(true)
+  })
+
+  it('still lets a fresh PR take the line', () => {
+    const s = coachSignals(state([wk(0, { prs: ['bench'] })]), TODAY)
+    expect(coachLine('proud', s, seeded('f'))).toMatch(/bench/i)
   })
 })
 

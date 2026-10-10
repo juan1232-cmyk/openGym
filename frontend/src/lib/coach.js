@@ -3,8 +3,9 @@
 //
 // Deliberately not a lookup table. Several signals blend into one hidden score, the score
 // gets noise, the mood is a weighted pick from a band (now and then the neighbouring band),
-// and some turns it says nothing at all. The one rule a user can rely on: a PR gets
-// celebrated. Everything else should read as a mood, not as a trigger they can map.
+// and some turns it says nothing at all. The rules a user can rely on: a PR gets
+// celebrated, and so do a first session, a milestone and a comeback (see coachMoment).
+// Everything else should read as a mood, not as a trigger they can map.
 //
 // All the randomness comes from one seeded generator (see coachSeed), so the orb holds its
 // mood across re-renders and visits within a few hours, and shifts when the day moves on or
@@ -27,6 +28,9 @@ export function coachSignals(state, now = new Date(), nameOf = id => id) {
   const first = ws.length ? Math.min(...ws.map(w => dayNum(w.d))) : today
 
   const daysOff = ws.length ? Math.min(...ws.map(ago).filter(n => n >= 0)) : null
+  // if they trained today: how long the gap before it was — a comeback deserves a word
+  const prior = ws.map(ago).filter(n => n > 0)
+  const gapBefore = daysOff === 0 && prior.length ? Math.min(...prior) : null
 
   // planned days of the last week that came and went with nothing logged — only since the
   // first workout, so a plan made yesterday doesn't count a week of "misses" against anyone
@@ -62,6 +66,7 @@ export function coachSignals(state, now = new Date(), nameOf = id => id) {
     total: ws.length,
     daysOff,
     trainedToday: daysOff === 0,
+    gapBefore,
     planned, missed,
     week: recent(0, 7).length,
     active4: new Set(recent(0, 28).map(w => Math.floor(ago(w) / 7))).size,
@@ -115,9 +120,21 @@ const BANDS = {
 export const BAND_OF = { drowsy: 'late' }
 Object.entries(BANDS).forEach(([b, tb]) => Object.keys(tb).forEach(m => { BAND_OF[m] = BAND_OF[m] || b }))
 
+// The other things it never lets slide: a first session, a round number of them, and
+// showing up again after a long gap. Only on the day it happens, so they can't go stale.
+const MILESTONES = [10, 25, 50, 100, 150, 200, 250, 300, 365, 500, 1000]
+export function coachMoment(s) {
+  if (!s.trainedToday) return null
+  if (s.total === 1) return 'first'
+  if (MILESTONES.includes(s.total)) return 'milestone'
+  if (s.gapBefore >= 7) return 'comeback'
+  return null
+}
+
 /** One of orb-rig MOODS. */
 export function coachMood(score, s, rng) {
   if (s.freshPR) return pickW(rng, { celebrate: 3, proud: 2, excited: 2 })
+  if (coachMoment(s)) return pickW(rng, { proud: 3, happy: 2, excited: 1 })
   if ((s.hour >= 23 || s.hour < 5) && rng() < 0.35) return 'drowsy'
   if (!s.total) return pickW(rng, { curious: 3, idle: 2, playful: 1 })
   const nudge = (rng() - 0.5) * 0.3
@@ -128,35 +145,100 @@ export function coachMood(score, s, rng) {
 }
 
 // Lines are [template, ...args] until the end, so a template is only ever filled by t().
+// Most of them should be worth reading: a fact about their own training, or something they
+// can actually do with it. The snark is the delivery, not the content.
 const LINES = {
   pr: s => [
     ['{0} PR. I saw that.', s.freshPR],
     ['That {0} PR? Proud of you.', s.freshPR],
     ['{0} went up. Keep that energy.', s.freshPR],
+    ['New {0} PR. Own that weight for a session or two before adding more.', s.freshPR],
+    ["{0} PR. Eat well and sleep tonight. That's how it sticks.", s.freshPR],
     ...(s.prs > 1 ? [['{0} PRs in two weeks. Who are you?', s.prs], ['New {0} PR. Again.', s.freshPR]] : [])
   ],
-  late: () => [["It's late. Sleep is part of training."], ['Go to bed. Gains happen there.']],
-  new: () => [["Hey. I'm Peek. Log a workout and we'll talk."], ["Nothing logged yet. Show me what you've got."]],
-  high: s => [
-    ...(s.trainedToday ? [['Good session. That one counted.'], ['Done. Now go eat.']] : []),
-    ...(s.week >= 2 ? [["{0} sessions this week. That's how it's done.", s.week]] : []),
-    ...(s.volTrend > 1.1 ? [['Volume is up. I like where this is going.']] : []),
-    ...(s.active4 >= 4 ? [["Four weeks without a gap. Don't get comfy."]] : [])
+  first: () => [
+    ['First session logged. The hardest one is done.'],
+    ['Day one. Light weights and clean form now, the numbers come later.'],
+    ["First one in. Next time, beat it by a single rep. That's the whole game."]
   ],
-  highAny: () => [["You're actually doing it. Keep going."], ['Solid. Now do it again.']],
+  milestone: s => [
+    ['{0} sessions. Most people quit long before this.', s.total],
+    ['Session {0}. Go look at your first numbers. Then keep going.', s.total],
+    ['{0} workouts logged. This is a habit now, not a phase.', s.total]
+  ],
+  comeback: s => [
+    ['Back after {0} days. Go a bit lighter today and build up.', s.gapBefore],
+    ["{0} days off and you came back. That's the part that matters.", s.gapBefore],
+    ["Expect to be sore tomorrow. It passes, and it's less every time."],
+    ...(s.gapBefore >= 14 ? [['After {0} days, take 10-20% off and earn it back over a couple of weeks.', s.gapBefore]] : [])
+  ],
+  late: s => [
+    ["It's late. Sleep is part of training."],
+    ['Go to bed. Gains happen there.'],
+    ['Screens off a bit before bed. Better sleep, better lifts.'],
+    ['Keep caffeine before mid-afternoon tomorrow. Late coffee steals sleep.'],
+    ...(s.trainedToday ? [['You trained today. Now give it 8 hours of sleep to pay off.']] : [])
+  ],
+  new: () => [
+    ["Hey. I'm Peek. Log a workout and we'll talk."],
+    ["Nothing logged yet. Show me what you've got."],
+    ['Pick a plan you can repeat three times a week. Fancy can wait.']
+  ],
+  high: s => [
+    ...(s.trainedToday ? [['Good session. That one counted.'], ['Done. Now go eat.'], ['Protein and a real meal in the next few hours. Recovery starts now.']] : []),
+    ...(s.week >= 2 ? [["{0} sessions this week. That's how it's done.", s.week]] : []),
+    ...(s.week >= 4 ? [['{0} this week. Make sure one day is actual rest.', s.week]] : []),
+    ...(s.volTrend > 1.1 ? [['Volume is up. I like where this is going.'], ['Volume is climbing. Sleep and food have to climb with it.']] : []),
+    ...(s.active4 >= 4 ? [["Four weeks without a gap. Don't get comfy."], ['A month straight. If everything starts feeling heavy, take a lighter week.']] : [])
+  ],
+  highAny: () => [
+    ["You're actually doing it. Keep going."],
+    ['Solid. Now do it again.'],
+    ["A bit more weight or one more rep than last time. Every time. That's it."],
+    ['Momentum is easy to keep and hard to restart. Protect it.']
+  ],
   mid: s => [
     ...(s.today && !s.trainedToday ? [['{0} today. You know what to do.', s.today], ['{0} is waiting.', s.today]] : []),
+    ...(s.today && !s.trainedToday && s.hour >= 18 ? [['Still time for {0}. A short version beats skipping it.', s.today]] : []),
+    ...(!s.today && !s.trainedToday ? [["Rest day. Walk, eat, sleep. That's the program today."], ['Rest day. Muscle gets built now, not under the bar.']] : []),
     ...(s.trainedToday ? [['Done for today. Eat something with protein in it.'], ["Rest counts too. Don't skip it."]] : []),
-    ...(s.stalled.length ? [['{0} has been stubborn lately.', s.stalled[0]]] : [])
+    ...(s.stalled.length ? [['{0} has been stubborn lately.', s.stalled[0]], ['{0} stuck? Add reps at the same weight first, then add load.', s.stalled[0]]] : [])
   ],
-  midAny: () => [["I'm watching. Casually."], ['Still here.'], ['Good day to lift something heavy.']],
+  midAny: () => [
+    ["I'm watching. Casually."],
+    ['Still here.'],
+    ['Good day to lift something heavy.'],
+    ['Leave a rep or two in the tank on most sets. Save the grinders.'],
+    ['Rest 2-3 minutes between heavy sets. Rushing them costs reps.'],
+    ['Control the way down. That half of the rep counts too.'],
+    ['A couple of light warm-up sets first. Cheaper than an injury.'],
+    ['Aim for about 1.6 g of protein per kg of body weight a day.'],
+    ['Creatine, 3-5 g a day. One of the few supplements that actually works.'],
+    ["Soreness isn't the goal. Beating last time is."],
+    ['Sleep is the cheapest performance boost there is.'],
+    ['A walk on rest days helps recovery more than the couch does.'],
+    ["Same weight, cleaner reps. That's progress too."],
+    ["Sharp pain isn't soreness. Stop that lift, don't push through it."]
+  ],
   low: s => [
     ...(s.daysOff >= 3 ? [['{0} days. The bar misses you. Not really.', s.daysOff], ['{0} days without training. Get up.', s.daysOff], ["It's been {0} days. I've been counting.", s.daysOff]] : []),
+    ...(s.daysOff >= 14 ? [['{0} days off. Go back lighter. Strength returns faster than it took to build.', s.daysOff]] : []),
     ...(s.missed === 1 ? [["You skipped a planned day. Don't make it two."]] : []),
+    ...(s.missed >= 1 ? [["Missed one? Just do the next session. Don't try to double up."]] : []),
     ...(s.missed > 1 ? [['You planned {0} sessions this week. You did {1}.', s.planned, s.planned - s.missed], ['{0} planned days skipped. Fix it today.', s.missed]] : []),
-    ...(s.stalled.length ? [['{0} is stuck. Something has to change.', s.stalled[0]]] : [])
+    ...(s.today && !s.trainedToday ? [['{0} is today. Short on time? Do just the first two lifts.', s.today]] : []),
+    ...(s.volTrend != null && s.volTrend < 0.7 ? [["You're doing a lot less than a few weeks ago. What changed?"]] : []),
+    ...(s.stalled.length ? [['{0} is stuck. Something has to change.', s.stalled[0]], ['{0} is stuck. Drop 10% and build back up. It usually breaks through.', s.stalled[0]]] : [])
   ],
-  lowAny: () => [["I'm not mad. I'm disappointed. Also mad."], ['No excuses today.'], ['Less scrolling. More lifting.']]
+  lowAny: () => [
+    ["I'm not mad. I'm disappointed. Also mad."],
+    ['No excuses today.'],
+    ['Less scrolling. More lifting.'],
+    ['Short on time? 20 minutes beats zero.'],
+    ['Just start the warm-up. Motivation shows up after, not before.'],
+    ["A bad workout still counts. A skipped one doesn't."],
+    ['Pack your gym bag tonight. One less excuse tomorrow.']
+  ]
 }
 const say = ([tpl, ...args]) => { const v = t(tpl, ...args); return v.charAt(0).toUpperCase() + v.slice(1) }
 const one = (rng, arr) => arr[Math.floor(rng() * arr.length)]
@@ -164,7 +246,9 @@ const one = (rng, arr) => arr[Math.floor(rng() * arr.length)]
 /** What it says in this mood, or null — silence is part of it. */
 export function coachLine(mood, s, rng) {
   if (s.freshPR) return say(one(rng, LINES.pr(s)))
-  if (mood === 'drowsy') return rng() < 0.6 ? say(one(rng, LINES.late())) : null
+  const moment = coachMoment(s)
+  if (moment) return say(one(rng, LINES[moment](s)))
+  if (mood === 'drowsy') return rng() < 0.6 ? say(one(rng, LINES.late(s))) : null
   if (!s.total) return say(one(rng, LINES.new()))
   const band = BAND_OF[mood] || 'mid'
   if (rng() < (band === 'mid' ? 0.2 : 0.08)) return null
