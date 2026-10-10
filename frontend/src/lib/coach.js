@@ -196,7 +196,19 @@ const LINES = {
     ['the player dreamed of heavier weights. and the dream was patient.'],
     ...(s.total > 1 ? [['{0} sessions behind you, and every one of them is still in you.', s.total]] : []),
     ...(s.trainedToday ? [['you showed up today. the universe noticed. now sleep.']] : []),
-    ...(s.daysOff >= 3 ? [['the world has waited {0} days for the player. it is patient. for now.', s.daysOff]] : [])
+    ...(s.daysOff >= 3 ? [['the world has waited {0} days for the player. it is patient. for now.', s.daysOff]] : []),
+    // and some in the spirit of Vinland Saga: strength without enemies, a field cleared by
+    // coming back every morning, a land you're walking toward
+    ["a true warrior doesn't need a sword. you don't need a reason. just the next session."],
+    ['you have no enemies. not the bar, not the scale, not the person on the next bench.'],
+    ['thorfinn cleared a forest one stump at a time. a field is just a lot of mornings.'],
+    ["you can't sow and harvest on the same day. you sowed. now sleep."],
+    ["the field doesn't grow faster if you shout at it. neither do you."],
+    ['anger gets you to the gym once. something you love gets you there for years.'],
+    ['strength used to hurt is cheap. strength used to carry is rare.'],
+    ["the strongest one isn't who lifts the most. it's who comes back when no one is watching."],
+    ["your vinland isn't a place. it's the you you're walking toward."],
+    ['the real fight was never with the weight. it was with the version of you that stays in bed.']
   ],
   new: () => [
     ["Hey. I'm Peek. Log a workout and we'll talk."],
