@@ -268,7 +268,10 @@ const LINES = {
     ['Short on time? 20 minutes beats zero.'],
     ['Just start the warm-up. Motivation shows up after, not before.'],
     ["A bad workout still counts. A skipped one doesn't."],
-    ['Pack your gym bag tonight. One less excuse tomorrow.']
+    ['Pack your gym bag tonight. One less excuse tomorrow.'],
+    // the two Vinland Saga ones from the night pool that also land as a daytime push
+    ['Anger gets you to the gym once. Something you love gets you there for years.'],
+    ['The real fight was never with the weight. It was with the version of you that stays in bed.']
   ]
 }
 const say = ([tpl, ...args]) => { const v = t(tpl, ...args); return v.charAt(0).toUpperCase() + v.slice(1) }
