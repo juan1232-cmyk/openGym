@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { modeOf, isTimed, fmtSec, setLabel, defaultConfig, buildSets, exLine, workoutVolume, effortOf, stepEffort, capEffort, isBw, isPerSide, sideReps, repStep, nextUp, nextSetLabel, previousSession, topSet, isLoadPR } from './history.js'
+import { modeOf, isTimed, fmtSec, setLabel, defaultConfig, buildSets, exLine, workoutVolume, effortOf, stepEffort, capEffort, isBw, isPerSide, sideReps, repStep, nextUp, nextSetLabel, previousSession, topSet, isLoadPR, moveItem } from './history.js'
 import { EXDB } from './exercises.js'
 
 // Real ids out of the shipped catalogue, so the body-part fallback is exercised for real.
@@ -513,5 +513,28 @@ describe('isLoadPR', () => {
     const unfinished = { workouts: [W('2026-09-01', [{ w: 60, r: 8, done: false }])] }
     expect(isLoadPR(unfinished, 'bench', entry(70))).toBe(false)
     expect(isLoadPR(S, 'bench', { id: 'bench', sets: [{ w: 90, r: 5, done: false }] })).toBe(false)
+  })
+})
+
+describe('moveItem', () => {
+  const ids = ex => ex.map(e => e.id + (e.sg ? ':' + e.sg : '')).join(' ')
+  it('moves up, down, to the ends', () => {
+    const ex = () => [{ id: 'a' }, { id: 'b' }, { id: 'c' }, { id: 'd' }]
+    expect(ids(moveItem(ex(), 3, 0))).toBe('d a b c')
+    expect(ids(moveItem(ex(), 0, 3))).toBe('b c d a')
+    expect(ids(moveItem(ex(), 1, 2))).toBe('a c b d')
+    expect(ids(moveItem(ex(), 1, 1))).toBe('a b c d')
+  })
+  it('keeps a superset whose members stay together', () => {
+    const ex = [{ id: 'a' }, { id: 'b', sg: 'x' }, { id: 'c', sg: 'x' }, { id: 'd' }]
+    expect(ids(moveItem(ex, 0, 3))).toBe('b:x c:x d a')
+  })
+  it('unlinks a pair when one member leaves', () => {
+    const ex = [{ id: 'a', sg: 'x' }, { id: 'b', sg: 'x' }, { id: 'c' }]
+    expect(ids(moveItem(ex, 0, 2))).toBe('b c a')
+  })
+  it('breaks a pair it lands inside rather than joining it', () => {
+    const ex = [{ id: 'a' }, { id: 'b', sg: 'x' }, { id: 'c', sg: 'x' }]
+    expect(ids(moveItem(ex, 0, 1))).toBe('b a c')
   })
 })
