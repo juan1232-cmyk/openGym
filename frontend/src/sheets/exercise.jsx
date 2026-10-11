@@ -212,18 +212,14 @@ const extraWords = ex => {
 // staple lifts (lib/pick.js browseOrder).
 // `listOf` reads the routine / workout being added to out of the live state, so the check
 // marks keep up while the picker stays open under each config sheet.
-// With `quick` ({ onAdd, onRemove }) a tap adds straight away and a second tap takes it back
-// out — only for what was added in this visit, so nothing already set up (or, in a workout,
-// already logged) can be lost to a stray tap. Without it, a tap opens the config sheet.
-function ExercisePicker({ onPick, close, listOf, quick }) {
+// A tap opens the config sheet (sets, reps, weight) on top, and the picker stays open under
+// it for the next one. With `unique` (a routine), what is already in the list is marked and
+// can't be added a second time by accident; a workout may repeat an exercise.
+function ExercisePicker({ onPick, close, listOf, unique }) {
   const st = useStore(s => s.S)
   const list = (listOf && listOf(st)) || []
   const inList = new Set(list.map(e => e.id))
   const [startCount] = useState(list.length)
-  const [startIds] = useState(() => inList)
-  // Peek's "that's the third exercise for mid chest" — the config sheet used to say it, and
-  // a one-tap add never opens that sheet.
-  const [hint, setHint] = useState(null)
   const [q, setQ] = useState('')
   const [mu, setMu] = useState('')          // '' = every muscle, else a muscle slug or 'cardio'
   const [shown, setShown] = useState(50)
@@ -244,13 +240,8 @@ function ExercisePicker({ onPick, close, listOf, quick }) {
   const added = Math.max(0, list.length - startCount)
   const pick = ex => onPick(ex, { list, retarget: alt => onPick(alt, { list: (listOf && listOf(S())) || [] }) })
   const tap = ex => {
-    if (!quick) return pick(ex)
-    if (startIds.has(ex.id)) { toast(t('Already in this routine')); return }
-    setHint(null)
-    if (inList.has(ex.id)) { quick.onRemove(ex); return }
-    quick.onAdd(ex)
-    const sug = suggestionFor(list, ex.id, all, { gymEq: st.gymEq, usage: opts.usage })
-    if (sug) setHint({ ex, sug })
+    if (unique && inList.has(ex.id)) { toast(t('Already in this routine')); return }
+    pick(ex)
   }
   // Scrolling the results is the moment the keyboard should get out of the way.
   const blur = () => { if (document.activeElement === inputRef.current) inputRef.current.blur() }
@@ -277,7 +268,7 @@ function ExercisePicker({ onPick, close, listOf, quick }) {
     <div className="pick-list" onTouchStart={blur}><div className="pick-col">
       <div className="list">
         {f.slice(0, shown).map(e => <PickRow key={e.id} ex={e} onPick={tap} inList={inList.has(e.id)} onInfo={exerciseDetailSheet}
-          note={quick && startIds.has(e.id) ? t('already in') : null} />)}
+          note={unique && inList.has(e.id) ? t('already in') : null} />)}
         {f.length === 0 && <div className="empty">{t('No match')}</div>}
         {elsewhere > 0 && <button className="pk-link" onClick={() => { setMu(''); reset() }}>{t('Show {0} matches in all muscles', elsewhere)}</button>}
         {searching && hidden > 0 && <button className="pk-link" onClick={() => setAllKit(true)}>{t('Show {0} more for other gyms', hidden)}</button>}
@@ -289,21 +280,13 @@ function ExercisePicker({ onPick, close, listOf, quick }) {
       {f.length > shown && <><div style={{ height: 8 }} /><Button variant="soft" onClick={() => setShown(s => s + 50)}>{t('Show more')}</Button></>}
     </div></div>
     <div className="pick-foot"><div className="pick-col">
-      {hint && <div className="pick-hint">
-        <p>{t('You already have {0} exercises for {1}.', hint.sug.overlap.ids.length, t(hint.sug.overlap.region).toLowerCase())}
-          {hint.sug.ex && <> {t('Try')} <b className="capitalize">{hint.sug.ex.n}</b> {t('instead.')}</>}</p>
-        <div className="row" style={{ gap: 8 }}>
-          {hint.sug.ex && <Button size="sm" variant="primary" onClick={() => { quick.onRemove(hint.ex); quick.onAdd(hint.sug.ex); setHint(null) }}>{t('Use this instead')}</Button>}
-          <button className="pk-dismiss" onClick={() => setHint(null)}>{t('Keep it')}</button>
-        </div>
-      </div>}
       <Button variant="primary" onClick={close}>{added ? t('Done · {0}', exCount(added)) : t('Done')}</Button>
     </div></div>
   </div>
 }
-// `opts.listOf(state)` → the [{ id }] being added to; `opts.quick` → one-tap add (see above).
+// `opts.listOf(state)` → the [{ id }] being added to; `opts.unique` → no duplicates (see above).
 export const exercisePicker = (onPick, opts = {}) =>
-  ui().openSheet(close => <ExercisePicker onPick={onPick} close={close} listOf={opts.listOf} quick={opts.quick} />, { kind: 'full', className: 'picker' })
+  ui().openSheet(close => <ExercisePicker onPick={onPick} close={close} listOf={opts.listOf} unique={opts.unique} />, { kind: 'full', className: 'picker' })
 
 /* ============================ my gym's equipment ============================ */
 // Every kind of kit in the catalogue, most exercises first, so the list reads "barbell,

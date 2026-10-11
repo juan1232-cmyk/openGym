@@ -541,7 +541,6 @@ export default {
   'Show {0} matches in all muscles': 'Tüm kaslarda {0} sonucu göster',
   'Done · {0}': 'Bitti · {0}',
   'Already in this routine': 'Zaten bu rutinde',
-  'Keep it': 'Kalsın',
   'Add to workout': 'Antrenmana ekle',
   'Best': 'En iyi',
   'Also works {0}': 'Ayrıca çalıştırır: {0}',

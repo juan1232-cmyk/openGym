@@ -541,7 +541,6 @@ export default {
   'Show {0} matches in all muscles': 'Показать {0} совпадений во всех мышцах',
   'Done · {0}': 'Готово · {0}',
   'Already in this routine': 'Уже в этой программе',
-  'Keep it': 'Оставить',
   'Add to workout': 'Добавить в тренировку',
   'Best': 'Рекорд',
   'Also works {0}': 'Также работают: {0}',

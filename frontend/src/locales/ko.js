@@ -541,7 +541,6 @@ export default {
   'Show {0} matches in all muscles': '모든 근육에서 {0}개 결과 보기',
   'Done · {0}': '완료 · {0}',
   'Already in this routine': '이미 이 루틴에 있어요',
-  'Keep it': '유지',
   'Add to workout': '운동에 추가',
   'Best': '최고',
   'Also works {0}': '{0}도 단련',

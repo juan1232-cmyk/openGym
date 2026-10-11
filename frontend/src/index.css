@@ -1479,10 +1479,6 @@ button.pk-tile:active{background:var(--surface-2)}
   background:var(--surface-2);color:var(--label);transition:background var(--fast),color var(--fast);
 }
 .pick-mark.on{background:var(--ink,var(--acc));color:var(--on-ink,var(--on-acc))}
-.pick-hint{background:var(--surface);border-radius:var(--r-card);padding:12px 14px;margin-bottom:10px}
-.pick-hint p{font-size:14px;line-height:1.35;margin-bottom:10px;color:var(--label)}
-.pick-hint .btn{width:auto}
-.pick-hint .pk-dismiss{margin-top:0;color:var(--label-2)}
 .pick-mark.on.pre{background:var(--surface-2);color:var(--label-3)}
 
 /* exercise config sheet: compact head, your own numbers, then the chips */

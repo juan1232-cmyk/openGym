@@ -541,7 +541,6 @@ export default {
   'Show {0} matches in all muscles': 'Mostrar {0} resultados em todos os músculos',
   'Done · {0}': 'Concluído · {0}',
   'Already in this routine': 'Já está nesta rotina',
-  'Keep it': 'Manter',
   'Add to workout': 'Adicionar ao treino',
   'Best': 'Melhor',
   'Also works {0}': 'Também trabalha {0}',
