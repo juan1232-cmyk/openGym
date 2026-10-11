@@ -37,15 +37,16 @@ cd frontend && npm test                     # vitest — training logic (src/lib
 an iframe inside a CSS-drawn iPhone 15 Pro, plus buttons that load demo profiles
 (`src/device/scenarios.js`, each held to its orb verdict by `scenarios.test.js`) into the app's
 localStorage. Locally: `npm run dev`, then `localhost:5173/device.html`. Hosted: Vercel is
-connected to the GitHub repo (`vercel.json` at the root), so every push to a branch that touches
-`frontend/` gets its own preview URL, and the Vercel bot links it on the PR. Add `/device.html`
+connected to the GitHub repo, so every push to a branch that touches `frontend/` gets its own
+preview URL, and the Vercel bot links it on the PR. Add `/device.html`
 to that URL for the phone view. The hosted demo has no `/api` and no exercise media, so it runs
 in guest mode with placeholder thumbnails. It's built into the self-hosted image too, which
-does no harm. `vercel.json`'s `ignoreCommand` looks over-built on purpose: it skips a build
-(exit 0) only when it can *prove* `frontend/` and `vercel.json` are unchanged, and maps every
-other outcome to exit 1. The plain `git diff --quiet HEAD^ HEAD -- frontend/` it replaced exits
-128 when a shallow clone has no `HEAD^` — the likely reason the PR #21 preview was cancelled.
-The `:/` pathspecs keep it correct whatever directory Vercel runs it from.
+does no harm. The Vercel project's Root Directory is `frontend`, so its config lives in
+`frontend/vercel.json` with paths relative to that folder — a repo-root `vercel.json` with
+`cd frontend` commands is what broke the PR #21 preview (skipped, then failed). Its
+`ignoreCommand` looks over-built on purpose: it skips a build (exit 0) only when it can *prove*
+nothing under `frontend/` changed, and maps every other outcome, including a shallow clone
+with no `HEAD^`, to exit 1. The `:/` pathspec keeps it independent of the directory it runs in.
 
 Full stack (needs Docker — not installed as of 2026-08-24):
 ```bash
