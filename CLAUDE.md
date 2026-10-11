@@ -37,8 +37,9 @@ cd frontend && npm test                     # vitest — training logic (src/lib
 an iframe inside a CSS-drawn iPhone 15 Pro, plus buttons that load demo profiles
 (`src/device/scenarios.js`, each held to its orb verdict by `scenarios.test.js`) into the app's
 localStorage. Locally: `npm run dev`, then `localhost:5173/device.html`. Hosted: Vercel is
-connected to the GitHub repo (`vercel.json` at the root), so every push to a branch that touches
-`frontend/` gets its own preview URL, and the Vercel bot links it on the PR. Add `/device.html`
+connected to the GitHub repo with Root Directory `frontend` and its Vite preset. There's no
+`vercel.json`; the settings live in the Vercel dashboard. Every push that touches `frontend/`
+gets its own preview URL, and the Vercel bot links it on the PR. `main` is the fixed URL. Add `/device.html`
 to that URL for the phone view. The hosted demo has no `/api` and no exercise media, so it runs
 in guest mode with placeholder thumbnails. It's built into the self-hosted image too, which
 does no harm.

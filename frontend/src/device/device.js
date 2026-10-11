@@ -50,6 +50,12 @@ document.getElementById('build').textContent = b.sha
   ? 'Built from ' + b.sha.slice(0, 7) + (b.ref ? ' on ' + b.ref : '') + (b.msg ? ' — ' + b.msg.split('\n')[0] : '')
   : 'Local build'
 
+// on a phone there's no frame — the app is the page — and the panel is a sheet behind a button
+const fab = document.getElementById('fab')
+const panel = open => { document.body.classList.toggle('dv-open', open); fab.setAttribute('aria-expanded', String(open)) }
+fab.addEventListener('click', () => panel(!document.body.classList.contains('dv-open')))
+document.getElementById('close').addEventListener('click', () => panel(false))
+
 // Loading a scenario replaces what this browser has saved. On the hosted demo that's only ever
 // demo data; on a local dev server it might be a real guest profile, so that one asks first.
 const isDemo = raw => {
@@ -89,8 +95,3 @@ Object.entries(SCENARIOS).forEach(([key, sc]) => {
 })
 document.getElementById('reload').addEventListener('click', () => frame.contentWindow.location.reload())
 
-// on a phone there's no frame — the app is the page — and the panel is a sheet behind a button
-const fab = document.getElementById('fab')
-const panel = open => { document.body.classList.toggle('dv-open', open); fab.setAttribute('aria-expanded', String(open)) }
-fab.addEventListener('click', () => panel(!document.body.classList.contains('dv-open')))
-document.getElementById('close').addEventListener('click', () => panel(false))
