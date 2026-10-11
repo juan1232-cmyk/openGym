@@ -145,6 +145,19 @@ export function exLine(cfg, unit) {
   return `${n} × ${rangeText(lo, hi)}${load}${split}`
 }
 
+/**
+ * Moves the exercise at `from` to `to` in place. A superset is only kept while its members
+ * stay next to each other (cleanupSg): moving one away, or landing between two, unlinks
+ * them — a move never quietly joins an exercise to the pair it lands beside.
+ */
+export function moveItem(ex, from, to) {
+  if (from === to || from < 0 || from >= ex.length) return ex
+  const [it] = ex.splice(from, 1)
+  ex.splice(Math.max(0, Math.min(to, ex.length)), 0, it)
+  cleanupSg(ex)
+  return ex
+}
+
 // Drop superset ids that no longer have an adjacent partner (after unlink/reorder/remove).
 export function cleanupSg(ex) {
   ex.forEach((e, i) => {

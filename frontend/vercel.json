@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm ci",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "ignoreCommand": "if git cat-file -e HEAD^ 2>/dev/null && git diff --quiet HEAD^ HEAD -- ':/frontend'; then exit 0; else exit 1; fi"
+}
