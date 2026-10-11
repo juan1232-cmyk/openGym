@@ -6,6 +6,7 @@ import { uid } from '../lib/format.js'
 import { t } from '../lib/i18n.js'
 import { supersetUnits, cleanupSg, exLine, modeOf } from '../lib/history.js'
 import { followsSuggestion, applySuggestion } from '../lib/scheme.js'
+import { quickConfig } from '../lib/pick.js'
 import { SchemePills } from '../components/Scheme.jsx'
 import Orb from '../components/Orb.jsx'
 import { Thumb } from '../components/Media.jsx'
@@ -57,6 +58,19 @@ export default function RoutineEdit() {
     else { const gid = prev.sg || ('sg' + uid()); prev.sg = gid; cur.sg = gid }
     cleanupSg(ex)
   })
+
+  // One tap in the picker adds with quickConfig; the pills on the row adjust it after.
+  const addQuick = ex => edit(x => { x.push({ id: ex.id, ...quickConfig(ex, useStore.getState().S, id) }) })
+  // Takes back the latest copy, preferring one that isn't in a superset, so undoing an add
+  // never unlinks anything.
+  const removeQuick = ex => edit(x => {
+    const at = ok => { for (let i = x.length - 1; i >= 0; i--) if (ok(x[i])) return i; return -1 }
+    let i = at(e => e.id === ex.id && !e.sg)
+    if (i < 0) i = at(e => e.id === ex.id)
+    if (i >= 0) { x.splice(i, 1); cleanupSg(x) }
+  })
+  const openPicker = () => exercisePicker((ex, ctx) => exConfigSheet(ex, null, cfg => edit(x => { x.push({ id: ex.id, ...cfg }) }), null, r, ctx),
+    { listOf: st => st.routines.find(x => x.id === id)?.ex, quick: { onAdd: addQuick, onRemove: removeQuick } })
 
   const units = supersetUnits(r.ex)
   const unitFirst = new Set(units.filter(u => u.length > 1).map(u => u[0]))
@@ -133,7 +147,7 @@ export default function RoutineEdit() {
     })()}
 
     <div className="small dim row" style={{ margin: '10px 2px', gap: 5 }}><Icon name="link" style={{ fontSize: 13 }} />{t('Tap the link button on an exercise to superset it with the one above — you’ll do them back-to-back.')}</div>
-    <Button variant="primary" onClick={() => exercisePicker((ex, ctx) => exConfigSheet(ex, null, cfg => edit(x => { x.push({ id: ex.id, ...cfg }) }), null, r, ctx), { listOf: st => st.routines.find(x => x.id === id)?.ex })} icon="plus">{t('Add exercise')}</Button>
+    <Button variant="primary" onClick={openPicker} icon="plus">{t('Add exercise')}</Button>
     <div style={{ height: 10 }} />
     <Button variant="danger" onClick={() => confirmSheet({
       title: t('Delete routine?'), message: t('“{0}” and its exercises will be removed.', r.name), confirmText: t('Delete'), danger: true,

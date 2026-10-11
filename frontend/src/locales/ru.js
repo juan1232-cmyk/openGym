@@ -540,4 +540,7 @@ export default {
   'Start from scratch': 'Начать с нуля',
   'Show {0} matches in all muscles': 'Показать {0} совпадений во всех мышцах',
   'Done · {0}': 'Готово · {0}',
+  'Already in this routine': 'Уже в этой программе',
+  'Keep it': 'Оставить',
+  'Add to workout': 'Добавить в тренировку',
 }

@@ -181,11 +181,13 @@ export function deleteCustomEx(ex, afterDelete) {
 export const muscleLine = ex => t(regionOf(ex) || ex.tg || ex.bp || '')
 export const chipLabel = m => (m === 'cardio' ? t('Cardio') : t(MUSCLE_NAME[m]))
 
-function PickRow({ ex, onPick, inList, icon = 'plus' }) {
+function PickRow({ ex, onPick, inList, icon = 'plus', onInfo, note }) {
   // TODO(score): fit score + one-line reason go here — see fitScore in lib/pick.js
-  return <div className="item" onClick={() => onPick(ex)}>
-    <Thumb ex={ex} /><div className="grow"><div className="tt capitalize">{ex.n}</div><div className="ss">{muscleLine(ex)}</div></div>
-    <Icon name={inList ? 'check' : icon} className={'chev' + (inList ? ' accent' : '')} />
+  return <div className="item pick-row" onClick={() => onPick(ex)}>
+    <Thumb ex={ex} /><div className="grow"><div className="tt capitalize">{ex.n}</div>
+      <div className="ss">{muscleLine(ex)}{note && <> · {note}</>}</div></div>
+    {onInfo && <button className="pick-info" aria-label={t('How to')} onClick={e => { e.stopPropagation(); onInfo(ex) }}><Icon name="info" /></button>}
+    <span className={'pick-mark' + (inList ? ' on' : '') + (note ? ' pre' : '')}><Icon name={inList ? 'check' : icon} /></span>
   </div>
 }
 
@@ -210,11 +212,18 @@ const extraWords = ex => {
 // staple lifts (lib/pick.js browseOrder).
 // `listOf` reads the routine / workout being added to out of the live state, so the check
 // marks keep up while the picker stays open under each config sheet.
-function ExercisePicker({ onPick, close, listOf }) {
+// With `quick` ({ onAdd, onRemove }) a tap adds straight away and a second tap takes it back
+// out — only for what was added in this visit, so nothing already set up (or, in a workout,
+// already logged) can be lost to a stray tap. Without it, a tap opens the config sheet.
+function ExercisePicker({ onPick, close, listOf, quick }) {
   const st = useStore(s => s.S)
   const list = (listOf && listOf(st)) || []
   const inList = new Set(list.map(e => e.id))
   const [startCount] = useState(list.length)
+  const [startIds] = useState(() => inList)
+  // Peek's "that's the third exercise for mid chest" — the config sheet used to say it, and
+  // a one-tap add never opens that sheet.
+  const [hint, setHint] = useState(null)
   const [q, setQ] = useState('')
   const [mu, setMu] = useState('')          // '' = every muscle, else a muscle slug or 'cardio'
   const [shown, setShown] = useState(50)
@@ -234,6 +243,15 @@ function ExercisePicker({ onPick, close, listOf }) {
   const elsewhere = searching && mu ? searchExercises(all, q, opts).length - found.length : 0
   const added = Math.max(0, list.length - startCount)
   const pick = ex => onPick(ex, { list, retarget: alt => onPick(alt, { list: (listOf && listOf(S())) || [] }) })
+  const tap = ex => {
+    if (!quick) return pick(ex)
+    if (startIds.has(ex.id)) { toast(t('Already in this routine')); return }
+    setHint(null)
+    if (inList.has(ex.id)) { quick.onRemove(ex); return }
+    quick.onAdd(ex)
+    const sug = suggestionFor(list, ex.id, all, { gymEq: st.gymEq, usage: opts.usage })
+    if (sug) setHint({ ex, sug })
+  }
   // Scrolling the results is the moment the keyboard should get out of the way.
   const blur = () => { if (document.activeElement === inputRef.current) inputRef.current.blur() }
   return <div className="pick">
@@ -258,11 +276,12 @@ function ExercisePicker({ onPick, close, listOf }) {
     </div></div>
     <div className="pick-list" onTouchStart={blur}><div className="pick-col">
       <div className="list">
-        {f.slice(0, shown).map(e => <PickRow key={e.id} ex={e} onPick={pick} inList={inList.has(e.id)} />)}
+        {f.slice(0, shown).map(e => <PickRow key={e.id} ex={e} onPick={tap} inList={inList.has(e.id)} onInfo={exerciseDetailSheet}
+          note={quick && startIds.has(e.id) ? t('already in') : null} />)}
         {f.length === 0 && <div className="empty">{t('No match')}</div>}
         {elsewhere > 0 && <button className="pk-link" onClick={() => { setMu(''); reset() }}>{t('Show {0} matches in all muscles', elsewhere)}</button>}
         {searching && hidden > 0 && <button className="pk-link" onClick={() => setAllKit(true)}>{t('Show {0} more for other gyms', hidden)}</button>}
-        <div className="item" onClick={() => customExSheet(null, ex => pick(ex), q.trim())}>
+        <div className="item" onClick={() => customExSheet(null, ex => tap(ex), q.trim())}>
           <div className="thumb thumb-x"><Icon name="plus" /></div>
           <div className="grow"><div className="tt">{searching ? t('Create “{0}”', q.trim()) : t('Create your own exercise')}</div></div>
         </div>
@@ -270,13 +289,21 @@ function ExercisePicker({ onPick, close, listOf }) {
       {f.length > shown && <><div style={{ height: 8 }} /><Button variant="soft" onClick={() => setShown(s => s + 50)}>{t('Show more')}</Button></>}
     </div></div>
     <div className="pick-foot"><div className="pick-col">
+      {hint && <div className="pick-hint">
+        <p>{t('You already have {0} exercises for {1}.', hint.sug.overlap.ids.length, t(hint.sug.overlap.region).toLowerCase())}
+          {hint.sug.ex && <> {t('Try')} <b className="capitalize">{hint.sug.ex.n}</b> {t('instead.')}</>}</p>
+        <div className="row" style={{ gap: 8 }}>
+          {hint.sug.ex && <Button size="sm" variant="primary" onClick={() => { quick.onRemove(hint.ex); quick.onAdd(hint.sug.ex); setHint(null) }}>{t('Use this instead')}</Button>}
+          <button className="pk-dismiss" onClick={() => setHint(null)}>{t('Keep it')}</button>
+        </div>
+      </div>}
       <Button variant="primary" onClick={close}>{added ? t('Done · {0}', exCount(added)) : t('Done')}</Button>
     </div></div>
   </div>
 }
-// `opts.listOf(state)` → the [{ id }] being added to.
+// `opts.listOf(state)` → the [{ id }] being added to; `opts.quick` → one-tap add (see above).
 export const exercisePicker = (onPick, opts = {}) =>
-  ui().openSheet(close => <ExercisePicker onPick={onPick} close={close} listOf={opts.listOf} />, { kind: 'full', className: 'picker' })
+  ui().openSheet(close => <ExercisePicker onPick={onPick} close={close} listOf={opts.listOf} quick={opts.quick} />, { kind: 'full', className: 'picker' })
 
 /* ============================ my gym's equipment ============================ */
 // Every kind of kit in the catalogue, most exercises first, so the list reads "barbell,
@@ -483,7 +510,7 @@ function ExConfig({ ex, existing, onSave, onDelete, close, routine, ctx }) {
       <ProgressionFields ex={ex} mode={mode} c={c} setC={setC} routine={routine} unit={st.unit} />
     </div>}
     {!cardio && !more && <div style={{ height: 14 }} />}
-    <Button variant="primary" onClick={save}>{existing ? t('Save') : t('Add to routine')}</Button>
+    <Button variant="primary" onClick={save}>{existing ? t('Save') : (ctx && ctx.verb) || t('Add to routine')}</Button>
     {existing && ctx && ctx.swap && <><div style={{ height: 8 }} /><Button icon="shuffle" onClick={() => { close(); swapSheet(ex, (ctx.list || []).map(e => e.id), ctx.swap) }}>{t('Swap for similar')}</Button></>}
     {ex.custom && <><div style={{ height: 8 }} /><Button icon="pencil" onClick={() => { close(); customExSheet(ex) }}>{t('Edit or delete this exercise')}</Button></>}
     {onDelete && <><div style={{ height: 8 }} /><Button variant="danger" onClick={() => { close(); onDelete() }}>{t('Remove from routine')}</Button></>}

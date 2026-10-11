@@ -540,4 +540,7 @@ export default {
   'Start from scratch': 'शुरू से बनाएं',
   'Show {0} matches in all muscles': 'सभी मांसपेशियों में {0} परिणाम दिखाएँ',
   'Done · {0}': 'हो गया · {0}',
+  'Already in this routine': 'पहले से इस रूटीन में है',
+  'Keep it': 'रहने दें',
+  'Add to workout': 'वर्कआउट में जोड़ें',
 }

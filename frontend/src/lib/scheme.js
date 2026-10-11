@@ -42,6 +42,13 @@ const COMPOUND = /press|squat|deadlift|\brow\b|pull ?up|chin ?up|\bdips?\b|lunge
 export const isCompound = ex => !!ex && !/calf|wrist|finger/.test(norm(ex.n)) && COMPOUND.test(norm(ex.n))
 const norm = s => String(s || '').toLowerCase().replace(/-/g, ' ')
 
+// Held, not repped: a plank or a carry added in one tap would otherwise plan "3 × 10–15 reps".
+// Only a name that *ends* on plank counts — "plank with twist" is a moving set — and nothing
+// going from one thing *to* another ("push-up to side plank").
+const HOLD = /(^|\s)plank$|\bl sit\b|wall sit|\bhold\b|dead hang|farmers? walk|\bcarry\b/
+/** 'time' for an exercise that is held, else undefined (the dataset's default applies). */
+export const defaultModeFor = ex => (ex && ex.bp !== 'cardio' && HOLD.test(norm(ex.n)) && !/\bto\b/.test(norm(ex.n)) ? 'time' : undefined)
+
 // [big lifts, everything else] per goal, as { sets, lo, hi }.
 const BY_GOAL = {
   muscle: [{ sets: 3, lo: 6, hi: 8 }, { sets: 3, lo: 10, hi: 15 }],

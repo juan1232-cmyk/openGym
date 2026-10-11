@@ -3,6 +3,8 @@
 // only render what comes out of here, so the ranking can be tested without clicking.
 import { MUSCLES, musclesOf, loadOf } from './muscles.js'
 import { EXIDX, EXDB } from './exercises.js'
+import { defaultConfig, lastEntryFor } from './history.js'
+import { applySuggestion, defaultModeFor } from './scheme.js'
 
 /* ---------------- what you use ---------------- */
 
@@ -431,6 +433,27 @@ export function similarTo(ex, all, { exclude = [], gymEq = null, usage = {} } = 
     .map(e => ({ e, s: score(e) }))
     .sort((a, b) => b.s - a.s || a.e.n.length - b.e.n.length || (a.e.n < b.e.n ? -1 : 1))
     .map(x => x.e)
+}
+
+/* ---------------- one-tap add ---------------- */
+
+/**
+ * The config an exercise gets when added with one tap, no sheet in between. How you already
+ * do the lift beats a generic suggestion: the same exercise in another routine first, then
+ * what the last logged session prescribed, then Peek's sets and reps for the goal. The first
+ * two are the person's own numbers, weight included; the fallback starts at 0, which the
+ * first session replaces (buildSets reads what was actually lifted).
+ */
+export function quickConfig(ex, st, routineId) {
+  const strip = cfg => { const { id, sg, ...rest } = cfg; return rest }
+  for (const r of st.routines || []) {
+    if (r.id === routineId) continue
+    const e = (r.ex || []).find(x => x.id === ex.id)
+    if (e) return strip(e)
+  }
+  const last = (st.workouts || []).length ? lastEntryFor(st, ex.id) : null
+  if (last && last.target) return strip(last.target)
+  return applySuggestion(defaultConfig(ex.id, defaultModeFor(ex)), ex, st.goal)
 }
 
 /* ---------------- fit score (TODO) ---------------- */

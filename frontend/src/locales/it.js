@@ -540,4 +540,7 @@ export default {
   'Start from scratch': 'Parti da zero',
   'Show {0} matches in all muscles': 'Mostra {0} risultati in tutti i muscoli',
   'Done · {0}': 'Fatto · {0}',
+  'Already in this routine': 'Già in questa routine',
+  'Keep it': 'Tienilo',
+  'Add to workout': 'Aggiungi all’allenamento',
 }

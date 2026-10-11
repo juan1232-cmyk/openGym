@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { EXDB, EXIDX } from './exercises.js'
 import {
   searchExercises, primaryOf, muscleChips, matchesMuscle, recentIds, usageOf, gymFilter,
-  overlapFor, suggestionFor, similarTo, OVERLAP_AT, regionOf, browseOrder, STAPLES, ALIAS_ES,
+  overlapFor, suggestionFor, similarTo, OVERLAP_AT, regionOf, browseOrder, STAPLES, ALIAS_ES, quickConfig,
 } from './pick.js'
 
 // Real exercises out of the shipped catalogue, looked up by name so the tests read like the UI.
@@ -239,5 +239,35 @@ describe('similarTo', () => {
     const run = EXDB.find(e => e.bp === 'cardio')
     expect(similarTo(run, EXDB).every(e => e.bp === 'cardio')).toBe(true)
     expect(EXIDX[run.id]).toBe(run)
+  })
+})
+
+describe('quickConfig', () => {
+  const st = (over = {}) => ({ goal: 'muscle', routines: [], workouts: [], ...over })
+
+  it('falls back to the goal suggestion, weight 0', () => {
+    expect(quickConfig(BENCH, st())).toMatchObject({ sets: 3, reps: 8, repsMin: 6, weight: 0, mode: 'reps' })
+    expect(quickConfig(FLY, st())).toMatchObject({ sets: 3, reps: 15, repsMin: 10 })
+    expect(quickConfig(BENCH, st({ goal: 'strength' }))).toMatchObject({ sets: 5, reps: 5 })
+  })
+
+  it('copies how the lift is planned in another routine, without its superset', () => {
+    const other = { id: 'r1', ex: [{ id: BENCH.id, sets: 4, reps: 10, weight: 70, sg: 'sgx' }] }
+    const cfg = quickConfig(BENCH, st({ routines: [other] }), 'r2')
+    expect(cfg).toEqual({ sets: 4, reps: 10, weight: 70 })
+    // the routine being added to doesn't count as "another" one
+    expect(quickConfig(BENCH, st({ routines: [other] }), 'r1')).toMatchObject({ sets: 3, reps: 8 })
+  })
+
+  it('uses what the last logged session prescribed', () => {
+    const w = { d: '2026-01-01', entries: [{ id: BENCH.id, sets: [{ w: 60, r: 5, done: true }], target: { id: BENCH.id, sets: 5, reps: 5, weight: 60, sg: 'a' } }] }
+    expect(quickConfig(BENCH, st({ workouts: [w] }))).toEqual({ sets: 5, reps: 5, weight: 60 })
+  })
+
+  it('plans a bodyweight lift without a weight and a plank as a hold', () => {
+    const push = byName('push-up')
+    expect(quickConfig(push, st())).toMatchObject({ bodyweight: true, weight: 0 })
+    const plank = byName('weighted front plank')
+    expect(quickConfig(plank, st())).toMatchObject({ mode: 'time', sec: 45 })
   })
 })

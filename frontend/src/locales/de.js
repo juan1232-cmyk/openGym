@@ -557,4 +557,7 @@ export default {
   'Start from scratch': 'Von vorne beginnen',
   'Show {0} matches in all muscles': '{0} Treffer in allen Muskeln zeigen',
   'Done · {0}': 'Fertig · {0}',
+  'Already in this routine': 'Schon in dieser Routine',
+  'Keep it': 'Behalten',
+  'Add to workout': 'Zum Training hinzufügen',
 }

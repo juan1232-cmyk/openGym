@@ -602,4 +602,7 @@ export default {
   'Start from scratch': 'Empieza desde cero',
   'Show {0} matches in all muscles': 'Mostrar {0} resultados en todos los músculos',
   'Done · {0}': 'Listo · {0}',
+  'Already in this routine': 'Ya está en esta rutina',
+  'Keep it': 'Dejarlo',
+  'Add to workout': 'Añadir al entreno',
 }

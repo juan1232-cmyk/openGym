@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { EXDB } from './exercises.js'
 import { repRangeOf } from './history.js'
-import { withRepRange, isCompound, suggestScheme, followsSuggestion, applySuggestion, REP_CHOICES } from './scheme.js'
+import { withRepRange, isCompound, suggestScheme, followsSuggestion, applySuggestion, REP_CHOICES, defaultModeFor } from './scheme.js'
 
 const byName = n => EXDB.find(e => e.n === n)
 const BENCH = byName('barbell bench press')
@@ -79,5 +79,18 @@ describe('suggestScheme', () => {
     expect(done).toMatchObject({ sets: 3, reps: 8, repsMin: 6, weight: 60, prog: 'double' })
     expect(followsSuggestion(done, BENCH, 'muscle')).toBe(true)
     expect(followsSuggestion({ id: CARDIO.id, sets: 1, min: 20 }, CARDIO, 'muscle')).toBe(true)
+  })
+})
+
+describe('defaultModeFor', () => {
+  const ex = n => ({ id: 'x', n, bp: 'waist' })
+  it('holds the things that are held', () => {
+    for (const n of ['weighted front plank', 'bodyweight incline side plank', 'l-sit on floor', 'farmers walk', 'dumbbell single arm overhead carry'])
+      expect(defaultModeFor(ex(n)), n).toBe('time')
+  })
+  it('leaves moving sets alone, even with a plank in the name', () => {
+    for (const n of ['front plank with twist', 'push-up to side plank', 'kettlebell hang clean', 'hanging leg raise', 'barbell bench press'])
+      expect(defaultModeFor(ex(n)), n).toBeUndefined()
+    expect(defaultModeFor({ id: 'c', n: 'plank', bp: 'cardio' })).toBeUndefined()
   })
 })

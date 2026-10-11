@@ -540,4 +540,7 @@ export default {
   'Start from scratch': '从零开始',
   'Show {0} matches in all muscles': '在所有肌肉中显示 {0} 个结果',
   'Done · {0}': '完成 · {0}',
+  'Already in this routine': '已在此计划中',
+  'Keep it': '保留',
+  'Add to workout': '添加到训练',
 }
