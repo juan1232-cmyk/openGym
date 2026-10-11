@@ -170,8 +170,17 @@ button,.chip,.tile,.item,.wday,.cal-d,.swatch,.hm-c,.lrow,.seg button,.stp butto
 /* while the rest timer floats above the tab bar, keep its height scrollable-past
    (the rest variant is two rows tall — ~44px more than the single-row work timer) */
 body.resting #app{padding-bottom:calc(250px + var(--sab))}
-@keyframes viewfade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-#app.vfade{animation:viewfade var(--med) var(--ease)}
+/* route change: only the incoming page animates (see lib/transition.js for the direction).
+   Kept to a short travel so it reads as motion without the empty gap a full-width slide
+   would leave with no outgoing page beside it. html/body clip overflow-x, so no scrollbar. */
+@keyframes vt-fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes vt-fwd{from{opacity:0;transform:translateX(36px)}to{opacity:1;transform:none}}
+@keyframes vt-back{from{opacity:0;transform:translateX(-36px)}to{opacity:1;transform:none}}
+@keyframes vt-up{from{opacity:0;transform:translateY(28px) scale(.985)}to{opacity:1;transform:none}}
+#app.vt-fade{animation:vt-fade var(--med) var(--ease)}
+#app.vt-fwd{animation:vt-fwd 340ms var(--ease)}
+#app.vt-back{animation:vt-back 340ms var(--ease)}
+#app.vt-up{animation:vt-up 380ms var(--ease)}
 
 /* large title, the way a nav bar does it */
 .hdr{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:8px 0 18px}

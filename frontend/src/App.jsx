@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { HashRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { useStore, needsGoals } from './store/useStore.js'
@@ -7,6 +7,7 @@ import { bindUI } from './components/ui.jsx'
 import { ACCENTS } from './lib/format.js'
 import { setLang, useLang } from './lib/i18n.js'
 import { setNav } from './lib/nav.js'
+import { routeDir } from './lib/transition.js'
 import { useWakeLock } from './lib/wakelock.js'
 import { startFlow } from './sheets.jsx'
 import Icon from './components/Icon.jsx'
@@ -69,6 +70,12 @@ function Shell() {
   useEffect(() => { document.documentElement.lang = S.lang || 'en' }, [langV, S.lang])
   // every tab/route change starts at the top of the page
   useEffect(() => { window.scrollTo(0, 0) }, [loc.pathname])
+  // worked out during render so the re-keyed #app mounts with the right class; idempotent
+  // per pathname, so StrictMode's second render reads back the same direction
+  const last = useRef({ path: null, dir: 'fade' })
+  if (last.current.path !== loc.pathname) {
+    last.current = { path: loc.pathname, dir: routeDir(last.current.path, loc.pathname) }
+  }
   // bound to the workout, not to the route — checking Stats mid-session keeps the screen on
   useWakeLock(!!S.active && S.keepAwake !== false)
   if (!ready && !authed) return (
@@ -83,7 +90,7 @@ function Shell() {
     <>
       {/* keyed on the route: a view that throws is contained, and switching tabs
           re-mounts the boundary, so the tab bar is always a way out */}
-      <div id="app" className="vfade" key={loc.pathname}>
+      <div id="app" className={'vt-' + last.current.dir} key={loc.pathname}>
         <ErrorBoundary>
           {!authed ? <Login /> : onboarding ? <Goals /> : (
             <Routes>
