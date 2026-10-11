@@ -543,4 +543,11 @@ export default {
   'Already in this routine': 'Zaten bu rutinde',
   'Keep it': 'Kalsın',
   'Add to workout': 'Antrenmana ekle',
+  'Best': 'En iyi',
+  'Also works {0}': 'Ayrıca çalıştırır: {0}',
+  'Suggested for your goal': 'Hedefin için önerilen',
+  'New to you — your first session sets the baseline.': 'Senin için yeni — ilk antrenmanın başlangıç noktasını belirler.',
+  'Starting weight ({0})': 'Başlangıç ağırlığı ({0})',
+  'Planned weight ({0})': 'Planlanan ağırlık ({0})',
+  'Each session starts from what you last lifted, so this is only a fallback.': 'Her antrenman son kaldırdığın ağırlıktan başlar, bu yalnızca yedek değerdir.',
 }

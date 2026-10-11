@@ -3,12 +3,12 @@
 import { useState, useRef } from 'react'
 import { useStore } from '../store/useStore.js'
 import { EXDB, EXIDX, BODYPARTS, isCardio, isBodyweightEq, allExercises } from '../lib/exercises.js'
-import { searchExercises, browseOrder, usageOf, recentIds, regionOf, muscleChips, matchesMuscle, suggestionFor, similarTo, gymFilter, wordsFrom } from '../lib/pick.js'
+import { searchExercises, browseOrder, usageOf, recentIds, regionOf, secondaryOf, muscleChips, matchesMuscle, suggestionFor, similarTo, gymFilter, wordsFrom, quickConfig } from '../lib/pick.js'
 import { MUSCLE_NAME } from '../lib/muscles.js'
 import Orb from '../components/Orb.jsx'
 import { fmtDate, fmtNum, uid, exCount } from '../lib/format.js'
 import { lastEntryFor, bestWeightFor, setLabel, defaultConfig, cleanupSg, modeOf, isBw, isPerSide, sideReps, repRangeOf } from '../lib/history.js'
-import { withRepRange, applySuggestion } from '../lib/scheme.js'
+import { withRepRange, suggestScheme } from '../lib/scheme.js'
 import { SetsChips, RepsChips } from '../components/Scheme.jsx'
 import { t, instrFor, getLang, INSTR_LANGS } from '../lib/i18n.js'
 import { nav } from '../lib/nav.js'
@@ -18,7 +18,7 @@ import Icon from '../components/Icon.jsx'
 import { Button, Switch, Segmented, SelectRow, Row, Section } from '../components/ui.jsx'
 import { glyphOf, DEFAULT_GLYPH } from '../lib/glyphs.js'
 import { estimate1RM, best1RM, REP_CAP } from '../lib/onerm.js'
-import { policyFor, defaultIncrement, POLICIES_FOR, POLICY_NAME, POLICY_DESC } from '../lib/progression.js'
+import { policyFor, defaultIncrement, nextPrescription, POLICIES_FOR, POLICY_NAME, POLICY_DESC } from '../lib/progression.js'
 import { S, update, ui, toast, confirmSheet } from './common.jsx'
 
 /* ============================ exercise detail ============================ */
@@ -399,6 +399,39 @@ function ProgressionFields({ ex, mode, c, setC, routine, unit }) {
   </>
 }
 
+// The top of the config sheet: what the lift is and what it trains, small enough that sets
+// and reps are on screen without scrolling. The animation and how-to are one tap away on the
+// thumbnail, not a 320px block in the way of every add.
+function ConfigHead({ ex }) {
+  const also = secondaryOf(ex).slice(0, 2).map(m => t(MUSCLE_NAME[m]).toLowerCase())
+  return <div className="cfg-head">
+    <button className="cfg-thumb" onClick={() => exerciseDetailSheet(ex)} aria-label={t('How to')}><Thumb ex={ex} /></button>
+    <div className="grow">
+      <h3 className="capitalize">{ex.n}</h3>
+      <div className="ss">{muscleLine(ex)}{ex.eq && ex.eq !== 'custom' ? <> · <span className="capitalize">{t(ex.eq)}</span></> : null}</div>
+      {also.length > 0 && <div className="ss">{t('Also works {0}', also.join(', '))}</div>}
+    </div>
+  </div>
+}
+
+// Your own numbers for this lift, which say more than any default: the last session, the
+// best, and what progression will ask for next — or, before the first log, that there is
+// nothing yet and the first session sets the baseline.
+function HistoryStrip({ ex, cfg, routine }) {
+  const st = useStore(s => s.S)
+  const last = lastEntryFor(st, ex.id)
+  if (!last) return <div className="cfg-new"><Icon name="sparkles" />{t('New to you — your first session sets the baseline.')}</div>
+  const best = bestWeightFor(st, ex.id)
+  const next = nextPrescription(st, { ...cfg, id: ex.id }, routine)
+  return <>
+    <div className="cfg-hist">
+      <div className="pk-tile"><span>{t('Last time')} · {fmtDate(last.d)}</span><b>{last.sets.map(x => setLabel(ex.id, x, last.target)).join(', ')}</b></div>
+      <div className="pk-tile"><span>{t('Best')}</span><b>{best > 0 ? <>{fmtNum(best)} <small>{st.unit}</small></> : '—'}</b></div>
+    </div>
+    {next && next.why && <div className="cfg-next"><Icon name="chartLine" />{t(...next.why)}</div>}
+  </>
+}
+
 // `ctx` comes from the caller: { list } is what is being added to (for Peek's overlap
 // check), { retarget } re-runs the add with another exercise, { swap } replaces this one.
 function ExConfig({ ex, existing, onSave, onDelete, close, routine, ctx }) {
@@ -406,7 +439,11 @@ function ExConfig({ ex, existing, onSave, onDelete, close, routine, ctx }) {
   const cardio = isCardio(ex.id)
   // A new exercise starts on what Peek would suggest for the profile's goal, so most of the
   // time adding one is just "Add to routine".
-  const [c, setC] = useState(() => existing || applySuggestion(defaultConfig(ex.id), ex, st.goal))
+  const [c, setC] = useState(() => existing || quickConfig(ex, st, routine && routine.id))
+  // Once the lift is logged, a session starts from what was last lifted (buildSets), so a
+  // planned weight only matters before that — it moves under More options then.
+  const logged = !!lastEntryFor(st, ex.id)
+  const sug = suggestScheme(st.goal, ex, { ...c, id: ex.id })
   // Everything most adds never touch lives behind "More options"; an exercise already set up
   // as a timed hold opens with it showing, since the Reps/Time switch is in there.
   const [more, setMore] = useState(() => !!existing && modeOf({ ...existing, id: ex.id }) === 'time')
@@ -445,21 +482,21 @@ function ExConfig({ ex, existing, onSave, onDelete, close, routine, ctx }) {
     }
   }
   return <>
-    <h3 className="capitalize">{ex.n}</h3>
-    <Media ex={ex} />
-    <MuscleTags ex={ex} />
+    <ConfigHead ex={ex} />
     {!existing && ctx && ctx.retarget && <PeekOverlap ex={ex} ctx={ctx} close={close} />}
     {ex.desc && <div className="exnote">{ex.desc}</div>}
+    <HistoryStrip ex={ex} cfg={c} routine={routine} />
     {mode === 'reps' ? <>
       {/* the two things nearly every add changes, one tap each */}
       <div className="cfg-lbl">{t('Sets')}</div>
-      <SetsChips value={c.sets} onPick={n => setC(x => ({ ...x, sets: n }))} />
+      <SetsChips value={c.sets} suggested={sug && sug.sets} onPick={n => setC(x => ({ ...x, sets: n }))} />
       <div className="cfg-lbl">{t('Reps')}</div>
-      <RepsChips cfg={{ ...c, id: ex.id }} onPick={(lo, hi) => setC(x => { const { id, ...y } = withRepRange({ ...x, id: ex.id }, lo, hi); return y })} />
-      {!bw && <div className="row cfgrow" style={{ margin: '16px 0 18px' }}>
-        <Stepper label={t('Weight ({0})', st.unit)} value={c.weight} step={2.5} onChange={v => setC(x => ({ ...x, weight: v }))} />
+      <RepsChips cfg={{ ...c, id: ex.id }} suggested={sug && [sug.lo, sug.hi]} onPick={(lo, hi) => setC(x => { const { id, ...y } = withRepRange({ ...x, id: ex.id }, lo, hi); return y })} />
+      {sug && <div className="cfg-sug"><i />{t('Suggested for your goal')}</div>}
+      {!bw && !logged && <div className="row cfgrow" style={{ margin: '16px 0 18px' }}>
+        <Stepper label={t('Starting weight ({0})', st.unit)} value={c.weight} step={2.5} onChange={v => setC(x => ({ ...x, weight: v }))} />
       </div>}
-      {bw && <div style={{ height: 18 }} />}
+      {(bw || logged) && <div style={{ height: 18 }} />}
     </> : <div className="row cfgrow" style={{ marginBottom: mode === 'time' ? 8 : 18 }}>
       {cardio ? <>
         <Stepper label={t('Intervals')} value={c.sets} step={1} decimal={false} onChange={v => setC(x => ({ ...x, sets: v }))} />
@@ -495,6 +532,12 @@ function ExConfig({ ex, existing, onSave, onDelete, close, routine, ctx }) {
           <Switch checked={perSide} onChange={v => setC(x => ({ ...x, side: v || undefined, reps: v ? Math.ceil((x.reps || 0) / 2) * 2 : x.reps }))} />
         </Row>}
       </div>
+      {mode === 'reps' && !bw && logged && <>
+        <div className="row cfgrow" style={{ marginBottom: 8 }}>
+          <Stepper label={t('Planned weight ({0})', st.unit)} value={c.weight} step={2.5} onChange={v => setC(x => ({ ...x, weight: v }))} />
+        </div>
+        <div className="small dim" style={{ marginBottom: 18 }}>{t('Each session starts from what you last lifted, so this is only a fallback.')}</div>
+      </>}
       {/* A stepper is too wide to sit in a list row next to a label — it squeezes the text to
           one word per line — so added weight gets the same full-width treatment as sets and
           reps, with its explanation underneath. */}
@@ -511,9 +554,12 @@ function ExConfig({ ex, existing, onSave, onDelete, close, routine, ctx }) {
     </div>}
     {!cardio && !more && <div style={{ height: 14 }} />}
     <Button variant="primary" onClick={save}>{existing ? t('Save') : (ctx && ctx.verb) || t('Add to routine')}</Button>
-    {existing && ctx && ctx.swap && <><div style={{ height: 8 }} /><Button icon="shuffle" onClick={() => { close(); swapSheet(ex, (ctx.list || []).map(e => e.id), ctx.swap) }}>{t('Swap for similar')}</Button></>}
-    {ex.custom && <><div style={{ height: 8 }} /><Button icon="pencil" onClick={() => { close(); customExSheet(ex) }}>{t('Edit or delete this exercise')}</Button></>}
-    {onDelete && <><div style={{ height: 8 }} /><Button variant="danger" onClick={() => { close(); onDelete() }}>{t('Remove from routine')}</Button></>}
+    {/* the secondary moves side by side, quieter than Save — Remove is a word, not a block */}
+    {(existing && ctx && ctx.swap || onDelete) && <div className="cfg-acts">
+      {existing && ctx && ctx.swap && <Button variant="soft" icon="shuffle" onClick={() => { close(); swapSheet(ex, (ctx.list || []).map(e => e.id), ctx.swap) }}>{t('Swap for similar')}</Button>}
+      {onDelete && <Button variant="plain" className="cfg-remove" onClick={() => { close(); onDelete() }}>{t('Remove from routine')}</Button>}
+    </div>}
+    {ex.custom && <><div style={{ height: 8 }} /><Button variant="plain" icon="pencil" onClick={() => { close(); customExSheet(ex) }}>{t('Edit or delete this exercise')}</Button></>}
   </>
 }
 export const exConfigSheet = (ex, existing, onSave, onDelete, routine, ctx) => ui().openSheet(close => <ExConfig ex={ex} existing={existing} onSave={onSave} onDelete={onDelete} routine={routine} ctx={ctx} close={close} />)

@@ -543,4 +543,11 @@ export default {
   'Already in this routine': 'पहले से इस रूटीन में है',
   'Keep it': 'रहने दें',
   'Add to workout': 'वर्कआउट में जोड़ें',
+  'Best': 'सर्वश्रेष्ठ',
+  'Also works {0}': '{0} पर भी काम करता है',
+  'Suggested for your goal': 'आपके लक्ष्य के लिए सुझाया गया',
+  'New to you — your first session sets the baseline.': 'आपके लिए नया — पहला सेशन शुरुआती स्तर तय करेगा।',
+  'Starting weight ({0})': 'शुरुआती वज़न ({0})',
+  'Planned weight ({0})': 'योजना वज़न ({0})',
+  'Each session starts from what you last lifted, so this is only a fallback.': 'हर सेशन पिछली बार उठाए वज़न से शुरू होता है, यह केवल बैकअप है।',
 }

@@ -11,10 +11,10 @@ import { ui } from '../sheets/common.jsx'
 
 export const repsLabel = (lo, hi) => (lo === hi ? fmtNum(lo) : fmtNum(lo) + '–' + fmtNum(hi))
 
-/** One row of set counts. */
-export function SetsChips({ value, onPick }) {
+/** One row of set counts. `suggested` marks Peek's pick for the goal with a dot. */
+export function SetsChips({ value, onPick, suggested }) {
   return <div className="chips scheme-chips">
-    {SET_CHOICES.map(n => <button key={n} className={'chip' + (value === n ? ' on' : '')} onClick={() => onPick(n)}>{n}</button>)}
+    {SET_CHOICES.map(n => <button key={n} className={'chip' + (value === n ? ' on' : '') + (suggested === n ? ' sug' : '')} onClick={() => onPick(n)}>{n}</button>)}
   </div>
 }
 
@@ -22,7 +22,7 @@ export function SetsChips({ value, onPick }) {
  * One row of rep ranges, plus Custom: two steppers for a range the presets don't have. A
  * range that isn't one of the presets opens on Custom so you see what is actually planned.
  */
-export function RepsChips({ cfg, onPick }) {
+export function RepsChips({ cfg, onPick, suggested }) {
   const { lo, hi } = repRangeOf(cfg)
   const preset = REP_CHOICES.some(([a, b]) => a === lo && b === hi)
   const [custom, setCustom] = useState(!preset && lo > 0)
@@ -30,7 +30,7 @@ export function RepsChips({ cfg, onPick }) {
   const [to, setTo] = useState(hi || 12)
   return <>
     <div className="chips scheme-chips">
-      {REP_CHOICES.map(([a, b]) => <button key={a + '-' + b} className={'chip' + (!custom && a === lo && b === hi ? ' on' : '')}
+      {REP_CHOICES.map(([a, b]) => <button key={a + '-' + b} className={'chip' + (!custom && a === lo && b === hi ? ' on' : '') + (suggested && suggested[0] === a && suggested[1] === b ? ' sug' : '')}
         onClick={() => { setCustom(false); onPick(a, b) }}>{repsLabel(a, b)}</button>)}
       <button className={'chip nocap' + (custom ? ' on' : '')} onClick={() => setCustom(true)}>{t('Custom')}</button>
     </div>

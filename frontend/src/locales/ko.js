@@ -543,4 +543,11 @@ export default {
   'Already in this routine': '이미 이 루틴에 있어요',
   'Keep it': '유지',
   'Add to workout': '운동에 추가',
+  'Best': '최고',
+  'Also works {0}': '{0}도 단련',
+  'Suggested for your goal': '목표에 맞는 추천',
+  'New to you — your first session sets the baseline.': '처음 하는 운동 — 첫 세션이 기준이 됩니다.',
+  'Starting weight ({0})': '시작 무게 ({0})',
+  'Planned weight ({0})': '계획 무게 ({0})',
+  'Each session starts from what you last lifted, so this is only a fallback.': '각 세션은 마지막으로 든 무게에서 시작하므로 이 값은 예비용입니다.',
 }

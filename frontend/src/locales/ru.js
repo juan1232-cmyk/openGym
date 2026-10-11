@@ -543,4 +543,11 @@ export default {
   'Already in this routine': 'Уже в этой программе',
   'Keep it': 'Оставить',
   'Add to workout': 'Добавить в тренировку',
+  'Best': 'Рекорд',
+  'Also works {0}': 'Также работают: {0}',
+  'Suggested for your goal': 'Рекомендуется для вашей цели',
+  'New to you — your first session sets the baseline.': 'Новое упражнение — первая тренировка задаст отправную точку.',
+  'Starting weight ({0})': 'Начальный вес ({0})',
+  'Planned weight ({0})': 'Плановый вес ({0})',
+  'Each session starts from what you last lifted, so this is only a fallback.': 'Каждая тренировка начинается с последнего веса, это лишь запасное значение.',
 }

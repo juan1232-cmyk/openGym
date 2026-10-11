@@ -605,4 +605,11 @@ export default {
   'Already in this routine': 'Ya está en esta rutina',
   'Keep it': 'Dejarlo',
   'Add to workout': 'Añadir al entreno',
+  'Best': 'Mejor',
+  'Also works {0}': 'También trabaja {0}',
+  'Suggested for your goal': 'Recomendado para tu objetivo',
+  'New to you — your first session sets the baseline.': 'Nuevo para ti: tu primera sesión marca el punto de partida.',
+  'Starting weight ({0})': 'Peso inicial ({0})',
+  'Planned weight ({0})': 'Peso previsto ({0})',
+  'Each session starts from what you last lifted, so this is only a fallback.': 'Cada sesión parte de lo último que levantaste, así que esto solo es un respaldo.',
 }

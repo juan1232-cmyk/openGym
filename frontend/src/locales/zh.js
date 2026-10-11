@@ -543,4 +543,11 @@ export default {
   'Already in this routine': '已在此计划中',
   'Keep it': '保留',
   'Add to workout': '添加到训练',
+  'Best': '最佳',
+  'Also works {0}': '同时锻炼{0}',
+  'Suggested for your goal': '根据你的目标推荐',
+  'New to you — your first session sets the baseline.': '新动作——第一次训练将作为基准。',
+  'Starting weight ({0})': '起始重量（{0}）',
+  'Planned weight ({0})': '计划重量（{0}）',
+  'Each session starts from what you last lifted, so this is only a fallback.': '每次训练都从你上次的重量开始，这里只是备用值。',
 }
