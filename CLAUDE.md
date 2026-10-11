@@ -41,7 +41,11 @@ connected to the GitHub repo (`vercel.json` at the root), so every push to a bra
 `frontend/` gets its own preview URL, and the Vercel bot links it on the PR. Add `/device.html`
 to that URL for the phone view. The hosted demo has no `/api` and no exercise media, so it runs
 in guest mode with placeholder thumbnails. It's built into the self-hosted image too, which
-does no harm.
+does no harm. `vercel.json`'s `ignoreCommand` looks over-built on purpose: it skips a build
+(exit 0) only when it can *prove* `frontend/` and `vercel.json` are unchanged, and maps every
+other outcome to exit 1. The plain `git diff --quiet HEAD^ HEAD -- frontend/` it replaced exits
+128 when a shallow clone has no `HEAD^` — the likely reason the PR #21 preview was cancelled.
+The `:/` pathspecs keep it correct whatever directory Vercel runs it from.
 
 Full stack (needs Docker — not installed as of 2026-08-24):
 ```bash
