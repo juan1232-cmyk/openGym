@@ -15,6 +15,7 @@ import Orb from '../components/Orb.jsx'
 import { Button, Check, NumberField } from '../components/ui.jsx'
 import { nextPrescription, applyPrescription } from '../lib/progression.js'
 import { glyphOf } from '../lib/glyphs.js'
+import { setVsLast } from '../lib/verdict.js'
 
 /* ---------- start chooser (no active workout) ---------- */
 function StartChooser() {
@@ -221,6 +222,9 @@ function burst(el) {
 // How long a just-finished card holds before the next one opens. Advancing on the same frame
 // read as the exercise disappearing; the beat lets the last green row and the cheer land first.
 const CHEER_MS = 650
+// how the orb takes a checked set against the same set last time (lib/verdict.js setVsLast)
+const VS_FACE = { beat: 'joyful-down-right', match: 'small-attentive', short: 'gentle-downward-gaze' }
+const VS_BUMP = { beat: 'hop', match: 'nod', short: 'sink' }
 
 /* ---------- active workout ---------- */
 // D2 from the Peek design: every exercise as a card in one list (the open one is the unit
@@ -292,12 +296,18 @@ function ActiveWorkout() {
         if (isLastExInUnit && !unitDone) startRest(S.restSec)
         else if (unitDone) stopRest()
         unitJustDone = unitDone
+        // The orb judges each set against the same set last time — a hop for beating it, a nod
+        // for matching it, a small sink for falling short — so it's tracking you, not just
+        // clapping. No history to compare with and it cheers like before.
+        const prev = lastEntryFor(S, e.id)
+        const vs = setVsLast(e.sets[i], prev && prev.sets[i])
+        if (vs) orb.current?.bump(VS_BUMP[vs])
         // a whole exercise done gets more than a set: a triple pulse you feel in the hand (three
         // ticks on an iPhone) instead of the single one a set gets — no extra sound, on purpose
         if (unitDone) {
           vibrate([40, 70, 40, 70, 120])
           orb.current?.react('joyful-down-right', 1800)
-        } else orb.current?.react('joyful-wide', 1100)
+        } else orb.current?.react(vs ? VS_FACE[vs] : 'joyful-wide', 1100)
         if (unitDone && isLastUnit) workoutDone = true      // last exercise's last set → done
         // No "confirm the weight you worked with" sheet here any more: finishing the workout
         // already keeps the heaviest done set as next time's starting weight, so the sheet

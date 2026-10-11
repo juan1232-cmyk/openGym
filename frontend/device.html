@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>openGym on iPhone</title>
+<meta name="description" content="The current build of openGym inside an iPhone frame, with demo data">
+<link rel="icon" type="image/png" href="icon-180.png">
+</head>
+<body>
+<!-- The real app, in an iframe, inside an iPhone 15 Pro drawn in CSS. Built with the app, so it
+     is always the code of the commit it was deployed from. See src/device/device.js. -->
+<main class="dv">
+  <div class="dv-stage">
+    <div class="dv-phone" id="phone">
+      <div class="dv-screen">
+        <iframe id="app" title="openGym" src="index.html#/home"></iframe>
+        <div class="dv-status" aria-hidden="true">
+          <span class="dv-time" id="time">9:41</span>
+          <span class="dv-island"></span>
+          <span class="dv-icons">
+            <svg viewBox="0 0 18 12" width="18" height="12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+            <svg viewBox="0 0 16 12" width="16" height="12"><path d="M8 11.5 5.6 9a3.4 3.4 0 0 1 4.8 0zM3.5 6.9a6.4 6.4 0 0 1 9 0l-1.5 1.5a4.3 4.3 0 0 0-6 0zM1.2 4.6a9.6 9.6 0 0 1 13.6 0l-1.5 1.5a7.5 7.5 0 0 0-10.6 0z"/></svg>
+            <svg viewBox="0 0 27 13" width="27" height="13"><rect x=".5" y=".5" width="23" height="12" rx="3.5" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="20" height="9" rx="2"/><path d="M25 4.5v4a2 2 0 0 0 0-4z" opacity=".4"/></svg>
+          </span>
+        </div>
+        <span class="dv-home" aria-hidden="true"></span>
+      </div>
+    </div>
+  </div>
+
+  <aside class="dv-panel" id="panel">
+    <button type="button" class="dv-close" id="close" aria-label="Close">×</button>
+    <h1>openGym <span>iPhone 15 Pro</span></h1>
+    <p class="dv-build" id="build"></p>
+    <h2>Demo data</h2>
+    <div class="dv-scenes" id="scenes"></div>
+    <p class="dv-note">Loads a few weeks of made-up training into this browser, so you can see each thing the orb says. Mid-workout: tick the three sets, which are heavier than last time, the same, then lighter.</p>
+    <div class="dv-links">
+      <button type="button" id="reload">Reload app</button>
+      <a href="index.html" target="_blank" rel="noopener">Open full screen ↗</a>
+    </div>
+  </aside>
+  <button type="button" class="dv-fab" id="fab" aria-expanded="false" aria-controls="panel">Demo</button>
+</main>
+<script type="module" src="/src/device/device.js"></script>
+</body>
+</html>
