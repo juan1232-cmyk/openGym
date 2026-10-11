@@ -536,4 +536,8 @@ export default {
   '{0} sets of {1} — time to add weight or move to a harder variation.': '{1} रेप्स के {0} सेट — अब वज़न बढ़ाने या किसी कठिन वैरिएशन पर जाने का समय।',
   '{0} per side': 'प्रति तरफ़ {0}',
   'You still log the total: {0} is {1} per side.': 'आप कुल ही दर्ज करते हैं: {0} यानी प्रति तरफ़ {1}।',
+  'Close': 'बंद करें',
+  'Start from scratch': 'शुरू से बनाएं',
+  'Show {0} matches in all muscles': 'सभी मांसपेशियों में {0} परिणाम दिखाएँ',
+  'Done · {0}': 'हो गया · {0}',
 }

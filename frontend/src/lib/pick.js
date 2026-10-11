@@ -2,7 +2,7 @@
 // equipment, overlap warnings and swaps. Pure — the picker, the library and the swap sheet
 // only render what comes out of here, so the ranking can be tested without clicking.
 import { MUSCLES, musclesOf, loadOf } from './muscles.js'
-import { EXIDX } from './exercises.js'
+import { EXIDX, EXDB } from './exercises.js'
 
 /* ---------------- what you use ---------------- */
 
@@ -92,10 +92,18 @@ const REGIONS_OF = {
   'upper-back': ['Lats', 'Mid back'],
 }
 
+const regionCache = new WeakMap()
 /** The specific muscle an exercise trains — an English label, also the i18n key. */
 export function regionOf(ex) {
   if (!ex) return null
   if (ex.bp === 'cardio') return 'Cardio'
+  // cached: search now matches on it, so it runs for every exercise on every keystroke
+  if (regionCache.has(ex)) return regionCache.get(ex)
+  const r = regionFor(ex)
+  regionCache.set(ex, r)
+  return r
+}
+function regionFor(ex) {
   const m = primaryOf(ex)
   if (!m) return null
   const name = norm(ex.n)
@@ -122,7 +130,9 @@ const isJunk = ex => /stretch|\b(male|female)\b|\bpov\b/.test(String(ex.n).toLow
 
 /* ---------------- search ---------------- */
 
-const norm = s => String(s || '').toLowerCase().replace(/[-/(),.]+/g, ' ').replace(/\s+/g, ' ').trim()
+// Accents folded away, so "máquina" and "maquina" are the same word.
+const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+  .replace(/[-/(),.]+/g, ' ').replace(/\s+/g, ' ').trim()
 
 // Words in a name that say what the movement is, not what it is done with — the part two
 // exercises have to share to be the same lift on different kit.
@@ -139,24 +149,145 @@ const ALIAS = {
   hammies: 'hamstrings', pecs: 'pectorals',
 }
 
-const expand = q => norm(q).split(' ').filter(Boolean).flatMap(w => norm(ALIAS[w] || w).split(' '))
+// The dataset's names are English only, but a Spanish speaker types "remo con mancuerna".
+// Keyed by stem so the word works while it is still being typed ("sentad") and in the
+// plural ("dominadas"). A Spanish meaning is offered *alongside* the word as typed, never
+// instead of it — "press", "lateral" and "militar" are English words too.
+export const ALIAS_ES = {
+  banc: 'bench', sentadill: 'squat', muert: 'deadlift', rem: 'row', dominad: 'pull up',
+  fond: 'dip', zancad: 'lunge', flexion: 'push up', jalon: 'pulldown', polea: 'cable',
+  mancuern: 'dumbbell', barra: 'barbell', maquin: ['machine', 'lever'], elevac: 'raise',
+  apertur: 'fly', cruc: 'crossover', prens: 'leg press', gemel: 'calf', pantorrill: 'calf',
+  femor: ['hamstring', 'leg curl'], cuadricep: 'quad', glute: 'glute', pecho: 'chest', espald: 'back',
+  hombr: 'shoulder', piern: 'leg', braz: 'arm', abdomin: 'abs', oblicu: 'oblique',
+  encogim: 'shrug', planch: 'plank', trapeci: 'trap', antebraz: 'forearm', muneca: 'wrist',
+  inclinad: 'incline', declinad: 'decline', tumbad: 'lying', acostad: 'lying', bicicl: 'bike',
+  cuerda: 'rope', kettlebel: 'kettlebell', goma: 'band', banda: 'band', martillo: 'hammer',
+  predicador: 'preacher', frances: 'skull', patad: 'kickback', puente: 'bridge', empuj: 'thrust',
+}
+// Said as two words, meant as one lift.
+const PHRASE_ES = [['peso muerto', 'deadlift'], ['de pie', 'standing'], ['hip thrust', 'hip thrust']]
+// Glue words a Spanish query is full of ("press de banca"). Dropped only when something else
+// was typed — on its own, "de" may be the start of "decline".
+const STOP = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'con', 'en', 'y', 'al', 'para', 'por', 'a'])
 
-const wordsOf = ex => norm([ex.n, ex.tg, ex.eq, ex.bp, ex.mg, ...(ex.sm || []), ex.desc].join(' ')).split(' ')
+// A Spanish stem matches a word that starts with it, or one it starts with once three letters
+// are in — "sen" is too little to mean anything yet.
+const esMeanings = w => {
+  const out = []
+  for (const k in ALIAS_ES) {
+    if (w.startsWith(k) || (w.length >= 3 && k.startsWith(w))) {
+      const v = ALIAS_ES[k]
+      ;(Array.isArray(v) ? v : [v]).forEach(m => out.push(m))
+    }
+  }
+  return out
+}
+
+/** Search words out of any labels — for `extraWords`, which the caller caches. */
+export const wordsFrom = labels => norm(labels.filter(Boolean).join(' ')).split(' ').filter(Boolean)
+
+const wordCache = new WeakMap()
+// Everything an exercise can be found by. Cached: this runs for every exercise on every
+// keystroke, and the inputs (a dataset record) never change.
+const wordsOf = ex => {
+  let w = wordCache.get(ex)
+  if (!w) {
+    w = norm([ex.n, ex.tg, ex.eq, ex.bp, ex.mg, ...(ex.sm || []), ex.desc, regionOf(ex)].join(' ')).split(' ')
+    wordCache.set(ex, w)
+  }
+  return w
+}
+
+/* typo tolerance: one slip per word, checked against the words the dataset actually has */
+let vocab = null
+const vocabulary = () => {
+  if (!vocab) {
+    const set = new Set()
+    EXDB.forEach(ex => wordsOf(ex).forEach(w => w && set.add(w)))
+    vocab = [...set]
+  }
+  return vocab
+}
+// Optimal string alignment distance, capped at 1: an insert, a delete, a substitution or two
+// neighbours swapped ("benhc").
+function within1(a, b) {
+  if (a === b) return true
+  if (Math.abs(a.length - b.length) > 1) return false
+  let i = 0
+  while (i < a.length && i < b.length && a[i] === b[i]) i++
+  if (a.length === b.length) {
+    return a.slice(i + 1) === b.slice(i + 1) ||
+      (a[i] === b[i + 1] && a[i + 1] === b[i] && a.slice(i + 2) === b.slice(i + 2))
+  }
+  return a.length > b.length ? a.slice(i + 1) === b.slice(i) : a.slice(i) === b.slice(i + 1)
+}
+// What `w` was probably meant to be, for a word of four letters or more that starts no word
+// in the dataset. Compared against word *starts* too, so a half-typed slip ("dedli") still
+// lands on "deadlift". Short words are left alone: "row" stays "row", never "arrow".
+function corrections(w) {
+  if (w.length < 4) return []
+  const words = vocabulary()
+  if (words.some(v => v.startsWith(w))) return []
+  const out = new Set()
+  for (const v of words) {
+    for (const n of [w.length - 1, w.length, w.length + 1]) {
+      if (n <= v.length && n >= 3 && within1(w, v.slice(0, n))) out.add(v.slice(0, n))
+    }
+  }
+  return [...out].slice(0, 6)
+}
+
+/**
+ * The query as groups of alternatives: each typed word becomes one or more readings, each a
+ * list of words that must all be found. "db" → [["dumbbell"]]; "remo" → [["remo"], ["row"]].
+ */
+function parse(q) {
+  let s = norm(q)
+  PHRASE_ES.forEach(([a, b]) => { s = s.replace(new RegExp('\\b' + a + '\\b', 'g'), b) })
+  let words = s.split(' ').filter(Boolean)
+  const kept = words.filter(w => !STOP.has(w))
+  if (kept.length) words = kept
+  return words.map(w => {
+    if (ALIAS[w]) return [norm(ALIAS[w]).split(' ')]
+    const alts = [[w]]
+    // a plural the dataset has in the singular: "laterales" → "lateral", "curls" → "curl"
+    if (w.length >= 5) alts.push([w.replace(/(es|s)$/, '')])
+    esMeanings(w).forEach(m => alts.push(norm(m).split(' ')))
+    corrections(w).forEach(c => alts.push([c]))
+    return alts
+  })
+}
 
 /**
  * Exercises matching `q`, best first. Every typed word has to be the start of some word in
- * the exercise (name, muscles, equipment) — so words can come in any order, and "row" no
- * longer finds "narrow". Without a query the list comes back as it was given.
+ * the exercise (name, muscles, equipment, the specific muscle) — so words can come in any
+ * order, and "row" no longer finds "narrow". Without a query the list comes back as it was
+ * given. `extraWords(ex)` adds words (see wordsFrom) an exercise can be found by without
+ * ranking on them — the muscle and kit names in the app's language.
  */
-export function searchExercises(list, q, { usage = {} } = {}) {
-  const tokens = expand(q)
-  if (!tokens.length) return list
-  const phrase = tokens.join(' ')
+export function searchExercises(list, q, { usage = {}, extraWords } = {}) {
+  const groups = parse(q)
+  if (!groups.length) return list
   const scored = []
   for (const ex of list) {
     const words = wordsOf(ex)
-    if (!tokens.every(t => words.some(w => w.startsWith(t)))) continue
+    const extra = extraWords ? extraWords(ex) : null
     const name = norm(ex.n), nameWords = name.split(' ')
+    const found = t => words.some(w => w.startsWith(t)) || (extra && extra.some(w => w.startsWith(t)))
+    // For each typed word, the reading that fits this exercise — one that is in the name
+    // if there is one, so "remo" ranks a row by its name, not by a muscle that happens to
+    // start with "rem".
+    const tokens = []
+    let ok = true
+    for (const alts of groups) {
+      const fits = alts.filter(a => a.every(found))
+      if (!fits.length) { ok = false; break }
+      const inName = fits.find(a => a.every(t => nameWords.some(w => w.startsWith(t))))
+      tokens.push(...(inName || fits[0]))
+    }
+    if (!ok) continue
+    const phrase = tokens.join(' ')
     let s = 0
     if (name === phrase) s += 1000
     if (name.includes(phrase)) s += 80
@@ -300,4 +431,19 @@ export function similarTo(ex, all, { exclude = [], gymEq = null, usage = {} } = 
     .map(e => ({ e, s: score(e) }))
     .sort((a, b) => b.s - a.s || a.e.n.length - b.e.n.length || (a.e.n < b.e.n ? -1 : 1))
     .map(x => x.e)
+}
+
+/* ---------------- fit score (TODO) ---------------- */
+
+// TODO(score): how well `ex` fits what is being built, for a badge + one-line reason on each
+// picker row (sheets/exercise.jsx, PickRow). Return null to show nothing — that is all it
+// does today. What there is to build it from:
+//  - the list being added to: loadOf / rankOf (muscles.js) for gaps, overlapFor for crowding,
+//    GROUPS for which muscles belong to the same day
+//  - the lift itself: isCompound (scheme.js), STAPLES, EQ_BONUS, isJunk — the dataset has no
+//    compound/level fields, so these name rules are all there is
+//  - the person: st.goal, usageOf, liftTrend (verdict.js)
+// Keep it pure and tested (pick.test.js), like everything else in this file.
+export function fitScore(ex, ctx) {
+  return null
 }

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { EXDB, EXIDX } from './exercises.js'
 import {
   searchExercises, primaryOf, muscleChips, matchesMuscle, recentIds, usageOf, gymFilter,
-  overlapFor, suggestionFor, similarTo, OVERLAP_AT, regionOf, browseOrder, STAPLES,
+  overlapFor, suggestionFor, similarTo, OVERLAP_AT, regionOf, browseOrder, STAPLES, ALIAS_ES,
 } from './pick.js'
 
 // Real exercises out of the shipped catalogue, looked up by name so the tests read like the UI.
@@ -48,6 +48,48 @@ describe('searchExercises', () => {
 
   it('returns the list untouched without a query', () => {
     expect(searchExercises(EXDB, '   ')).toBe(EXDB)
+  })
+
+  it('ignores accents', () => {
+    expect(names(searchExercises(EXDB, 'máquina'))).toEqual(names(searchExercises(EXDB, 'maquina')))
+  })
+
+  it('understands the Spanish people type at the gym', () => {
+    expect(searchExercises(EXDB, 'press banca')[0]).toBe(BENCH)
+    expect(searchExercises(EXDB, 'press de banca')[0]).toBe(BENCH)
+    expect(names(searchExercises(EXDB, 'peso muerto'))).toContain('barbell deadlift')
+    expect(names(searchExercises(EXDB, 'remo mancuerna'))).toContain('dumbbell bent over row')
+    expect(names(searchExercises(EXDB, 'dominadas'))).toContain('pull-up')
+    expect(names(searchExercises(EXDB, 'elevaciones laterales')).slice(0, 3)).toContain('dumbbell lateral raise')
+    expect(names(searchExercises(EXDB, 'curl femoral')).slice(0, 5)).toContain('lever lying leg curl')
+  })
+
+  it('finds a Spanish word while it is still being typed', () => {
+    const half = names(searchExercises(EXDB, 'sentad')).slice(0, 5)
+    expect(half).toContain('barbell full squat')
+    expect(names(searchExercises(EXDB, 'sentadillas')).slice(0, 5)).toContain('barbell full squat')
+  })
+
+  it('has every Spanish stem lead somewhere', () => {
+    for (const k in ALIAS_ES) expect(searchExercises(EXDB, k).length, k).toBeGreaterThan(0)
+  })
+
+  it('forgives one slip in a longer word', () => {
+    expect(searchExercises(EXDB, 'benhc press')[0]).toBe(BENCH)
+    expect(names(searchExercises(EXDB, 'dedlift'))).toContain('barbell deadlift')
+    expect(names(searchExercises(EXDB, 'squt'))).toContain('barbell full squat')
+  })
+
+  it('leaves short words exact — a typo guess there would be noise', () => {
+    expect(names(searchExercises(EXDB, 'row'))).not.toContain('barbell narrow stance squat')
+    expect(searchExercises(EXDB, 'xqz')).toEqual([])
+  })
+
+  it('finds an exercise by extra words without ranking on them', () => {
+    const extraWords = ex => (ex === FLY ? ['pectorales'] : [])
+    const r = searchExercises(EXDB, 'pectorales', { extraWords })
+    expect(r).toContain(FLY)
+    expect(names(searchExercises(EXDB, 'bench press', { extraWords }))).toEqual(names(searchExercises(EXDB, 'bench press')))
   })
 })
 

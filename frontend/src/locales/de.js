@@ -553,4 +553,8 @@ export default {
   '{0} sets of {1} — time to add weight or move to a harder variation.': '{0} Sätze mit {1} — Zeit für Zusatzgewicht oder eine schwerere Variante.',
   '{0} per side': '{0} pro Seite',
   'You still log the total: {0} is {1} per side.': 'Du trägst weiterhin die Gesamtzahl ein: {0} sind {1} pro Seite.',
+  'Close': 'Schließen',
+  'Start from scratch': 'Von vorne beginnen',
+  'Show {0} matches in all muscles': '{0} Treffer in allen Muskeln zeigen',
+  'Done · {0}': 'Fertig · {0}',
 }

@@ -18,6 +18,12 @@ export default function Plan() {
     nav('/plan/r/' + r.id)
   }
 
+  // The way into building a plan, so it gets a full row rather than a small button up top.
+  const newRow = <div className="item rt-new" onClick={addRoutine}>
+    <span className="rt-new-i"><Icon name="plus" /></span>
+    <div className="grow"><div className="tt">{t('New routine')}</div><div className="ss">{t('Start from scratch')}</div></div>
+    <Icon name="chevronRight" className="chev" /></div>
+
   return <>
     <div className="hdr">
       <div><h1>{t('Plan')}</h1><div className="sub">{t('Your weekly routine')}</div></div>
@@ -35,15 +41,13 @@ export default function Plan() {
         })}
       </div>
     </div><div>
-      <div className="row between" style={{ marginTop: 22, marginBottom: 10 }}>
-        <h4 className="sec" style={{ margin: 0 }}>{t('Routines')}</h4>
-        <Button size="sm" variant="tinted" icon="plus" onClick={addRoutine}>{t('New')}</Button>
-      </div>
+      <h4 className="sec">{t('Routines')}</h4>
       {S.routines.length ? <div className="list">{S.routines.map(r => <div key={r.id} className="item" onClick={() => nav('/plan/r/' + r.id)}>
         <span className="lrow-i"><Icon name={glyphOf(r.emoji)} /></span>
         <div className="grow"><div className="tt">{r.name}</div><div className="ss">{exCount(r.ex.length)}</div></div>
-        <Icon name="chevronRight" className="chev" /></div>)}</div> : <>
+        <Icon name="chevronRight" className="chev" /></div>)}{newRow}</div> : <>
         <div className="empty"><div className="ico"><Icon name="clipboard" /></div>{t('No routines yet.')}<br />{t('Create one or load the starter plan.')}</div>
+        <div className="list" style={{ marginBottom: 10 }}>{newRow}</div>
         <Button icon="sparkles" onClick={loadStarterPlan}>{t('Load starter plan (Push / Pull / Legs)')}</Button>
       </>}
     </div></div>

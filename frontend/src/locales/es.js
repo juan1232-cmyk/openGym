@@ -598,4 +598,8 @@ export default {
   'For getting stronger I’d do 5 × 5 on big lifts and 8–12 reps on the rest.': 'Para ganar fuerza haría 5 × 5 en los básicos y 8–12 reps en el resto.',
   'For losing fat I’d do 8–12 reps on big lifts and 12–15 on the rest.': 'Para perder grasa haría 8–12 reps en los básicos y 12–15 en el resto.',
   'I’d do 3 sets of 8–12 reps on everything here.': 'Yo haría 3 series de 8–12 reps en todo.',
+  'Close': 'Cerrar',
+  'Start from scratch': 'Empieza desde cero',
+  'Show {0} matches in all muscles': 'Mostrar {0} resultados en todos los músculos',
+  'Done · {0}': 'Listo · {0}',
 }

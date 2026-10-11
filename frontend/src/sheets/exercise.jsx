@@ -1,9 +1,9 @@
 // Everything about one exercise: the library detail card, adding it to a routine, its
 // sets/reps/progression config, the exercise picker, and custom (user-created) exercises.
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useStore } from '../store/useStore.js'
 import { EXDB, EXIDX, BODYPARTS, isCardio, isBodyweightEq, allExercises } from '../lib/exercises.js'
-import { searchExercises, browseOrder, usageOf, recentIds, regionOf, muscleChips, matchesMuscle, suggestionFor, similarTo, gymFilter } from '../lib/pick.js'
+import { searchExercises, browseOrder, usageOf, recentIds, regionOf, muscleChips, matchesMuscle, suggestionFor, similarTo, gymFilter, wordsFrom } from '../lib/pick.js'
 import { MUSCLE_NAME } from '../lib/muscles.js'
 import Orb from '../components/Orb.jsx'
 import { fmtDate, fmtNum, uid, exCount } from '../lib/format.js'
@@ -182,61 +182,101 @@ export const muscleLine = ex => t(regionOf(ex) || ex.tg || ex.bp || '')
 export const chipLabel = m => (m === 'cardio' ? t('Cardio') : t(MUSCLE_NAME[m]))
 
 function PickRow({ ex, onPick, inList, icon = 'plus' }) {
+  // TODO(score): fit score + one-line reason go here — see fitScore in lib/pick.js
   return <div className="item" onClick={() => onPick(ex)}>
     <Thumb ex={ex} /><div className="grow"><div className="tt capitalize">{ex.n}</div><div className="ss">{muscleLine(ex)}</div></div>
     <Icon name={inList ? 'check' : icon} className={'chev' + (inList ? ' accent' : '')} />
   </div>
 }
 
-// Deliberately bare: a search field, one row of muscles, the list. Without a search, what
-// you already train comes first, then the staple lifts (lib/pick.js browseOrder).
+// Muscle, kit and region names in the app's language, so "pectorales" or "mancuerna" finds
+// an exercise in a Spanish UI. Cached per language — the search runs on every keystroke.
+const extraCache = new Map()
+const extraWords = ex => {
+  const lang = getLang()
+  if (lang === 'en') return null
+  const key = lang + ':' + ex.id
+  let w = extraCache.get(key)
+  if (!w) {
+    w = wordsFrom([t(ex.eq), t(ex.tg), t(ex.bp), t(regionOf(ex) || ''), ...(ex.sm || []).map(m => t(m))])
+    extraCache.set(key, w)
+  }
+  return w
+}
+
+// A whole screen, not a sheet: a search field and one row of muscles that stay put, the list
+// scrolling under them, and Done always in reach — at the top too, since the keyboard covers
+// the bottom while you type. Without a search, what you already train comes first, then the
+// staple lifts (lib/pick.js browseOrder).
 // `listOf` reads the routine / workout being added to out of the live state, so the check
 // marks keep up while the picker stays open under each config sheet.
 function ExercisePicker({ onPick, close, listOf }) {
   const st = useStore(s => s.S)
   const list = (listOf && listOf(st)) || []
   const inList = new Set(list.map(e => e.id))
+  const [startCount] = useState(list.length)
   const [q, setQ] = useState('')
   const [mu, setMu] = useState('')          // '' = every muscle, else a muscle slug or 'cardio'
   const [shown, setShown] = useState(50)
   const [allKit, setAllKit] = useState(false)
+  const inputRef = useRef(null)
   const reset = () => setShown(50)
   const all = allExercises(st)
   const searching = !!q.trim()
+  const opts = { usage: usageOf(st), extraWords }
   const pool = all.filter(e => matchesMuscle(e, mu))
-  const found = searching ? searchExercises(pool, q, { usage: usageOf(st) }) : browseOrder(pool, { recent: recentIds(st) })
+  const found = searching ? searchExercises(pool, q, opts) : browseOrder(pool, { recent: recentIds(st) })
   // The gym profile hides what you can't do there — with a way out while searching, so a
   // machine your gym lacks still turns up instead of looking like the app doesn't know it.
   const f = st.gymEq && !allKit ? gymFilter(found, st.gymEq) : found
   const hidden = found.length - f.length
+  // Same way out for the muscle chip: "curl" with Chest still selected would say No match.
+  const elsewhere = searching && mu ? searchExercises(all, q, opts).length - found.length : 0
+  const added = Math.max(0, list.length - startCount)
   const pick = ex => onPick(ex, { list, retarget: alt => onPick(alt, { list: (listOf && listOf(S())) || [] }) })
-  return <>
-    <div className="row between" style={{ marginBottom: 14 }}>
-      <h3 style={{ margin: 0 }}>{t('Add exercise')}</h3>
-      <Button size="sm" variant="primary" onClick={close}>{t('Done')}</Button>
-    </div>
-    <div className="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-      <input className="input" placeholder={t('Search')} value={q} onChange={e => { setQ(e.target.value); reset() }} />
-      {q && <button className="search-x" aria-label={t('Clear')} onClick={() => { setQ(''); reset() }}><Icon name="xmark" /></button>}</div>
-    <div className="chips" style={{ margin: '12px 0 14px' }}>
-      <button className={'chip nocap' + (!mu ? ' on' : '')} onClick={() => { setMu(''); reset() }}>{t('All')}</button>
-      {muscleChips(all).map(m => <button key={m} className={'chip' + (mu === m ? ' on' : '')} onClick={() => { setMu(m); reset() }}>{chipLabel(m)}</button>)}
-    </div>
-    <div className="list">
-      {f.slice(0, shown).map(e => <PickRow key={e.id} ex={e} onPick={pick} inList={inList.has(e.id)} />)}
-      {f.length === 0 && <div className="empty">{t('No match')}</div>}
-      {searching && hidden > 0 && <button className="pk-link" onClick={() => setAllKit(true)}>{t('Show {0} more for other gyms', hidden)}</button>}
-      <div className="item" onClick={() => customExSheet(null, ex => pick(ex), q.trim())}>
-        <div className="thumb thumb-x"><Icon name="plus" /></div>
-        <div className="grow"><div className="tt">{searching ? t('Create “{0}”', q.trim()) : t('Create your own exercise')}</div></div>
+  // Scrolling the results is the moment the keyboard should get out of the way.
+  const blur = () => { if (document.activeElement === inputRef.current) inputRef.current.blur() }
+  return <div className="pick">
+    <div className="pick-head"><div className="pick-col">
+      <div className="pick-top">
+        <button className="iconbtn" onClick={close} aria-label={t('Close')}><Icon name="chevronLeft" /></button>
+        <h3>{t('Add exercise')}</h3>
+        <button className="pick-done" onClick={close}>{t('Done')}</button>
       </div>
-    </div>
-    {f.length > shown && <><div style={{ height: 8 }} /><Button variant="soft" onClick={() => setShown(s => s + 50)}>{t('Show more')}</Button></>}
-  </>
+      <form className="search" role="search" onSubmit={e => { e.preventDefault(); inputRef.current?.blur() }}>
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+        {/* iOS would "correct" db, rdl and half-typed Spanish into other words */}
+        <input ref={inputRef} className="input" type="search" placeholder={t('Search')} value={q}
+          autoCorrect="off" autoCapitalize="none" autoComplete="off" spellCheck={false} enterKeyHint="search"
+          onChange={e => { setQ(e.target.value); reset() }} />
+        {q && <button type="button" className="search-x" aria-label={t('Clear')} onClick={() => { setQ(''); reset() }}><Icon name="xmark" /></button>}
+      </form>
+      <div className="chips">
+        <button className={'chip nocap' + (!mu ? ' on' : '')} onClick={() => { setMu(''); reset() }}>{t('All')}</button>
+        {muscleChips(all).map(m => <button key={m} className={'chip' + (mu === m ? ' on' : '')} onClick={() => { setMu(m); reset() }}>{chipLabel(m)}</button>)}
+      </div>
+    </div></div>
+    <div className="pick-list" onTouchStart={blur}><div className="pick-col">
+      <div className="list">
+        {f.slice(0, shown).map(e => <PickRow key={e.id} ex={e} onPick={pick} inList={inList.has(e.id)} />)}
+        {f.length === 0 && <div className="empty">{t('No match')}</div>}
+        {elsewhere > 0 && <button className="pk-link" onClick={() => { setMu(''); reset() }}>{t('Show {0} matches in all muscles', elsewhere)}</button>}
+        {searching && hidden > 0 && <button className="pk-link" onClick={() => setAllKit(true)}>{t('Show {0} more for other gyms', hidden)}</button>}
+        <div className="item" onClick={() => customExSheet(null, ex => pick(ex), q.trim())}>
+          <div className="thumb thumb-x"><Icon name="plus" /></div>
+          <div className="grow"><div className="tt">{searching ? t('Create “{0}”', q.trim()) : t('Create your own exercise')}</div></div>
+        </div>
+      </div>
+      {f.length > shown && <><div style={{ height: 8 }} /><Button variant="soft" onClick={() => setShown(s => s + 50)}>{t('Show more')}</Button></>}
+    </div></div>
+    <div className="pick-foot"><div className="pick-col">
+      <Button variant="primary" onClick={close}>{added ? t('Done · {0}', exCount(added)) : t('Done')}</Button>
+    </div></div>
+  </div>
 }
 // `opts.listOf(state)` → the [{ id }] being added to.
 export const exercisePicker = (onPick, opts = {}) =>
-  ui().openSheet(close => <ExercisePicker onPick={onPick} close={close} listOf={opts.listOf} />)
+  ui().openSheet(close => <ExercisePicker onPick={onPick} close={close} listOf={opts.listOf} />, { kind: 'full', className: 'picker' })
 
 /* ============================ my gym's equipment ============================ */
 // Every kind of kit in the catalogue, most exercises first, so the list reads "barbell,

@@ -536,4 +536,8 @@ export default {
   '{0} sets of {1} — time to add weight or move to a harder variation.': '{0} 组 × {1} 次——该加重量或换更难的变式了。',
   '{0} per side': '每侧 {0} 次',
   'You still log the total: {0} is {1} per side.': '你记录的仍然是总数：{0} 表示每侧 {1} 次。',
+  'Close': '关闭',
+  'Start from scratch': '从零开始',
+  'Show {0} matches in all muscles': '在所有肌肉中显示 {0} 个结果',
+  'Done · {0}': '完成 · {0}',
 }
