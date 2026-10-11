@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useStore } from '../store/useStore.js'
 import { exOr } from '../lib/exercises.js'
 import { uid } from '../lib/format.js'
@@ -17,6 +17,7 @@ import { glyphOf } from '../lib/glyphs.js'
 import { Button, Row, SelectRow } from '../components/ui.jsx'
 import { POLICIES_FOR, POLICY_NAME, POLICY_DESC } from '../lib/progression.js'
 import BodyMap from '../components/BodyMap.jsx'
+import useDragReorder from '../components/useDragReorder.js'
 import { loadOfRoutine, rankOf, MUSCLE_NAME } from '../lib/muscles.js'
 
 // The routine editor is built from the same pieces as Home and Stats — white cards with a
@@ -130,6 +131,8 @@ export default function RoutineEdit() {
   const S = useStore(s => s.S)
   const update = useStore(s => s.update)
   const r = S.routines.find(x => x.id === id)
+  const listRef = useRef(null)
+  const drag = useDragReorder({ containerRef: listRef, onMove: (from, to) => updateRoutine(id, x => moveItem(x.ex, from, to)) })
   useEffect(() => { if (!r) nav('/plan') }, [!!r])
   if (!r) return null
 
@@ -168,13 +171,15 @@ export default function RoutineEdit() {
     const ex = exOr(e.id)
     // reps work is adjusted right on the row; holds and cardio keep their summary line
     const pills = modeOf(e) === 'reps' && !ex.missing
-    return <div key={i} className="rt-row" onClick={() => openRow(i)}>
+    return <div key={i} className="rt-row" data-idx={i} onClick={() => { if (!drag.consumeClick()) openRow(i) }}>
       <Thumb ex={ex} />
       <div className="grow rt-main">
         <div className="tt capitalize">{ex.n}</div>
         <div className="ss">{pills ? muscleLine(ex) : exLine(e, S.unit)}</div>
       </div>
-      <button className="rt-grip" aria-label={t('Move')} onClick={ev => { ev.stopPropagation(); moveSheet(id, i) }}><Grip /></button>
+      {/* drag to reorder; a tap opens the same moves as a menu */}
+      <button className="rt-grip" aria-label={t('Move')} {...drag.handle(i, r.ex.length)}
+        onClick={ev => { ev.stopPropagation(); if (!drag.consumeClick()) moveSheet(id, i) }}><Grip /></button>
       {/* on a line of their own, under the name, so sets · reps · weight fit in one row */}
       {pills && <SchemePills cfg={e} unit={S.unit} onChange={cfg => edit(x => { x[i] = cfg })} />}
     </div>
@@ -207,7 +212,7 @@ export default function RoutineEdit() {
 
     <PeekSuggest r={r} goal={S.goal} edit={edit} hide={() => update(s => { s.routines.find(x => x.id === id).hideSuggest = true })} />
 
-    <div className="card rt-list">
+    <div className="card rt-list" ref={listRef}>
       <div className="pk-card-h"><b>{t('Exercises')}</b></div>
       {r.ex.length ? units.map(u => u.length > 1
         ? <div key={'ss' + u[0]} className="rt-ss"><div className="rt-ss-l"><Icon name="link" />{t('Superset')}</div>{u.map(row)}</div>

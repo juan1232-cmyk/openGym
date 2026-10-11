@@ -1535,3 +1535,6 @@ button.pk-tile:active{background:var(--surface-2)}
 .rt-del,:root[data-skin="peek"] .btn.rt-del{color:var(--red)}
 .pk-link.rt-del{display:block;margin:6px auto 0}
 .rt-main .ss{font-size:13px;color:var(--label-2);margin-top:2px}
+/* while a row is being dragged: it floats, nothing gets selected, the rest make room */
+.rt-row.dragging{position:relative;z-index:2;background:var(--surface);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.14)}
+body.reordering,body.reordering *{user-select:none;-webkit-user-select:none;cursor:grabbing}
