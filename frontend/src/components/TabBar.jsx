@@ -64,7 +64,7 @@ export default function TabBar({ onStart }) {
       <span className="tb-pill" ref={pill} aria-hidden="true" />
       <Tab k="home" icon="house" to="/home" label={t('Home')} />
       <Tab k="plan" icon="calendar" to="/plan" label={t('Plan')} />
-      <button className={'start' + (S.active ? ' rec' : '')} onClick={startWorkout}>
+      <button className={'start' + (S.active ? ' rec' : '') + (on('workout') ? ' on' : '')} onClick={startWorkout}>
         <span className="cir"><Icon name={S.active ? 'play' : 'dumbbell'} /></span>
         <span>{S.active ? t('Resume') : t('Start')}</span>
       </button>
