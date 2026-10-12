@@ -1252,9 +1252,7 @@ button.pk-tile:active{background:var(--surface-2)}
   transition:transform 380ms var(--ease),width 380ms var(--ease),opacity var(--fast);
 }
 :root[data-skin="peek"] #tabbar button.start{margin-top:0}
-:root[data-skin="peek"] #tabbar button.start span{color:var(--acc);font-weight:600;transition:color 320ms var(--ease)}
-/* on the white pill the accent would wash out (lime on white), so Start reads in ink there */
-:root[data-skin="peek"] #tabbar button.start.on span{color:var(--ink)}
+:root[data-skin="peek"] #tabbar button.start span{color:var(--acc);font-weight:600}
 :root[data-skin="peek"] #tabbar button.start.rec span:not(.cir){color:var(--orange);display:flex;align-items:center;gap:5px}
 :root[data-skin="peek"] #tabbar button.start.rec span:not(.cir)::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
 :root[data-skin="peek"] #timer{bottom:calc(var(--sab) + 86px)}
