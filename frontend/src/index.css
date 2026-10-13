@@ -1552,3 +1552,86 @@ button.pk-tile:active{background:var(--surface-2)}
 /* while a row is being dragged: it floats, nothing gets selected, the rest make room */
 .rt-row.dragging{position:relative;z-index:2;background:var(--surface);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.14)}
 body.reordering,body.reordering *{user-select:none;-webkit-user-select:none;cursor:grabbing}
+
+/* sparkline (components/Spark.jsx) */
+.spark{position:relative;width:100%}
+.spark svg{display:block;width:100%;height:100%;overflow:visible}
+.spark polyline{fill:none;stroke:var(--spark);stroke-width:2;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.spark .goal{stroke:var(--yellow);stroke-width:1.5;stroke-dasharray:4 4;vector-effect:non-scaling-stroke}
+.spark i{position:absolute;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--acc)}
+
+/* --------------------------------------------- Stats, design A (views/Stats.jsx) -- */
+/* One range on top, every card below reads it. Tiles are the Peek white cards; the strength
+   tile is the one ink card, so the page has a single dark accent like the tab bar. */
+.sa-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.sa-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.sa-tile{display:flex;flex-direction:column;gap:8px;min-width:0;padding:14px;border-radius:var(--r-card);background:var(--surface);text-align:left;color:var(--label)}
+button.sa-tile:active{transform:scale(.985)}
+.sa-tile .l{display:flex;align-items:center;gap:6px;white-space:nowrap;min-width:0;font-size:13px;color:var(--label-2)}
+.sa-tile .l .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;text-transform:capitalize}
+.sa-tile .l .k{flex:none;white-space:nowrap;margin-left:-2px}
+.sa-tile .s{font-size:12px;color:var(--label-2)}
+.sa-v{font-size:24px;font-weight:600;letter-spacing:-.035em;line-height:1;white-space:nowrap}
+.sa-v small{font-size:12px;font-weight:500;letter-spacing:0;color:var(--label-2)}
+.sa-tile.dark{background:var(--ink);color:var(--on-ink)}
+.sa-tile.dark .l,.sa-tile.dark small{color:var(--on-ink-2)}
+.sa-tile.dark .s.acc{color:var(--acc);font-weight:500}
+.sa-tile.dark .spark i{background:var(--on-ink)}
+.sa-tile[disabled]{opacity:1}
+.sa-ringrow{display:flex;align-items:center;gap:10px}
+.sa-ringrow > div{display:flex;flex-direction:column;gap:5px;min-width:0}
+.sa-ring{width:52px;height:52px;flex:none;transform:rotate(-90deg)}
+.sa-ring circle{fill:none;stroke-width:6}
+.sa-ring .bg{stroke:var(--surface-2)}
+.sa-ring .fg{stroke:var(--label);stroke-linecap:round;transition:stroke-dashoffset .6s var(--spring)}
+.sa-ring .fg.full{stroke:var(--acc)}
+.sa-strip{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:auto}
+.sa-strip i{height:16px;border-radius:4px;background:var(--surface-2)}
+.sa-strip i.on{background:var(--acc)}
+.sa-strip i.on:last-child{background:var(--ink)}
+.sa-bars{display:flex;align-items:flex-end;justify-content:space-between;gap:4px;height:30px;margin-top:auto}
+.sa-bars i{flex:0 1 10px;min-width:3px;border-radius:3px;background:var(--surface-2);transition:height var(--med) var(--ease)}
+.sa-bars i.on{background:var(--surface-3)}
+.sa-bars i.on:last-child{background:var(--acc)}
+.sa-delta{font-family:var(--mono);font-size:11px;font-weight:500;padding:2px 6px;border-radius:99px;background:var(--surface-2);color:var(--label-2)}
+.sa-delta.up{background:var(--acc-soft);color:var(--acc-ink)}
+.sa-delta.down{background:color-mix(in srgb,var(--red) 12%,transparent);color:var(--red)}
+.sa-card{border-radius:var(--r-card)}
+.sa-mb{display:grid;grid-template-columns:44% 1fr;gap:14px;align-items:center;margin-top:14px}
+.sa-mb .bm-v{max-height:170px}
+.sa-mlist{display:flex;flex-direction:column;gap:14px;min-width:0}
+.sa-m{display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:500}
+.sa-m .row span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sa-m .mono{font-family:var(--mono);font-size:13px;color:var(--label-2);flex:none}
+.sa-m i{display:block;height:5px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.sa-m i b{display:block;height:100%;border-radius:99px;background:var(--acc)}
+.sa-miss{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:14px;padding-top:14px;border-top:1px solid var(--sep);font-size:13px;color:var(--label-2)}
+.sa-miss > span:first-child{margin-right:4px}
+.sa-pb{display:flex;align-items:center;gap:12px;width:100%;padding:14px 0;text-align:left}
+.sa-pb + .sa-pb{border-top:1px solid var(--sep)}
+.sa-pb .ic{width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--acc-soft);color:var(--acc-ink);font-size:18px}
+.sa-pb .l{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
+.sa-pb b{font-size:15px;font-weight:600;color:var(--label);text-transform:capitalize;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sa-pb .l span{font-size:13px;color:var(--label-2)}
+.sa-pb .v{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--label);flex:none}
+/* design A, the "what to act on" additions */
+.sa-tile .s.good{color:var(--acc-ink);font-weight:500}
+.sa-tile .s.warn{color:var(--orange);font-weight:500}
+.sa-tile .s + .s{margin-top:-4px}
+.sa-pb .ic.stuck{background:color-mix(in srgb,var(--orange) 14%,transparent);color:var(--orange)}
+.sa-pb .ic.down{background:color-mix(in srgb,var(--red) 12%,transparent);color:var(--red)}
+.sa-pb .chev{color:var(--label-3);font-size:14px;flex:none}
+.sa-m i{position:relative}
+.sa-m i::before{content:'';position:absolute;top:0;bottom:0;left:var(--lo);right:calc(100% - var(--hi));background:color-mix(in srgb,var(--acc) 22%,var(--surface-2))}
+.sa-m i b{position:relative}
+.sa-m.under i b{background:var(--orange)}
+.sa-m.over i b{background:var(--ink)}
+button.mchip{font:inherit;font-size:12px}
+.sa-note{margin-top:12px;font-size:12px;line-height:1.4;color:var(--label-3)}
+.sa-wd{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:14px}
+.sa-wd > div{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;font-weight:500;color:var(--label-3)}
+.sa-wd i{position:relative;width:100%;max-width:30px;height:64px;border-radius:8px;background:var(--surface-2);overflow:hidden}
+.sa-wd i b{position:absolute;left:0;right:0;bottom:0;background:var(--acc);border-radius:8px 8px 0 0}
+.sa-wd .n{font-family:var(--mono);color:var(--label-2)}
+.sa-wd .worst i b{background:var(--orange)}
+.sa-wd .worst span:last-child{color:var(--orange);font-weight:600}
