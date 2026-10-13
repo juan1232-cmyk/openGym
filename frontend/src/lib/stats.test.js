@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import {
   rangeBounds, prevBounds, inRange, adherence, buckets, bucketBy, weeksTrained, bestRun,
-  personalBests, mainLift, AREAS, areaSets
+  personalBests, mainLift, AREAS, areaSets, liftsToWatch, weeklySets, setStatus, bwPace, weekdayPattern
 } from './stats.js'
+import { SCENARIOS } from '../device/scenarios.js'
 import { MUSCLES } from './muscles.js'
 import { EXDB } from './exercises.js'
 
@@ -131,5 +132,91 @@ describe('AREAS', () => {
     expect(a.find(x => x.area === 'Arms').sets).toBe(5.5)
     expect(a.find(x => x.area === 'Chest').sets).toBe(4)
     expect(a.find(x => x.area === 'Legs').sets).toBe(0)
+  })
+})
+
+describe('liftsToWatch', () => {
+  const NOW = new Date()
+  it('flags planned lifts stuck on their target, most-stuck first', () => {
+    const w = liftsToWatch(SCENARIOS.stalled.state(NOW), NOW)
+    expect(w.map(x => x.kind)).toEqual(['stuck', 'stuck'])
+    expect(w.every(x => x.n >= 2)).toBe(true)
+  })
+
+  it('flags lifts whose estimated 1RM is falling', () => {
+    const w = liftsToWatch(SCENARIOS.slipping.state(NOW), NOW)
+    expect(w.length).toBeGreaterThan(0)
+    expect(w.every(x => x.kind === 'down')).toBe(true)
+  })
+
+  it('has nothing to say about a profile that is progressing', () => {
+    expect(liftsToWatch(SCENARIOS.progressing.state(NOW), NOW)).toEqual([])
+  })
+})
+
+describe('weeklySets / setStatus', () => {
+  it('spreads the range\'s sets over its weeks', () => {
+    expect(weeklySets({ chest: 30 }, rangeBounds(30, TODAY)).chest).toBeCloseTo(7)
+  })
+
+  it('counts a part-done week as one week, not scaled up', () => {
+    expect(weeklySets({ chest: 6 }, rangeBounds(7, TODAY)).chest).toBe(6)
+  })
+
+  it('reads under / in range / over against 10–20 a week', () => {
+    expect([4, 10, 20, 24].map(setStatus)).toEqual(['under', 'ok', 'ok', 'over'])
+  })
+})
+
+describe('bwPace', () => {
+  // losing half a kilo a week, weighing in every four days
+  const losing = Array.from({ length: 8 }, (_, i) => ({ d: '', t: TODAY.getTime() - (28 - i * 4) * 864e5, w: 80 - i * 4 / 7 * 0.5 }))
+
+  it('reads the pace per week off the last four weeks', () => {
+    expect(bwPace(losing, null, TODAY).perWeek).toBeCloseTo(-0.5)
+  })
+
+  it('dates the goal when the pace heads toward it', () => {
+    const p = bwPace(losing, 76, TODAY)
+    expect(p.dir).toBe('toward')
+    // about 2 kg to go at 0.5 kg a week: four weeks out
+    expect(p.eta).toBe('2026-10-21')
+  })
+
+  it('says so when the pace heads away from the goal', () => {
+    expect(bwPace(losing, 82, TODAY).dir).toBe('away')
+  })
+
+  it('is null without enough weigh-ins to fit a line', () => {
+    expect(bwPace(losing.slice(-2), 76, TODAY)).toBeNull()
+  })
+})
+
+describe('weekdayPattern', () => {
+  // Mon / Wed / Fri plan; eight weeks of Mondays and Wednesdays, never a Friday
+  const days = []
+  for (let i = 1; i < 56; i++) { const d = new Date(TODAY); d.setDate(d.getDate() - i); if ([1, 3].includes(d.getDay())) days.push(d) }
+  const S = { workouts: days.map(d => wo(d.toISOString().slice(0, 10))), dayPlan: {}, routines: [{ id: 'r' }], week: { 1: 'r', 3: 'r', 5: 'r' } }
+
+  it('counts planned and done per weekday, Monday first', () => {
+    const p = weekdayPattern(S, rangeBounds(7, TODAY), TODAY)
+    expect(p.days[0].planned).toBe(p.days[0].done)
+    expect(p.days[4].done).toBe(0)
+    expect(p.days[4].planned).toBeGreaterThanOrEqual(7)
+  })
+
+  it('names the weekday that keeps getting skipped', () => {
+    expect(weekdayPattern(S, rangeBounds(7, TODAY), TODAY).worst.wd).toBe(4)
+  })
+
+  it('breaks a tie on misses toward the day missed more of the time', () => {
+    // Mondays planned 4×, done once; Wednesdays planned 3×, never done — both missed 3 times
+    const S = { workouts: [wo('2026-09-21'), wo('2026-08-31')], dayPlan: {}, routines: [{ id: 'r' }], week: { 1: 'r', 3: 'r' } }
+    expect(weekdayPattern(S, rangeBounds(7, TODAY), TODAY).worst.wd).toBe(2)
+  })
+
+  it('names nothing when no weekday is skipped as a habit', () => {
+    const all = { ...S, week: { 1: 'r', 3: 'r' } }
+    expect(weekdayPattern(all, rangeBounds(7, TODAY), TODAY).worst).toBeNull()
   })
 })

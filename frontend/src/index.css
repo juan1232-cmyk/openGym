@@ -1614,3 +1614,24 @@ button.sa-tile:active{transform:scale(.985)}
 .sa-pb b{font-size:15px;font-weight:600;color:var(--label);text-transform:capitalize;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sa-pb .l span{font-size:13px;color:var(--label-2)}
 .sa-pb .v{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--label);flex:none}
+/* design A, the "what to act on" additions */
+.sa-tile .s.good{color:var(--acc-ink);font-weight:500}
+.sa-tile .s.warn{color:var(--orange);font-weight:500}
+.sa-tile .s + .s{margin-top:-4px}
+.sa-pb .ic.stuck{background:color-mix(in srgb,var(--orange) 14%,transparent);color:var(--orange)}
+.sa-pb .ic.down{background:color-mix(in srgb,var(--red) 12%,transparent);color:var(--red)}
+.sa-pb .chev{color:var(--label-3);font-size:14px;flex:none}
+.sa-m i{position:relative}
+.sa-m i::before{content:'';position:absolute;top:0;bottom:0;left:var(--lo);right:calc(100% - var(--hi));background:color-mix(in srgb,var(--acc) 22%,var(--surface-2))}
+.sa-m i b{position:relative}
+.sa-m.under i b{background:var(--orange)}
+.sa-m.over i b{background:var(--ink)}
+button.mchip{font:inherit;font-size:12px}
+.sa-note{margin-top:12px;font-size:12px;line-height:1.4;color:var(--label-3)}
+.sa-wd{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:14px}
+.sa-wd > div{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;font-weight:500;color:var(--label-3)}
+.sa-wd i{position:relative;width:100%;max-width:30px;height:64px;border-radius:8px;background:var(--surface-2);overflow:hidden}
+.sa-wd i b{position:absolute;left:0;right:0;bottom:0;background:var(--acc);border-radius:8px 8px 0 0}
+.sa-wd .n{font-family:var(--mono);color:var(--label-2)}
+.sa-wd .worst i b{background:var(--orange)}
+.sa-wd .worst span:last-child{color:var(--orange);font-weight:600}

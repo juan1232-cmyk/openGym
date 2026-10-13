@@ -4,6 +4,8 @@
 import { isoOf, weekKey } from './format.js'
 import { effectiveRoutineId, topSet, isBw } from './history.js'
 import { bestSetOf, e1rmSeries } from './onerm.js'
+import { liftTrend, liftStalls, STALL_SESSIONS } from './verdict.js'
+import { trendPer14 } from './progress.js'
 
 const DAY = 864e5
 const at = iso => new Date(iso + 'T12:00:00')
@@ -117,3 +119,90 @@ export const AREAS = [
   ['Back', ['upper-back', 'trapezius', 'lower-back']],
 ]
 export const areaSets = load => AREAS.map(([area, ms]) => ({ area, sets: ms.reduce((n, m) => n + (load[m] || 0), 0) }))
+
+// ---- what to act on --------------------------------------------------------------------
+
+// Lifts worth a look right now: planned lifts stuck on their target (the same stall count the
+// orb's "Stalled" verdict uses), then lifts whose estimated 1RM is trending down. Stuck comes
+// first because it already says what's wrong; a falling trend only says that something is.
+// Not range-bound on purpose — "is this lift stuck" is a question about today.
+export function liftsToWatch(S, now = new Date()) {
+  const planned = new Map()
+  ;(S.routines || []).forEach(r => (r.ex || []).forEach(c => { if (!planned.has(c.id)) planned.set(c.id, c) }))
+  const out = []
+  planned.forEach((cfg, id) => {
+    const n = liftStalls(S, cfg, now)
+    if (n >= STALL_SESSIONS) out.push({ id, kind: 'stuck', n })
+  })
+  const seen = new Set(out.map(x => x.id))
+  const recent = new Set((S.workouts || []).slice(-12).flatMap(w => w.entries.map(e => e.id)))
+  recent.forEach(id => {
+    if (seen.has(id)) return
+    const tr = liftTrend(S, id, now)
+    if (tr && tr.dir === 'down') out.push({ id, kind: 'down', rate: tr.rate })
+  })
+  return out.sort((a, b) => (a.kind === b.kind ? (a.kind === 'stuck' ? b.n - a.n : a.rate - b.rate) : a.kind === 'stuck' ? -1 : 1))
+}
+
+// The common hypertrophy guideline: roughly 10–20 hard sets per muscle per week. Only the
+// big muscle groups are held to it — nobody programs 10 weekly sets for the shins, and a page
+// that flags them as "under" every week teaches you to ignore the flags.
+export const SETS_TARGET = [10, 20]
+export const MAJOR = ['chest', 'upper-back', 'deltoids', 'biceps', 'triceps', 'quadriceps', 'hamstring', 'gluteal', 'calves', 'abs']
+
+// Effective sets per muscle per week over the range. A part-done current week counts as one
+// week, so midweek it reads as "so far" rather than being scaled up into a guess.
+export function weeklySets(load, b) {
+  const weeks = Math.max(1, span(b) / 7)
+  return Object.fromEntries(Object.entries(load).map(([m, v]) => [m, v / weeks]))
+}
+export const setStatus = perWeek => (perWeek < SETS_TARGET[0] ? 'under' : perWeek > SETS_TARGET[1] ? 'over' : 'ok')
+
+// Body-weight pace from the last four weeks of weigh-ins (the same best-fit line the lift
+// trends use, so one salty dinner doesn't swing it), and — when there's a goal and the pace
+// is heading toward it — about when it lands. Null pace until there's enough to fit a line.
+export const PACE_DAYS = 28
+export function bwPace(bodyweight, targetW, now = new Date()) {
+  const from = now.getTime() - PACE_DAYS * DAY
+  const pts = (bodyweight || [])
+    .map(x => ({ t: x.t || at(x.d).getTime(), y: x.w }))
+    .filter(p => p.t >= from && p.t <= now.getTime())
+  const r = trendPer14(pts)
+  if (r == null) return null
+  const perWeek = r / 2
+  const cur = pts[pts.length - 1].y
+  if (!targetW || Math.abs(targetW - cur) < 0.05) return { perWeek, dir: targetW ? 'reached' : null, eta: null }
+  if (Math.abs(perWeek) < 0.05) return { perWeek, dir: 'flat', eta: null }
+  if (Math.sign(targetW - cur) !== Math.sign(perWeek)) return { perWeek, dir: 'away', eta: null }
+  const weeks = Math.abs(targetW - cur) / Math.abs(perWeek)
+  // past a year out the line says more about noise than about a date
+  return { perWeek, dir: 'toward', eta: weeks <= 52 ? isoOf(new Date(now.getTime() + weeks * 7 * DAY)) : null }
+}
+
+// Planned days trained, per weekday (Monday first), over the range — never less than the last
+// eight weeks, since one week holds a single sample per weekday and calls nothing a habit.
+// A planned day counts as done only if something was logged that day. Today is left out:
+// it isn't missed yet.
+export const PATTERN_MIN_DAYS = 56
+export function weekdayPattern(S, b, now = new Date()) {
+  const ws = S.workouts || []
+  const first = ws.reduce((a, w) => (!a || w.d < a ? w.d : a), null)
+  const days = Array.from({ length: 7 }, (_, i) => ({ wd: i, planned: 0, done: 0 }))
+  if (!first) return { days, worst: null }
+  const minFrom = addDays(isoOf(now), -(PATTERN_MIN_DAYS - 1))
+  let from = b.from < minFrom ? b.from : minFrom
+  if (first > from) from = first
+  const trained = new Set(ws.map(w => w.d))
+  const today = isoOf(now)
+  for (let iso = from; iso < today; iso = addDays(iso, 1)) {
+    if (!effectiveRoutineId(S, iso)) continue
+    const d = days[(at(iso).getDay() + 6) % 7]
+    d.planned++
+    if (trained.has(iso)) d.done++
+  }
+  // the most-missed weekday, only when it's a pattern: missed at least twice and at least half
+  // the time it was planned. A tie on misses goes to the day missed more of the time.
+  const worst = days.filter(d => d.planned - d.done >= 2 && (d.planned - d.done) / d.planned >= 0.5)
+    .sort((a, c) => (c.planned - c.done) - (a.planned - a.done) || (c.planned - c.done) / c.planned - (a.planned - a.done) / a.planned)[0] || null
+  return { days, worst }
+}
