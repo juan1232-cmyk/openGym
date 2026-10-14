@@ -52,6 +52,8 @@ export const DOWN = ['downward-gaze', 'gentle-downward-gaze', 'curious-left', 's
 const IDLE_BLINK = [3400, 6200], BUSY_BLINK = [2800, 5000], FAST_BLINK = [1800, 3600], SLOW_BLINK = [6500, 9500]
 export const MOODS = {
   idle:         { pool: POOL, hold: [3400, 5600], blink: IDLE_BLINK },
+  // the welcome screen's: hanging above the copy, looking down at it (the DOWN pool)
+  down:         { pool: DOWN, hold: [3400, 5600], blink: IDLE_BLINK },
   curious:      { pool: ['surprised-left', 'surprised-wide-left', 'upward-side-glance', 'far-right-glance', 'curious-left'], hold: [2300, 3600], blink: BUSY_BLINK },
   happy:        { pool: ['joyful-down-right', 'joyful-wide', 'playful-right', 'gentle-downward-gaze'], hold: [2300, 3400], blink: BUSY_BLINK },
   proud:        { pool: ['far-right-glance', 'curious-left', 'joyful-down-right', 'joyful-wide'], hold: [2300, 3400], blink: BUSY_BLINK },

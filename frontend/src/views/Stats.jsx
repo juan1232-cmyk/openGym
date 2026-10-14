@@ -177,7 +177,7 @@ export default function Stats() {
 
     <Segmented className="seg-range" value={days} onChange={setDays} options={RANGES.map(r => ({ value: r.value, label: t(r.label) }))} />
 
-    <div className="sa-grid">
+    <div className="sa-grid" data-tour="stats-main">
       <div className="sa-tile">
         <span className="l">{t('Sessions')}</span>
         <div className="sa-ringrow">

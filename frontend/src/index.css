@@ -1071,48 +1071,126 @@ h4.sec{
 @keyframes pk-peek{0%{transform:translateY(-120px)}100%{transform:none}}
 @keyframes pk-up{0%{opacity:0;transform:translateY(14px)}100%{opacity:1;transform:none}}
 
-/* D1 welcome / D4 create account: one 480px orb, mostly off-screen, looking down at the
-   copy. Moving on to "create account" slides it further up to make room for the form. */
-.pk-onboard .orb-wrap{
-  position:absolute;left:50%;top:-150px;margin-left:-240px;
-  animation:pk-peek 1100ms var(--spring) both;
-  transition:top 700ms var(--spring);
-}
-.pk-onboard .orb{transform-origin:50% 0;animation-delay:1.1s}
-.pk-onboard.create .orb-wrap{top:-290px}
-/* short phones: hang it higher so the copy never sits on top of it */
-@media (max-height:720px){ .pk-onboard.welcome .orb-wrap{top:-230px} }
 .pk-step{flex:1;display:flex;flex-direction:column;animation:pk-up 320ms var(--spring) backwards}
-/* the entrance choreography is for arriving at the app, not for coming back from a step */
-.pk-onboard.seen .pk-hero,.pk-onboard.seen .pk-actions .btn,.pk-onboard.seen .pk-link{animation:none}
 .pk-nav{display:flex;justify-content:space-between;align-items:center;height:44px;font-size:13px;font-weight:500}
-.pk-nav.on-orb{color:#f3f2ee}
 .pk-back{width:44px;height:44px;margin-left:-12px;font-size:22px;color:inherit;display:flex;align-items:center;justify-content:center}
 .pk-back .icn{--icon-stroke:2}
-.pk-nav .steps{opacity:.8}
-.pk-nav:not(.on-orb) .steps{color:var(--label-2);opacity:1}
-/* clears the orb, which ends 190px down (480 - 290) whatever the safe area does */
-.pk-title{font-size:32px;line-height:1.05;font-weight:600;letter-spacing:-.045em;color:var(--label);margin-top:max(16px,calc(142px - var(--sat)))}
-.pk-fields{display:flex;flex-direction:column;gap:10px;margin-top:24px}
 .pk-full .input{height:56px;padding:0 16px;font-size:16px}
 .pk-hero{display:flex;flex-direction:column;gap:8px;padding:0 4px;animation:pk-up 600ms var(--spring) 1s both}
 .pk-hero h1{font-size:36px;line-height:1.05;font-weight:600;letter-spacing:-.045em;color:var(--label);text-wrap:balance;max-width:8em}
 .pk-hero p{font-size:16px;line-height:1.45;color:var(--label-2)}
 .pk-actions{display:flex;flex-direction:column;gap:10px;margin-top:30px}
-.pk-onboard .pk-actions .btn{animation:pk-up 600ms var(--spring) 1.15s backwards}   /* backwards, not both: a held transform would swallow the press scale */
-.pk-onboard .pk-actions .btn+.btn{animation-delay:1.25s}
 .pk-link{
   align-self:center;margin-top:6px;padding:10px 12px;
   font-size:14px;color:var(--label-2);text-decoration:underline;text-underline-offset:3px;
 }
-.pk-onboard .pk-link{animation:pk-up 600ms var(--spring) 1.35s backwards}
 /* plain text under the fields — a filled box here read as one more input */
 .pk-note{padding:4px 4px 0;font-size:14px;line-height:1.4;color:var(--label-2)}
 
-/* D5 — goals */
-.pk-goals{animation:pk-up 420ms var(--spring) backwards}
-.pk-ask{display:flex;align-items:center;gap:16px;margin-top:20px}
-.pk-ask h1{font-size:28px;line-height:1.05;font-weight:600;letter-spacing:-.045em;color:var(--label)}
+/* ------------------------------------------------- onboarding (views/Onboarding.jsx) -- */
+/* One orb for every step, drawn at 480px and scaled into each screen's slot, so Peek travels
+   between screens instead of being swapped for another one. The welcome slot is the old D1
+   one: mostly off the top of the screen, looking down at the copy. */
+.ob > .ob-orb,.ob > .ob-say,.ob > .ob-sat{position:absolute}
+.ob-sat{top:0;left:0;width:1px;height:var(--sat);visibility:hidden;pointer-events:none}
+.ob-orb{left:0;top:0;z-index:2;transform-origin:0 0;transition:transform 750ms var(--spring)}
+/* welcome ⇄ name: one long, even glide — no spring, no overshoot */
+.ob-orb.glide{transition:transform 1100ms cubic-bezier(.65,0,.35,1)}
+.ob-orb .orb-wrap.ob-peekin{animation:pk-peek 1100ms var(--spring) both}
+.ob-nav{position:relative;z-index:3}
+.ob-dots{display:flex;gap:5px}
+.ob-dots i{width:6px;height:6px;border-radius:3px;background:var(--surface-3);transition:width 300ms var(--spring),background 300ms}
+.ob-dots i.on{width:18px;background:var(--ink)}
+.ob-dots i.done{background:var(--label-3)}
+/* each step fades up; arriving by the glide it waits until Peek is most of the way there */
+.ob-step{flex:1;display:flex;flex-direction:column;animation:pk-up 420ms var(--spring) backwards}
+.ob-step.late{animation-delay:700ms}
+.ob.gliding .ob-nav{animation:pk-up 420ms var(--spring) 700ms backwards}
+.ob .pk-step{animation:none}
+@keyframes ob-out{to{opacity:0;transform:translateY(10px)}}
+.ob.leaving .ob-step,.ob.leaving .ob-nav{animation:ob-out 320ms ease forwards}
+.ob-welcome .pk-actions .btn{animation:pk-up 600ms var(--spring) 1.15s backwards}   /* backwards, not both: a held transform would swallow the press scale */
+.ob-welcome .pk-actions .btn+.btn{animation-delay:1.25s}
+.ob-welcome .pk-link{animation:pk-up 600ms var(--spring) 1.35s backwards}
+/* the question screens start under Peek (Onboarding.jsx SLOTS.ask) and its bubble */
+.ob-q{padding-top:94px}
+.ob-q .pk-choices{margin-top:0}
+.ob-q > .pk-label:first-child{margin-top:0}
+/* Peek's bubble: beside it on the question screens, under it everywhere else */
+.ob-say{z-index:3}
+.ob-say.beside{transform:translateY(-100%)}
+.ob-say.under{left:20px;right:20px;display:flex;justify-content:center}
+.ob-say.under .pk-say{max-width:320px}
+.ob-say.beside .pk-say,.tour-say .pk-say{max-width:none}
+.ob-say .pk-say,.tour-say .pk-say{margin-top:0;animation:ob-bubble 360ms var(--spring) both}
+@keyframes ob-bubble{0%{opacity:0;transform:scale(.94)}100%{opacity:1;transform:none}}
+.pk-say.up,.pk-say.down{border-radius:18px}
+.pk-say.up{transform-origin:50% 0}
+.pk-say.up::before{left:50%;top:-6px;bottom:auto;margin-left:-6px;clip-path:polygon(50% 0,100% 100%,0 100%)}
+.pk-say.down{transform-origin:50% 100%}
+.pk-say.down::before{left:50%;margin-left:-6px;bottom:-6px;clip-path:polygon(0 0,100% 0,50% 100%)}
+/* a small lift for "yes, got it" — the onboarding's, gentler than Home's hop */
+@keyframes ob-lift{0%,100%{transform:none}45%{transform:translateY(-8px)}}
+.orb.b-lift{animation:ob-lift 560ms ease-in-out!important}
+/* the days you train: seven toggles, all off to begin with */
+.ob-week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:12px}
+.ob-week button{
+  height:60px;border-radius:12px;background:var(--surface);color:var(--label-2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  transition:background 220ms ease,color 220ms ease;
+}
+.ob-week b{font-size:15px;font-weight:600}
+.ob-week i{width:5px;height:5px;border-radius:50%}
+.ob-week button.on{background:var(--ink);color:var(--on-ink)}
+.ob-week button.on i{background:var(--acc)}
+.ob-week button.pop{animation:ob-pop 380ms var(--spring)}
+@keyframes ob-pop{0%{opacity:.5;transform:scale(.94)}100%{opacity:1;transform:none}}
+.ob-daysum{margin:10px 4px 0;font-size:13px;font-weight:500;color:var(--label-2);font-variant-numeric:tabular-nums}
+.pk-seg.two{grid-template-columns:1fr 1fr}
+/* "You make it": the routines, then what each answer did */
+.ob-reveal{padding-top:172px}
+.ob-plan{display:flex;flex-direction:column;gap:8px}
+@keyframes ob-up{0%{opacity:0;transform:translateY(16px)}100%{opacity:1;transform:none}}
+.ob-rcard{padding:14px 16px;animation:ob-up 500ms var(--spring) backwards}
+.ob-rcard .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
+.ob-rcard h3{font-size:18px;font-weight:600;letter-spacing:-.03em}
+.ob-rcard .days{font-size:12px;font-weight:600;color:var(--acc-ink)}
+.ob-rcard ul{list-style:none;display:flex;flex-direction:column;gap:5px}
+.ob-rcard li{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--label-2)}
+.ob-rcard li .v{font-family:var(--mono);font-size:12px;color:var(--label);flex:none}
+.ob-because{padding:14px 16px;border-radius:var(--r-card);background:var(--ink);color:var(--on-ink);animation:ob-up 500ms var(--spring) backwards}
+.ob-because h4{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--on-ink-2);margin-bottom:10px}
+.ob-because div{display:grid;grid-template-columns:1fr 1.25fr;gap:10px;padding:7px 0;border-top:1px solid var(--ink-2);font-size:13px;line-height:1.3}
+.ob-because div:first-of-type{border-top:0;padding-top:0}
+.ob-because span{color:var(--on-ink-2)}
+.ob-in{animation:pk-up 500ms var(--spring) backwards}
+.ob-center{text-align:center}
+
+/* ----------------------------------------------------- the tour (components/Tour.jsx) -- */
+/* Every tap lands on this layer. The spotlight is a hole in a huge shadow; with nothing to
+   light it shrinks to a point and the whole screen stays dimmed. */
+.tour{position:fixed;inset:0;z-index:150;cursor:pointer;-webkit-tap-highlight-color:transparent;animation:tour-in 300ms ease both}
+@keyframes tour-in{from{opacity:0}}
+.tour-spot{
+  position:fixed;left:50%;top:50%;width:0;height:0;border-radius:22px;pointer-events:none;
+  box-shadow:0 0 0 200vmax rgba(11,11,11,.62);
+  transition:left 600ms var(--spring),top 600ms var(--spring),width 600ms var(--spring),height 600ms var(--spring),border-radius 600ms var(--spring);
+}
+.tour-spot.on{box-shadow:0 0 0 200vmax rgba(11,11,11,.62),inset 0 0 0 2px rgba(243,242,238,.85)}
+.tour-ring{position:fixed;border-radius:99px;pointer-events:none;box-shadow:inset 0 0 0 2px var(--acc);animation:tour-ring 1.3s ease-out infinite}
+@keyframes tour-ring{0%{box-shadow:inset 0 0 0 2px var(--acc),0 0 0 0 color-mix(in srgb,var(--acc) 70%,transparent)}100%{box-shadow:inset 0 0 0 2px var(--acc),0 0 0 14px transparent}}
+.tour-orb{position:fixed;left:0;top:0;transition:transform 700ms var(--spring),opacity 300ms}
+.tour-orb.hidden{opacity:0;pointer-events:none}
+.tour-say{position:fixed}
+.tour-say.over,.tour-say.beside{transform:translateY(-100%)}
+.tour-hint{display:block;margin-top:6px;font-size:12px;font-weight:500;color:var(--label-3);animation:pk-up 400ms var(--spring) backwards}
+.tour-top{position:fixed;top:calc(var(--sat) + 10px);left:16px;right:16px;display:flex;align-items:center;gap:10px;cursor:default}
+.tour-prog{flex:1;display:flex;gap:4px;padding:7px 9px;border-radius:99px;background:rgba(11,11,11,.72)}
+.tour-prog i{flex:1;height:4px;border-radius:2px;background:color-mix(in srgb,var(--on-ink) 28%,transparent);overflow:hidden;position:relative}
+.tour-prog i::after{content:'';position:absolute;inset:0;border-radius:2px;background:var(--on-ink);transform:scaleX(var(--p,0));transform-origin:0 50%;transition:transform 500ms var(--spring)}
+.tour-skip{padding:8px 14px;border-radius:99px;background:rgba(11,11,11,.72);color:var(--on-ink);font-size:13px;font-weight:600}
+
+/* the onboarding's choice cards and segmented controls */
 .pk-choices{display:flex;flex-direction:column;gap:8px;margin-top:28px}
 .pk-choice{
   display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px;text-align:left;
