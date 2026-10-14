@@ -17,9 +17,14 @@ export const DEF = {
   // server pull, backup import) still falls back to the `showRir` boolean this replaced and
   // keeps the column it had. See effortOf.
   reminder: { on: false, time: '08:00', tz: null }, effort: null,
-  // the onboarding answers (Goals screen): goal is one of lib/starter.js GOALS, or 'own' when
-  // the profile skipped it to build a plan by hand. null means never asked — see needsGoals.
-  goal: null, days: null
+  // the onboarding answers (views/Onboarding.jsx, lib/onboard.js commitAnswers). goal is one
+  // of lib/starter.js GOALS ('own' on profiles from before the onboarding asked); null means
+  // never asked — see needsGoals. trainDays are the weekdays picked (0 = Sunday), progDefault
+  // the progression a new routine starts on, name what Peek calls you without an account.
+  goal: null, days: null, name: null, level: null, kit: null, trainDays: null, progDefault: null,
+  // false from the onboarding until the tour is done or skipped. true by default, so a
+  // profile that predates the tour never gets it.
+  toured: true
 }
 const clone = o => JSON.parse(JSON.stringify(o))
 
@@ -31,7 +36,7 @@ function loadState() {
   return clone(DEF)
 }
 
-// Whether a profile should be walked through the Goals step: nothing planned, nothing logged,
+// Whether a signed-in profile should be walked through the onboarding: nothing planned, nothing logged,
 // never answered — and only once the server has had its say about that.
 const needsGoals = (st, ready, pulling) => ready && !pulling && !st.goal && !(st.routines || []).length && !(st.workouts || []).length
 
@@ -100,7 +105,7 @@ export const useStore = create((set, get) => {
       catch (e) { localStorage.setItem('gym_dirty', '1') }
     },
     // true while a pull is in flight, so a screen that depends on "does this profile have any
-    // data yet" (the Goals onboarding step) doesn't flash up on a device that simply hasn't
+    // data yet" (the onboarding) doesn't flash up on a device that simply hasn't
     // downloaded it yet
     pulling: false,
     async pullState() {

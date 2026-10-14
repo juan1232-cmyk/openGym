@@ -13,7 +13,8 @@ export default function Plan() {
   const update = useStore(s => s.update)
 
   const addRoutine = () => {
-    const r = { id: uid(), name: t('New routine'), emoji: DEFAULT_GLYPH, ex: [] }
+    // starts on the progression the onboarding picked from your experience, if it asked
+    const r = { id: uid(), name: t('New routine'), emoji: DEFAULT_GLYPH, ex: [], ...(S.progDefault ? { prog: S.progDefault } : {}) }
     update(s => { s.routines.push(r) })
     nav('/plan/r/' + r.id)
   }
@@ -31,12 +32,13 @@ export default function Plan() {
     </div>
     <div className="cols"><div>
       <h4 className="sec">{t('Week schedule')}</h4>
-      <div className="list" style={{ display: 'flex', flexDirection: 'column' }}>
+      <div className="list" style={{ display: 'flex', flexDirection: 'column' }} data-tour={S.routines.length ? 'plan-main' : undefined}>
         {[1, 2, 3, 4, 5, 6, 0].map(d => {
           const r = S.routines.find(x => x.id === S.week[d])
           return <div key={d} className="item" onClick={() => dayAssignSheet(d)}>
             <div className="grow"><div className="tt">{t(DAYN[d])}</div></div>
-            {r ? <span className="tag acc"><Icon name={glyphOf(r.emoji)} />{r.name}</span> : <span className="tag">{t('Rest')}</span>}
+            {/* a day picked in the onboarding with nothing on it yet is waiting for a routine, not a rest day */}
+            {r ? <span className="tag acc"><Icon name={glyphOf(r.emoji)} />{r.name}</span> : (S.trainDays || []).includes(d) ? <span className="tag">{t('Training day')}</span> : <span className="tag">{t('Rest')}</span>}
             <Icon name="chevronRight" className="chev" /></div>
         })}
       </div>
@@ -46,8 +48,8 @@ export default function Plan() {
         <span className="lrow-i"><Icon name={glyphOf(r.emoji)} /></span>
         <div className="grow"><div className="tt">{r.name}</div><div className="ss">{exCount(r.ex.length)}</div></div>
         <Icon name="chevronRight" className="chev" /></div>)}{newRow}</div> : <>
-        <div className="empty"><div className="ico"><Icon name="clipboard" /></div>{t('No routines yet.')}<br />{t('Create one or load the starter plan.')}</div>
-        <div className="list" style={{ marginBottom: 10 }}>{newRow}</div>
+        <div data-tour="plan-main"><div className="empty"><div className="ico"><Icon name="clipboard" /></div>{t('No routines yet.')}<br />{t('Create one or load the starter plan.')}</div>
+        <div className="list" style={{ marginBottom: 10 }}>{newRow}</div></div>
         <Button icon="sparkles" onClick={loadStarterPlan}>{t('Load starter plan (Push / Pull / Legs)')}</Button>
       </>}
     </div></div>

@@ -11,6 +11,7 @@ import { bwSheet, goalSheet, dayOverrideSheet, calendarSheet, startFlow, loadSta
 import LineChart from '../components/LineChart.jsx'
 import Icon from '../components/Icon.jsx'
 import Orb from '../components/Orb.jsx'
+import Say from '../components/Say.jsx'
 import { Button } from '../components/ui.jsx'
 
 const nameOf = id => (EXIDX[id] || {}).n || id
@@ -21,33 +22,7 @@ const VERDICT_LABEL = {
   stalled: 'Stalled', away: 'Away', new: 'Getting to know you'
 }
 
-const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
-const TYPE_MS = 24
 const CHATTER_MS = 24000
-
-// The line, said rather than shown: typed a character at a time while the orb's body bobs like
-// a mouth, with a breath at each full stop. The untyped rest is laid out but invisible, so the
-// bubble is its final size from the first letter and nothing under it moves.
-function Say({ text, verdict, orb }) {
-  const [n, setN] = useState(reducedMotion() ? text.length : 0)
-  useEffect(() => {
-    if (reducedMotion()) return
-    let i = 0, tm = 0
-    const step = () => {
-      setN(++i)
-      if (i >= text.length) return orb.current?.talk(false)
-      const c = text[i - 1], pause = '.!?'.includes(c) ? 280 : c === ',' ? 140 : 0
-      orb.current?.talk(!pause)
-      tm = setTimeout(step, pause || TYPE_MS)
-    }
-    tm = setTimeout(step, TYPE_MS)
-    return () => { clearTimeout(tm); orb.current?.talk(false) }
-  }, [text])
-  return <div className="pk-say" aria-hidden="true">
-    <span className={'pk-verdict ' + verdict}>{t(VERDICT_LABEL[verdict])}</span>
-    <p>{text.slice(0, n)}<span className="rest">{text.slice(n)}</span></p>
-  </div>
-}
 
 // The orb as coach, at the top of Home: the verdict from lib/verdict.js in what it says and in
 // how its whole body moves (and the glow behind it), a line naming what's behind it said into a
@@ -131,9 +106,9 @@ function Coach({ S }) {
     hold(6000)
   }
 
-  return <div className="pk-coachtop">
+  return <div className="pk-coachtop" data-tour="coach">
     <Orb ref={orb} size={104} mood={mood} verdict={base.verdict} onPoke={onPoke} />
-    {shown && line && <Say key={line} text={line} verdict={base.verdict} orb={orb} />}
+    {shown && line && <Say key={line} text={line} label={t(VERDICT_LABEL[base.verdict])} labelClass={base.verdict} orb={orb} />}
     <span className="sr-only" aria-live="polite">{shown && line ? t(VERDICT_LABEL[base.verdict]) + '. ' + line : ''}</span>
   </div>
 }
@@ -147,7 +122,7 @@ const GREETING = {
 // Home — D3 "dashboard" from the Peek design: what to do today, the week at a glance, and
 // the last few sessions. Deeper charts and full history stay in Stats. Two things the design
 // doesn't show are kept on purpose: the body-weight card (half of what this app tracks) and
-// the no-plan card for a profile that skipped the Goals step.
+// the no-plan card for a profile that chose to build its own plan in the onboarding.
 export default function Home() {
   const nav = useNavigate()
   const S = useStore(s => s.S)
@@ -188,7 +163,7 @@ export default function Home() {
     </div>
     <div className="pk-greet">
       <span>{now.toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'short' })}</span>
-      <h1>{user ? t(hi, user.name) : t(anon)}<br />{headline}</h1>
+      <h1>{user ? t(hi, user.name) : S.name ? t(hi, S.name) : t(anon)}<br />{headline}</h1>
     </div>
 
     <div className="card pk-today">

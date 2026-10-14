@@ -13,7 +13,8 @@ const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(pre
 // progressing, sagging when you're slipping — so it reads before any line does; `bump(kind)`
 // is a one-shot body move (hop / nod / sink) for a single moment, like a set beating last time.
 // `lookAt(x, y)` turns the head toward a point on screen (a finger), `lookAt()` lets it wander
-// again; `talk(on)` makes the body bob like a mouth moving while a line is being said.
+// again, and `look(pitch, yaw)` turns it by degrees; `talk(on)` makes the body bob like a
+// mouth moving while a line is being said.
 export default function Orb({ size, bias, pool, mood, verdict, inverted, poke = 'surprised-left', onPoke, className = '', style, ref }) {
   const l = useRef(null), r = useRef(null), body = useRef(null), rig = useRef(null)
   useEffect(() => {
@@ -51,7 +52,9 @@ export default function Orb({ size, bias, pool, mood, verdict, inverted, poke = 
       const dx = (x - (b.left + b.width / 2)) / 180, dy = (y - (b.top + b.height / 2)) / 220
       rig.current?.look(-dy * 22, dx * 32)
     },
-    talk: on => body.current?.classList.toggle('talking', !!on && !reducedMotion())
+    talk: on => body.current?.classList.toggle('talking', !!on && !reducedMotion()),
+    // turn the head by degrees (+pitch up, +yaw right); look() wanders again
+    look: (pitch, yaw) => (pitch == null ? rig.current?.look() : rig.current?.look(pitch, yaw))
   }), [])
   const onClick = () => {
     if (onPoke) onPoke()

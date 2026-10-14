@@ -16,8 +16,8 @@ import ErrorBoundary from './components/ErrorBoundary.jsx'
 import Modals from './components/Modals.jsx'
 import Toast from './components/Toast.jsx'
 import RestTimer from './components/RestTimer.jsx'
-import Login from './views/Login.jsx'
-import Goals from './views/Goals.jsx'
+import Onboarding from './views/Onboarding.jsx'
+import Tour from './components/Tour.jsx'
 import ExerciseProgress from './views/ExerciseProgress.jsx'
 import Home from './views/Home.jsx'
 import Plan from './views/Plan.jsx'
@@ -92,7 +92,8 @@ function Shell() {
           re-mounts the boundary, so the tab bar is always a way out */}
       <div id="app" className={'vt-' + last.current.dir} key={loc.pathname}>
         <ErrorBoundary>
-          {!authed ? <Login /> : onboarding ? <Goals /> : (
+          {/* keyed on auth: signing in to an empty account starts it over at the goal question */}
+          {!authed || onboarding ? <Onboarding key={user ? 'in' : 'out'} /> : (
             <Routes>
               <Route path="/home" element={<Home />} />
               <Route path="/plan" element={<Plan />} />
@@ -110,6 +111,7 @@ function Shell() {
         </ErrorBoundary>
       </div>
       {!hideTabs && <TabBar onStart={startFlow} />}
+      {authed && !onboarding && S.toured === false && <Tour />}
       <RestTimer />
       <Modals />
       <Toast />
