@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { starterPlan, DAY_OPTIONS, GOALS } from './starter.js'
+import { starterPlan, DAY_OPTIONS, GOALS, KITS } from './starter.js'
+import { EXIDX } from './exercises.js'
+import { gymAllows } from './pick.js'
+import { gymEqFor } from './onboard.js'
 
 const trainingDays = p => Object.keys(p.week).length
 
@@ -58,5 +61,41 @@ describe('starterPlan', () => {
 
   it('knows every goal it offers', () => {
     GOALS.forEach(goal => expect(starterPlan({ goal }).routines.length).toBeGreaterThan(0))
+  })
+
+  it('puts a routine on exactly the weekdays picked, Monday first, and rests the others', () => {
+    for (let n = 1; n <= 6; n++) {
+      const picked = [0, 6, 5, 4, 3, 2, 1].slice(0, n)
+      const p = starterPlan({ weekdays: picked })
+      expect(Object.keys(p.week).map(Number).sort()).toEqual([...picked].sort())
+      p.routines.forEach(r => expect(Object.values(p.week)).toContain(r.id))
+    }
+    const tts = starterPlan({ weekdays: [6, 2, 4] })
+    expect([2, 4, 6].map(d => tts.routines.find(r => r.id === tts.week[d]).name)).toEqual(['Push Day', 'Pull Day', 'Leg Day'])
+    expect(starterPlan({ weekdays: [3] }).routines.map(r => r.name)).toEqual(['Full Body'])
+  })
+
+  it('swaps every lift to one the kit can do, all of them real exercises', () => {
+    KITS.forEach(kit => {
+      for (let n = 1; n <= 6; n++) {
+        starterPlan({ weekdays: [1, 2, 3, 4, 5, 6].slice(0, n), kit }).routines.forEach(r => {
+          expect(r.ex.length).toBeGreaterThan(0)
+          r.ex.forEach(e => {
+            expect(EXIDX[e.id], `${kit} ${e.id}`).toBeTruthy()
+            expect(gymAllows(EXIDX[e.id], gymEqFor(kit)), `${kit} ${EXIDX[e.id].n}`).toBe(true)
+          })
+          expect(new Set(r.ex.map(e => e.id)).size).toBe(r.ex.length)
+        })
+      }
+    })
+  })
+
+  it('keeps the strength 5×5 on the first lift after a swap, and sets the progression asked for', () => {
+    const p = starterPlan({ goal: 'strength', days: 3, kit: 'bodyweight', prog: 'linear' })
+    p.routines.forEach(r => {
+      expect(r.ex[0]).toMatchObject({ sets: 5, reps: 5 })
+      expect(r.prog).toBe('linear')
+    })
+    expect(starterPlan({ days: 3 }).routines[0].prog).toBeUndefined()
   })
 })
