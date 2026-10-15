@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
+import { useStore } from '../store/useStore.js'
 import { imgSrc, gifSrc, poseSrc } from '../lib/exercises.js'
 import Icon from './Icon.jsx'
 
-// How long each pose shows before the other one takes its place — the pace picked side by
-// side against faster and slower ones.
-const POSE_MS = 1200
+// How long each pose shows before the other one takes its place, per the Settings choice
+// (S.poseSpeed). Normal is the pace picked side by side against the others.
+export const POSE_MS = { slow: 1800, normal: 1200, fast: 700 }
 const reduceMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
 // The exercise, shown where you go to learn the movement (Details, configuring an exercise) —
@@ -25,12 +26,13 @@ export default function Media({ ex, id }) {
   const [second, setSecond] = useState(false)
   const [failed, setFailed] = useState(null)
   const [noPose, setNoPose] = useState(null)
+  const ms = POSE_MS[useStore(s => s.S.poseSpeed)] || POSE_MS.normal
   const poses = !!ex.gif && noPose !== ex.gif
   useEffect(() => {
     if (!poses || !playing) return
-    const t = setInterval(() => setSecond(s => !s), POSE_MS)
+    const t = setInterval(() => setSecond(s => !s), ms)
     return () => clearInterval(t)
-  }, [poses, playing, ex.gif])
+  }, [poses, playing, ex.gif, ms])
   if (!ex.gif || failed === ex.gif) return null
   if (poses) {
     // both stay mounted, the second stacked on the first, so a switch never waits on a load
