@@ -13,14 +13,18 @@
 #
 #   REALESRGAN=/path/to/realesrgan-ncnn-vulkan scripts/upscale-poses.sh [media-dir]
 #
-# About 10s a still on integrated graphics: ~7 hours for all 1,324 exercises. Resumable: an
+# About 4s a still on integrated graphics: ~3 hours for all 1,324 exercises. Resumable: an
 # exercise with both stills is skipped, and each still is written under a temp name first.
+# Exits 0 only once every exercise has both stills; 2 if some frames came back blank (run it
+# again to redo those); 1 if a whole batch did (the GPU isn't reachable).
 set -euo pipefail
 
 dir=${1:-"$(dirname "$0")/../media"}
 exe=${REALESRGAN:?set REALESRGAN to the realesrgan-ncnn-vulkan executable}
 models="$(dirname "$exe")/models"
-batch=100  # exercises per upscaler run: loading the model takes minutes, so runs are big
+# Exercises per upscaler run. Loading the model costs a few seconds, and on integrated graphics
+# a run can go bad partway (see the blank-frame check), so runs stay short.
+batch=25
 mkdir -p "$dir/pose"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
@@ -33,6 +37,7 @@ done
 total=$(ls "$dir"/gif/*.gif | wc -l)
 echo "↻ Upscaling the two poses of ${#todo[@]} of $total exercises (the rest are done)…"
 
+skipped=0
 for ((i = 0; i < ${#todo[@]}; i += batch)); do
   rm -rf "$tmp/in" "$tmp/out"
   mkdir -p "$tmp/in" "$tmp/out"
@@ -40,24 +45,31 @@ for ((i = 0; i < ${#todo[@]}; i += batch)); do
     # frames 1 and 7 (n = 0 and 6), written as X-1.png and X-2.png
     ffmpeg -nostdin -v error -i "$g" -vf "select='eq(n\,0)+eq(n\,6)'" -fps_mode passthrough "$tmp/in/$(basename "$g" .gif)-%d.png"
   done
-  "$exe" -i "$tmp/in" -o "$tmp/out" -n realesrgan-x4plus -s 4 -m "$models" -f png >/dev/null 2>&1
-  # When the GPU goes away mid-run (screen locked, display asleep, a process started without the
-  # desktop), the upscaler still exits 0 but writes solid black frames. Every real pose sits on
-  # white, so a frame with nothing brighter than dark grey means the whole batch is suspect:
-  # stop before saving any of it.
+  # One frame at a time in 128px tiles: on integrated graphics the defaults (two frames at once,
+  # bigger tiles) returned blank frames far more often, for about the same speed.
+  "$exe" -i "$tmp/in" -o "$tmp/out" -n realesrgan-x4plus -s 4 -t 128 -j 1:1:1 -m "$models" -f png >/dev/null 2>&1 || true
+  # The upscaler can exit 0 yet write solid black frames — every one when the GPU isn't
+  # reachable (screen locked, display asleep, a process started outside the desktop), now and
+  # then a few when the integrated GPU falters under the load. Every real pose sits on white, so
+  # a frame with nothing brighter than dark grey is dropped, never saved; its exercise stays
+  # unfinished and the next run redoes it.
+  kept=0 blank=0
   for p in "$tmp"/out/*.png; do
+    [ -e "$p" ] || continue
     ymax=$(ffmpeg -nostdin -v error -i "$p" -vf "scale=64:-1,signalstats,metadata=print:key=lavfi.signalstats.YMAX:file=-" -f null - | grep -o 'YMAX=[0-9]*' | cut -d= -f2)
-    if [ "${ymax:-0}" -lt 64 ]; then
-      echo "✗ The upscaler returned a blank frame ($(basename "$p")), so the GPU isn't reachable. Nothing from this batch was saved; run it again from a desktop session." >&2
-      exit 1
-    fi
-  done
-  for p in "$tmp"/out/*.png; do
+    if [ "${ymax:-0}" -lt 64 ]; then blank=$((blank + 1)); continue; fi
     out="$dir/pose/$(basename "$p" .png)"
     ffmpeg -nostdin -v error -y -i "$p" -vf "scale=720:-2:flags=lanczos" -q:v 2 "$out.part.jpg"
     mv "$out.part.jpg" "$out.jpg"
+    kept=$((kept + 1))
   done
+  if [ $kept -eq 0 ]; then
+    echo "✗ Every frame in this batch came back blank, so the GPU isn't reachable. Run it again from a desktop session." >&2
+    exit 1
+  fi
+  skipped=$((skipped + blank))
   done_n=$(( i + batch < ${#todo[@]} ? i + batch : ${#todo[@]} ))
-  echo "  $done_n / ${#todo[@]}"
+  echo "  $done_n / ${#todo[@]}$([ $blank -gt 0 ] && echo " ($blank blank frames dropped, redone next run)")"
 done
-echo "✓ $(( $(ls "$dir/pose" | grep -c -- '-2\.jpg$') )) of $total exercises have both poses."
+echo "✓ $(ls "$dir/pose" | grep -c -- '-2\.jpg$') of $total exercises have both poses."
+[ $skipped -eq 0 ] || exit 2
