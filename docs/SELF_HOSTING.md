@@ -16,6 +16,10 @@ docker compose up -d
 ```
 
 - First start downloads the exercise images/GIFs (~140 MB) once into `app/img` and `app/gif`.
+- Optional, for sharp exercise pictures: the details sheet switches between two upscaled
+  poses per exercise when `media/pose/` has them, and plays the plain GIF otherwise. They're
+  made on a computer with a GPU (not the server) by `scripts/upscale-poses.sh` — see the
+  comment at its top — then copied into `media/pose/` next to `media/gif/`.
 - Open **http://localhost:8080** and create a profile with a passkey.
 - Rather build from source than pull prebuilt images? Skip `docker compose pull` and run
   `docker compose up -d --build` instead — no Node needed locally either way.

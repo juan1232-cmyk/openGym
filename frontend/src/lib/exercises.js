@@ -31,8 +31,11 @@ export const allExercises = st => [...(st.customEx || []), ...EXDB]
 // shipping ~140 MB of images into the deployment.
 const IMG_BASE = import.meta.env.VITE_IMG_BASE || 'img/'
 const GIF_BASE = import.meta.env.VITE_GIF_BASE || 'gif/'
+const POSE_BASE = import.meta.env.VITE_POSE_BASE || 'pose/'
 export const imgSrc = ex => IMG_BASE + ex.img
 export const gifSrc = ex => GIF_BASE + ex.gif
+// the GIF's two held positions, upscaled (scripts/upscale-poses.sh): n = 1 or 2
+export const poseSrc = (ex, n) => POSE_BASE + ex.gif.replace(/\.gif$/, `-${n}.jpg`)
 
 // Cardio exercises log time + speed instead of weight × reps.
 export const isCardio = idOrEx => (typeof idOrEx === 'string' ? EXIDX[idOrEx] : idOrEx)?.bp === 'cardio'

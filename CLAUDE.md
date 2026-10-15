@@ -54,10 +54,19 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-`frontend/vite.config.js` also proxies `/img` and `/gif` to `MEDIA_TARGET` (default
+`frontend/vite.config.js` also proxies `/img`, `/gif` and `/pose` to `MEDIA_TARGET` (default
 `:8888`) — those 404 in plain `npm run dev` unless something's serving `media/` locally, since
 that's normally the `media` compose service downloading the ~140MB exercise dataset. Exercise
 list/text still works without it; only images/GIFs are missing.
+
+**The details sheet switches between two upscaled poses, not the GIF.** `media/pose/X-1.jpg`
+and `X-2.jpg` are frames 1 and 7 of each GIF (its two held positions — true of every GIF
+checked) redrawn at 720px by Real-ESRGAN, made by `scripts/upscale-poses.sh`. That needs a
+GPU, so it runs on a desktop (~7h, resumable) and the folder is copied to the server; any
+exercise without poses plays its GIF. Tried and dropped, so it isn't re-tried: smoothing the
+GIFs with ffmpeg's frame interpolation (soft, smeary at 180px), AI-upscaling every frame
+(sharp, but ~45h and still the jumpy 12-frame motion), and ExerciseDB's paid HD files (same
+12 frames, $599). Other apps' smooth videos come from a source this dataset doesn't have.
 
 ## Architecture
 
