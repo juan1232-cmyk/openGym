@@ -233,6 +233,7 @@ export default {
   'Theme': 'Tema',
   'Dark': 'Koyu',
   'Light': 'Açık',
+  'System': 'Sistem',
   'Accent color': 'Vurgu rengi',
   'General': 'Genel',
   'During a workout': 'Antrenman sırasında',

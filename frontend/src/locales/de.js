@@ -247,6 +247,7 @@ export default {
   'Theme': 'Design',
   'Dark': 'Dunkel',
   'Light': 'Hell',
+  'System': 'System',
   'Accent color': 'Akzentfarbe',
   'General': 'Allgemein',
   'During a workout': 'Während des Trainings',

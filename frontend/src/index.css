@@ -988,6 +988,34 @@ h4.sec{
   --mono:'Geist Mono',ui-monospace,'SF Mono','Cascadia Mono','Roboto Mono',Menlo,Consolas,monospace;
   --spring:cubic-bezier(.22,1,.36,1);
 }
+/* Peek, dark. The same design with the stone inverted: a warm near-black page, cards a few
+   points lighter, the stone colour as text. Ink — the design's one contrasting colour — turns
+   light, so a selected pill or a focus ring still stands out; the orb inverts with it (a light
+   sphere, dark eyes), since a black sphere on a black page is not there at all. System colours
+   take their iOS dark values, which are tuned to read on a dark page. */
+:root:root[data-skin="peek"][data-theme="dark"] {
+  --bg:#0e0e0d; --bg-el:#0e0e0d;
+  --surface:#1b1b19; --surface-2:#2a2a27; --surface-3:#363632;
+  --label:#f3f2ee; --label-2:#a9a8a1; --label-3:#7a7972; --label-4:#3b3b37;
+  --sep:#262624; --sep-op:#2f2f2c;
+  --blue:#0a84ff; --green:#30d158; --red:#ff453a; --orange:#ff9f0a;
+  --yellow:#ffd60a; --teal:#40c8e0; --indigo:#5e5ce6; --pink:#ff375f;
+  --purple:#bf5af2; --mint:#63e6e2; --brown:#ac8e68; --grey:#8e8e93;
+  --acc-soft:color-mix(in srgb,#12b76a 18%,transparent); --acc-line:color-mix(in srgb,#12b76a 50%,transparent);
+  --acc-ink:#2fcf85;
+  --ink:#f3f2ee; --ink-2:#d9d8d2; --on-ink:#0b0b0b; --on-ink-2:#5f5e58;
+  --line:#3d3d39;
+  --orb:#f3f2ee; --orb-eye:#0b0b0b;
+}
+/* The slabs — tab bar, workout dock, rest timer, coach notes — are drawn in ink on the light
+   page. Inverted, they'd be bright bars glaring at the bottom of a dark screen, so in dark they
+   re-scope ink to a raised dark grey instead and keep their light-on-dark reading. Everything
+   inside them (labels, the active-tab pill, an inverted orb) follows from the same tokens. */
+:root[data-skin="peek"][data-theme="dark"] :is(#tabbar,.pk-dock,#timer,.pk-coach,.ob-because,.sa-tile.dark,.tour-top) {
+  --ink:#262624; --ink-2:#3a3a36; --on-ink:#f3f2ee; --on-ink-2:#a9a8a1;
+  --orb:#0b0b0b; --orb-eye:#f3f2ee;
+}
+:root[data-skin="peek"][data-theme="dark"] :is(#tabbar,.pk-dock,#timer){box-shadow:inset 0 0 0 1px #34342f,0 12px 34px -12px rgba(0,0,0,.8)}
 :root[data-skin="peek"] body{font-family:var(--font)}
 
 /* green as text reads through --acc-ink; green as a fill keeps --acc */
@@ -1017,7 +1045,8 @@ h4.sec{
 .btn.soft:active{background:var(--surface-3)}
 
 /* ---------------------------------------------------------------- orb -- */
-/* Colours are literal, not skin tokens: the orb is the same black sphere wherever it sits. */
+/* Colours are their own two tokens, not the skin's: the orb is the same black sphere wherever
+   it sits — except in dark, which swaps them (see the dark Peek tokens above). */
 @keyframes ob-breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 @keyframes ob-squish{0%{transform:scale(1)}25%{transform:scale(1.05,.93)}55%{transform:scale(.98,1.03)}100%{transform:scale(1)}}
 /* the body motion two coach expressions carry (orb-rig EX `m`): a tremble, a slow sway */
@@ -1025,7 +1054,7 @@ h4.sec{
 @keyframes ob-drift{0%,100%{transform:translate(0,0)}33%{transform:translate(-4px,-3px)}66%{transform:translate(3px,-5px)}}
 .orb-wrap{cursor:pointer;flex:none}
 .orb{
-  border-radius:50%;background:#0b0b0b;position:relative;overflow:hidden;
+  border-radius:50%;background:var(--orb,#0b0b0b);position:relative;overflow:hidden;
   animation:ob-breathe 5s ease-in-out infinite;
   transition:background-color .5s ease;
 }
@@ -1044,9 +1073,9 @@ h4.sec{
 .orb.talking{animation:ob-talk 140ms ease-in-out infinite alternate}
 .orb.shake{animation:ob-shake 160ms linear infinite}
 .orb.drift{animation:ob-drift 4.5s ease-in-out infinite}
-.orb i{position:absolute;top:0;left:0;width:0;height:0;border-radius:999px;background:#f3f2ee;transition:background-color .5s ease}
-.orb.inv{background:#f3f2ee}
-.orb.inv i{background:#0b0b0b}
+.orb i{position:absolute;top:0;left:0;width:0;height:0;border-radius:999px;background:var(--orb-eye,#f3f2ee);transition:background-color .5s ease}
+.orb.inv{background:var(--orb-eye,#f3f2ee)}
+.orb.inv i{background:var(--orb,#0b0b0b)}
 .orb.poke{animation:ob-squish 480ms cubic-bezier(.34,1.3,.64,1)!important}
 /* one-shot reactions (Orb `bump`): beat last time / matched it / fell short */
 @keyframes ob-hop{0%{transform:none}30%{transform:translateY(-18px) scale(.95,1.06)}62%{transform:translateY(0) scale(1.07,.92)}82%{transform:scale(.98,1.02)}100%{transform:none}}

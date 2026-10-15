@@ -233,6 +233,7 @@ export default {
   'Theme': 'थीम',
   'Dark': 'डार्क',
   'Light': 'लाइट',
+  'System': 'सिस्टम',
   'Accent color': 'एक्सेंट रंग',
   'General': 'सामान्य',
   'During a workout': 'वर्कआउट के दौरान',
