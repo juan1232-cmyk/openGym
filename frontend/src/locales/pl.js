@@ -233,6 +233,7 @@ export default {
   'Theme': 'Motyw',
   'Dark': 'Ciemny',
   'Light': 'Jasny',
+  'System': 'Systemowy',
   'Accent color': 'Kolor akcentu',
   'General': 'Ogólne',
   'During a workout': 'Podczas treningu',

@@ -233,6 +233,7 @@ export default {
   'Theme': 'Тема',
   'Dark': 'Тёмная',
   'Light': 'Светлая',
+  'System': 'Системная',
   'Accent color': 'Акцентный цвет',
   'General': 'Основное',
   'During a workout': 'Во время тренировки',

@@ -233,6 +233,7 @@ export default {
   'Theme': '테마',
   'Dark': '다크',
   'Light': '라이트',
+  'System': '시스템',
   'Accent color': '강조 색상',
   'General': '일반',
   'During a workout': '운동 중',

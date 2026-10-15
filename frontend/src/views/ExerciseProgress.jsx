@@ -29,7 +29,7 @@ function Spark({ points }) {
   const [lx, ly] = xy(points[points.length - 1])
   return <svg viewBox={`0 0 ${W} ${H}`} className="pk-spark" aria-hidden="true">
     {points.length > 1 && <polyline points={points.map(p => xy(p).join(',')).join(' ')} fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
-    <circle cx={lx} cy={ly} r="6" fill="var(--acc)" stroke="#fff" strokeWidth="2" />
+    <circle cx={lx} cy={ly} r="6" fill="var(--acc)" stroke="var(--surface)" strokeWidth="2" />
   </svg>
 }
 

@@ -129,9 +129,17 @@ export default function Settings() {
     {user && <PushCard S={S} update={update} toast={toast} />}
 
     {/* ---------- appearance ---------- */}
-    {/* Theme and accent colour are gone: the Peek design is one fixed look (light stone,
-        one green) on every screen now, so those switches would do nothing. */}
+    {/* Accent colour stays gone: the Peek design is one green. Light/dark is back as the
+        design's own dark palette (index.css), not the old black-and-green theme. */}
     <Section title={t('Appearance')} footer={t('synced with your profile')}>
+      <Row icon="moon" iconTint="var(--indigo)" title={t('Theme')}>
+        <Segmented
+          className="seg-inline"
+          options={[{ value: 'system', label: t('System') }, { value: 'light', label: t('Light') }, { value: 'dark', label: t('Dark') }]}
+          value={S.appearance === 'light' || S.appearance === 'dark' ? S.appearance : 'system'}
+          onChange={v => update(s => { s.appearance = v })}
+        />
+      </Row>
       {/* Purely how the muscle map is drawn — nothing else in the app reads this. */}
       <Row icon="figureStrength" iconTint="var(--teal)" title={t('Body diagram')}>
         <Segmented

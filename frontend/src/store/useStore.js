@@ -7,6 +7,10 @@ const KEY = 'gym_state_v1'
 export const DEF = {
   unit: 'kg', restSec: 90, sound: true, keepAwake: true, lang: 'en',
   theme: 'dark', accent: 'lime', body: 'male', targetW: null,
+  // appearance: 'system' | 'light' | 'dark'. A new key rather than `theme`, which every profile
+  // has stored as 'dark' (its old default) while the Peek skin ignored it and drew light —
+  // honouring it now would flip everyone to dark without them having chosen it.
+  appearance: 'system',
   bodyweight: [], routines: [], week: {}, dayPlan: {},
   exWeights: {}, workouts: [], active: null, customEx: [],
   // gymEq: the equipment your gym has (dataset `eq` names). null = everything — the picker

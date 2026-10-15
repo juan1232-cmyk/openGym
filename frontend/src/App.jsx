@@ -33,16 +33,22 @@ bindUI(useUI)   // lets the shared controls open sheets without importing the st
 
 // The skin sits on top of the theme (see index.css), so the status-bar colour follows the
 // skin when there is one — a light Peek page under a black status bar reads as a gap.
-const SKIN_BAR = { peek: '#f3f2ee' }
-function applyPrefs(theme, accent, skin, focus) {
+const SKIN_BAR = { peek: { light: '#f3f2ee', dark: '#0e0e0d' } }
+const darkQuery = typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : null
+const resolveTheme = appearance =>
+  appearance === 'light' || appearance === 'dark' ? appearance : darkQuery?.matches ? 'dark' : 'light'
+function applyPrefs(appearance, accent, skin, focus) {
   const de = document.documentElement
-  de.dataset.theme = theme === 'light' ? 'light' : 'dark'
+  const theme = resolveTheme(appearance)
+  de.dataset.theme = theme
   de.dataset.accent = ACCENTS[accent] ? accent : 'lime'
   de.dataset.skin = skin
   // "focus" = no tab bar on screen (onboarding, a running workout); fixed bars sit lower then
   de.dataset.chrome = focus ? 'focus' : ''
+  // native controls (date pickers, scrollbars) follow the page instead of the OS
+  de.style.colorScheme = theme
   const meta = document.querySelector('meta[name="theme-color"]')
-  if (meta) meta.content = SKIN_BAR[skin] || (de.dataset.theme === 'light' ? '#f2f2f7' : '#000000')
+  if (meta) meta.content = SKIN_BAR[skin]?.[theme] || (theme === 'light' ? '#f2f2f7' : '#000000')
 }
 
 // Every screen wears the "Peek" design skin. It started on Home, Workout and an exercise's
@@ -65,7 +71,15 @@ function Shell() {
   // Home in its place (the session keeps running; Home and the Start tab both say Resume).
   // An exercise's progress page is a drill-down with its own ‹, drawn without one too.
   const hideTabs = onboarding || (cur === 'workout' && !!S.active) || cur === 'exercise'
-  useEffect(() => { applyPrefs(S.theme, S.accent, skin, hideTabs) }, [S.theme, S.accent, skin, hideTabs])
+  useEffect(() => {
+    const apply = () => applyPrefs(S.appearance, S.accent, skin, hideTabs)
+    apply()
+    // on 'system', flipping the phone to dark at night re-skins the open app, not just the next launch
+    if (S.appearance !== 'light' && S.appearance !== 'dark' && darkQuery) {
+      darkQuery.addEventListener('change', apply)
+      return () => darkQuery.removeEventListener('change', apply)
+    }
+  }, [S.appearance, S.accent, skin, hideTabs])
   useEffect(() => { setLang(S.lang || 'en') }, [S.lang])
   useEffect(() => { document.documentElement.lang = S.lang || 'en' }, [langV, S.lang])
   // every tab/route change starts at the top of the page
