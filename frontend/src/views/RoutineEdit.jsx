@@ -160,7 +160,8 @@ export default function RoutineEdit() {
     const ex = exOr(e.id)
     // reps work is adjusted right on the row; holds and cardio keep their summary line
     const pills = modeOf(e) === 'reps' && !ex.missing
-    return <div key={i} className="rt-row" data-idx={i} onClick={() => { if (!drag.consumeClick()) openRow(i) }}>
+    // press and hold anywhere on the row to pick it up, as in an iOS list; a tap still opens it
+    return <div key={i} className="rt-row" data-idx={i} {...drag.row(i)} onClick={() => { if (!drag.consumeClick()) openRow(i) }}>
       <Thumb ex={ex} />
       <div className="grow rt-main">
         <div className="tt capitalize">{ex.n}</div>
