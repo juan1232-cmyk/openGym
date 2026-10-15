@@ -1658,6 +1658,8 @@ button.pk-tile:active{background:var(--surface-2)}
 .rt-main .ss{font-size:13px;color:var(--label-2);margin-top:2px}
 /* while a row is being dragged: it floats, nothing gets selected, the rest make room */
 .rt-row.dragging{position:relative;z-index:2;background:var(--surface);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.14)}
+/* on the dark page the light shadow is lost, so a lifted row steps up a surface instead */
+:root[data-theme="dark"] .rt-row.dragging{background:var(--surface-2);box-shadow:0 14px 34px rgba(0,0,0,.6)}
 body.reordering,body.reordering *{user-select:none;-webkit-user-select:none;cursor:grabbing}
 
 /* sparkline (components/Spark.jsx) */
