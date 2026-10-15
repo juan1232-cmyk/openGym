@@ -41,6 +41,17 @@ for ((i = 0; i < ${#todo[@]}; i += batch)); do
     ffmpeg -nostdin -v error -i "$g" -vf "select='eq(n\,0)+eq(n\,6)'" -fps_mode passthrough "$tmp/in/$(basename "$g" .gif)-%d.png"
   done
   "$exe" -i "$tmp/in" -o "$tmp/out" -n realesrgan-x4plus -s 4 -m "$models" -f png >/dev/null 2>&1
+  # When the GPU goes away mid-run (screen locked, display asleep, a process started without the
+  # desktop), the upscaler still exits 0 but writes solid black frames. Every real pose sits on
+  # white, so a frame with nothing brighter than dark grey means the whole batch is suspect:
+  # stop before saving any of it.
+  for p in "$tmp"/out/*.png; do
+    ymax=$(ffmpeg -nostdin -v error -i "$p" -vf "scale=64:-1,signalstats,metadata=print:key=lavfi.signalstats.YMAX:file=-" -f null - | grep -o 'YMAX=[0-9]*' | cut -d= -f2)
+    if [ "${ymax:-0}" -lt 64 ]; then
+      echo "✗ The upscaler returned a blank frame ($(basename "$p")), so the GPU isn't reachable. Nothing from this batch was saved; run it again from a desktop session." >&2
+      exit 1
+    fi
+  done
   for p in "$tmp"/out/*.png; do
     out="$dir/pose/$(basename "$p" .png)"
     ffmpeg -nostdin -v error -y -i "$p" -vf "scale=720:-2:flags=lanczos" -q:v 2 "$out.part.jpg"
