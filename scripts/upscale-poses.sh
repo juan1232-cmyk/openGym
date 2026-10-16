@@ -29,12 +29,15 @@ mkdir -p "$dir/pose"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
+# Names are cut with parameter expansion, not basename or $(...): on Windows every subprocess
+# can cost half a second when the machine is busy, and these loops run once per exercise.
+gifs=("$dir"/gif/*.gif)
 todo=()
-for g in "$dir"/gif/*.gif; do
-  b=$(basename "$g" .gif)
+for g in "${gifs[@]}"; do
+  b=${g##*/}; b=${b%.gif}
   [ -s "$dir/pose/$b-1.jpg" ] && [ -s "$dir/pose/$b-2.jpg" ] || todo+=("$g")
 done
-total=$(ls "$dir"/gif/*.gif | wc -l)
+total=${#gifs[@]}
 echo "↻ Upscaling the two poses of ${#todo[@]} of $total exercises (the rest are done)…"
 
 skipped=0
@@ -42,8 +45,9 @@ for ((i = 0; i < ${#todo[@]}; i += batch)); do
   rm -rf "$tmp/in" "$tmp/out"
   mkdir -p "$tmp/in" "$tmp/out"
   for g in "${todo[@]:i:batch}"; do
+    b=${g##*/}
     # frames 1 and 7 (n = 0 and 6), written as X-1.png and X-2.png
-    ffmpeg -nostdin -v error -i "$g" -vf "select='eq(n\,0)+eq(n\,6)'" -fps_mode passthrough "$tmp/in/$(basename "$g" .gif)-%d.png"
+    ffmpeg -nostdin -v error -i "$g" -vf "select='eq(n\,0)+eq(n\,6)'" -fps_mode passthrough "$tmp/in/${b%.gif}-%d.png"
   done
   # One frame at a time in 128px tiles: on integrated graphics the defaults (two frames at once,
   # bigger tiles) returned blank frames far more often, for about the same speed.
@@ -58,7 +62,7 @@ for ((i = 0; i < ${#todo[@]}; i += batch)); do
     [ -e "$p" ] || continue
     ymax=$(ffmpeg -nostdin -v error -i "$p" -vf "scale=64:-1,signalstats,metadata=print:key=lavfi.signalstats.YMAX:file=-" -f null - | grep -o 'YMAX=[0-9]*' | cut -d= -f2)
     if [ "${ymax:-0}" -lt 64 ]; then blank=$((blank + 1)); continue; fi
-    out="$dir/pose/$(basename "$p" .png)"
+    b=${p##*/}; out="$dir/pose/${b%.png}"
     ffmpeg -nostdin -v error -y -i "$p" -vf "scale=720:-2:flags=lanczos" -q:v 2 "$out.part.jpg"
     mv "$out.part.jpg" "$out.jpg"
     kept=$((kept + 1))
