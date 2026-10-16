@@ -39,8 +39,9 @@ an iframe inside a CSS-drawn iPhone 15 Pro, plus buttons that load demo profiles
 localStorage. Locally: `npm run dev`, then `localhost:5173/device.html`. Hosted: Vercel is
 connected to the GitHub repo, so every push to a branch that touches `frontend/` gets its own
 preview URL, and the Vercel bot links it on the PR. Add `/device.html`
-to that URL for the phone view. The hosted demo has no `/api` and no exercise media, so it runs
-in guest mode with placeholder thumbnails. It's built into the self-hosted image too, which
+to that URL for the phone view. The hosted demo has no `/api` and no dataset media, so it runs
+in guest mode with placeholder thumbnails — though the details sheet's poses ship with the
+build, so those show there too. It's built into the self-hosted image too, which
 does no harm. The Vercel project's Root Directory is `frontend`, so its config lives in
 `frontend/vercel.json` with paths relative to that folder — a repo-root `vercel.json` with
 `cd frontend` commands is what broke the PR #21 preview (skipped, then failed). Its
@@ -54,16 +55,19 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-`frontend/vite.config.js` also proxies `/img`, `/gif` and `/pose` to `MEDIA_TARGET` (default
+`frontend/vite.config.js` also proxies `/img` and `/gif` to `MEDIA_TARGET` (default
 `:8888`) — those 404 in plain `npm run dev` unless something's serving `media/` locally, since
 that's normally the `media` compose service downloading the ~140MB exercise dataset. Exercise
 list/text still works without it; only images/GIFs are missing.
 
-**The details sheet switches between two upscaled poses, not the GIF.** `media/pose/X-1.jpg`
-and `X-2.jpg` are frames 1 and 7 of each GIF (its two held positions — true of every GIF
-checked) redrawn at 720px by Real-ESRGAN, made by `scripts/upscale-poses.sh`. That needs a
-GPU, so it runs on a desktop (~7h, resumable) and the folder is copied to the server; any
-exercise without poses plays its GIF. Tried and dropped, so it isn't re-tried: smoothing the
+**The details sheet switches between two upscaled poses, not the GIF.**
+`frontend/public/pose/X-1.webp` and `X-2.webp` are frames 1 and 7 of each GIF (its two held
+positions — true of every GIF checked) redrawn at 720px by Real-ESRGAN, made by
+`scripts/upscale-poses.sh`. They're committed (~49 MB, WebP at quality 82) so every build —
+Vercel, Docker, `npm run dev` — has them with no extra step; rerun the script (GPU, on a
+desktop, resumable) only if the dataset gains exercises. Any exercise without poses plays its
+GIF. They're derived from the dataset, whose licence is reportedly non-commercial, in a
+public repo — fine for a personal, free deployment; not for charging anyone. Tried and dropped, so it isn't re-tried: smoothing the
 GIFs with ffmpeg's frame interpolation (soft, smeary at 180px), AI-upscaling every frame
 (sharp, but ~45h and still the jumpy 12-frame motion), and ExerciseDB's paid HD files (same
 12 frames, $599). Other apps' smooth videos come from a source this dataset doesn't have.
@@ -72,7 +76,7 @@ GIFs with ffmpeg's frame interpolation (soft, smeary at 180px), AI-upscaling eve
 
 **One build target, self-hosted only.** Upstream also had a `VITE_DEMO=1` GitHub Pages demo
 build and a `VITE_MOBILE=1` Capacitor native-app build (own persistence, no backend, no sync) —
-both stripped from this fork: the demo served a public audience this private repo doesn't have,
+both stripped from this fork: the demo served a public audience this personal fork doesn't have (the repo itself is public on GitHub),
 and the mobile build's whole reason to exist (zero server, single device) works against the
 sync-across-devices goal this fork is actually for. The app is a PWA instead (`frontend/public/
 manifest.json` + `sw.js`, registered in `main.jsx`) — add-to-homescreen from your self-hosted
