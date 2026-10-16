@@ -14,10 +14,10 @@ const reduceMotion = () => typeof matchMedia === 'function' && matchMedia('(pref
 // Custom exercises have no media — the slot stays blank by design (issue #11).
 //
 // It switches between the GIF's two held positions, upscaled to 720px
-// (scripts/upscale-poses.sh): the GIFs are 180px and soft when stretched to this size, and
-// their in-between frames carry motion trails, so two sharp poses read better than the full
-// rep. An exercise without upscaled poses — the script runs on a desktop and may not have
-// reached it, and a plain `npm run dev` may never have run it — plays its GIF instead. Media
+// (scripts/upscale-poses.sh) and shipped with the app in frontend/public/pose: the GIFs are
+// 180px and soft when stretched to this size, and their in-between frames carry motion
+// trails, so two sharp poses read better than the full rep. An exercise without poses — one a
+// newer dataset added after the stills were made — plays its GIF instead. Media
 // that fails to load either way falls back to nothing instead of the browser's broken-image
 // icon. Failures are remembered per file, not per component, since a swap reuses the slot
 // for another lift.
