@@ -560,6 +560,9 @@ h4.sec{
 .wprog i{display:block;height:100%;background:var(--acc);border-radius:99px;transition:width var(--med) var(--ease)}
 .exmedia{position:relative;border-radius:var(--r-lg);overflow:hidden;background:#fff;margin-bottom:12px}
 .exmedia img{width:100%;height:320px;object-fit:contain;display:block}
+/* the two poses (components/Media.jsx): stacked, the second shown or hidden on top */
+.exmedia.expose{height:320px}
+.exmedia.expose img{position:absolute;inset:0;height:100%}
 
 .sethead{
   display:flex;align-items:center;gap:8px;padding:0 0 6px;
@@ -947,7 +950,7 @@ h4.sec{
   /* 520px fits the clock, the bar and all three controls on one line again */
   #timer.rest{flex-direction:row;align-items:center;gap:14px}
   #timer.rest .head{flex:1;min-width:0}
-  .exmedia img{height:380px}
+  .exmedia img,.exmedia.expose{height:380px}
   .hm-wrap{display:flex;flex-direction:column;align-items:center}
 }
 

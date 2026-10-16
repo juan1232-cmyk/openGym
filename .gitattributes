@@ -1,0 +1,4 @@
+# Shell scripts fail on their first line under a CRLF checkout (bash reads the \r), and
+# Windows checkouts default to CRLF — scripts/upscale-poses.sh is meant to run in Git Bash on
+# a Windows desktop. Keep them LF everywhere.
+*.sh text eol=lf
