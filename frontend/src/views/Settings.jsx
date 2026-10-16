@@ -10,6 +10,7 @@ import { wakeLockSupported } from '../lib/wakelock.js'
 import { t, LANGS, INSTR_LANGS } from '../lib/i18n.js'
 import { loadStarterPlan, confirmSheet, importFromApp, gymEquipmentSheet, gymEqLabel } from '../sheets.jsx'
 import Icon from '../components/Icon.jsx'
+import { POSE_MS } from '../components/Media.jsx'
 import { Section, Row, SelectRow, Switch, Segmented, Button, TextField } from '../components/ui.jsx'
 
 export default function Settings() {
@@ -138,6 +139,14 @@ export default function Settings() {
           options={[{ value: 'system', label: t('System') }, { value: 'light', label: t('Light') }, { value: 'dark', label: t('Dark') }]}
           value={S.appearance === 'light' || S.appearance === 'dark' ? S.appearance : 'system'}
           onChange={v => update(s => { s.appearance = v })}
+        />
+      </Row>
+      <Row icon="timer" iconTint="var(--orange)" title={t('Exercise poses')} subtitle={t('How fast the two poses switch')}>
+        <Segmented
+          className="seg-inline"
+          options={[{ value: 'slow', label: t('Slow') }, { value: 'normal', label: t('Normal') }, { value: 'fast', label: t('Fast') }]}
+          value={POSE_MS[S.poseSpeed] ? S.poseSpeed : 'normal'}
+          onChange={v => update(s => { s.poseSpeed = v })}
         />
       </Row>
       {/* Purely how the muscle map is drawn — nothing else in the app reads this. */}
