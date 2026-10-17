@@ -5,6 +5,7 @@ import { MUSCLES, musclesOf, loadOf } from './muscles.js'
 import { EXIDX, EXDB } from './exercises.js'
 import { defaultConfig, lastEntryFor } from './history.js'
 import { applySuggestion, defaultModeFor } from './scheme.js'
+import { scoreOf, reasonOf } from './score.js'
 
 /* ---------------- what you use ---------------- */
 
@@ -456,17 +457,13 @@ export function quickConfig(ex, st, routineId) {
   return applySuggestion(defaultConfig(ex.id, defaultModeFor(ex)), ex, st.goal)
 }
 
-/* ---------------- fit score (TODO) ---------------- */
+/* ---------------- fit score ---------------- */
 
-// TODO(score): how well `ex` fits what is being built, for a badge + one-line reason on each
-// picker row (sheets/exercise.jsx, PickRow). Return null to show nothing — that is all it
-// does today. What there is to build it from:
-//  - the list being added to: loadOf / rankOf (muscles.js) for gaps, overlapFor for crowding,
-//    GROUPS for which muscles belong to the same day
-//  - the lift itself: isCompound (scheme.js), STAPLES, EQ_BONUS, isJunk — the dataset has no
-//    compound/level fields, so these name rules are all there is
-//  - the person: st.goal, usageOf, liftTrend (verdict.js)
-// Keep it pure and tested (pick.test.js), like everything else in this file.
-export function fitScore(ex, ctx) {
-  return null
+// The badge + one-line reason on a picker row (sheets/exercise.jsx, PickRow): the exercise's
+// training-engine score (lib/score.js) with the person's joint comfort applied, or null for
+// the exercises nobody has rated — no badge beats a number guessed from a name.
+// `ctx.comfort` is S.comfort, { exId: 0–10 }.
+export function fitScore(ex, ctx = {}) {
+  const s = ex && scoreOf(ex.id, (ctx.comfort || {})[ex.id])
+  return s ? { score: Math.round(s.score), reason: s.sore ? 'Hurts your joints' : reasonOf(s) } : null
 }

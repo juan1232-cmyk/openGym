@@ -16,6 +16,9 @@ export const DEF = {
   // gymEq: the equipment your gym has (dataset `eq` names). null = everything — the picker
   // then shows the whole catalogue, which is also what a profile from before this sees.
   gymEq: null,
+  // comfort: how a joint feels doing an exercise, { exId: 0–10 }, only for the ones flagged
+  // (sheets/compare.jsx). Under 5 takes 20 % off that exercise's score (lib/score.js).
+  comfort: {},
   // effort: which per-set effort scale is logged — 'none' | 'rir' | 'rpe'. null, not 'none', so
   // that a profile which never chose (loaded state is overlaid on DEF, on every path: local,
   // server pull, backup import) still falls back to the `showRir` boolean this replaced and
