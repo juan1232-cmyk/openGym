@@ -94,18 +94,33 @@ function MuscleBalance({ S, ws, b }) {
   </div>
 }
 
-// Lifts to act on now — stuck on their target, or with an estimate that's falling.
+// The fixes for a flat lift, in the order to try them — numbered, because the order is the
+// advice: a deload is the last resort, not one option among three.
+function fixLine(f, S) {
+  if (f.kind === 'sets') return t('Add {0}–{1} sets to it this week', f.add[0], f.add[1])
+  if (f.kind === 'swap') return f.alt ? t('Switch to {0} for a block', nameOf(f.alt)) : t('Switch to a similar exercise for a block')
+  return f.weight != null
+    ? t('Take a deload week at {0} ({1} % lighter)', fmtNum(f.weight) + ' ' + S.unit, Math.round((1 - f.factor) * 100))
+    : t('Take a deload week, about {0} % lighter', Math.round((1 - f.factor) * 100))
+}
+
+// Lifts to act on now — stuck on their target, with an estimate that's falling, or with no
+// new estimated best in a while (and what to try about it).
 function LiftsToWatch({ S }) {
   const nav = useNavigate()
   const list = liftsToWatch(S).slice(0, 4)
   return <div className="card sa-card">
     <div className="pk-card-h"><b>{t('Lifts to watch')}</b><span>{t('Right now')}</span></div>
     {list.length ? list.map(x => (
-      <button key={x.id} className="sa-pb" onClick={() => nav('/exercise/' + x.id)}>
-        <span className={'ic ' + x.kind}><Icon name={x.kind === 'stuck' ? 'pause' : 'arrowDown'} /></span>
+      <button key={x.id} className={'sa-pb' + (x.fixes ? ' fx' : '')} onClick={() => nav('/exercise/' + x.id)}>
+        <span className={'ic ' + x.kind}><Icon name={x.kind === 'stuck' ? 'pause' : x.kind === 'flat' ? 'minus' : 'arrowDown'} /></span>
         <span className="l"><b>{nameOf(x.id)}</b><span>{x.kind === 'stuck'
           ? t('Missed the target {0} sessions in a row', x.n)
-          : t('Est. 1RM down {0} per 2 weeks', fmtVol(Math.abs(x.rate), S.unit))}</span></span>
+          : x.kind === 'flat'
+            ? t('No new est. 1RM best in {0} sessions', x.n)
+            : t('Est. 1RM down {0} per 2 weeks', fmtVol(Math.abs(x.rate), S.unit))}</span>
+        {x.fixes && <span className="sa-fix">{x.fixes.map((f, i) => <span key={f.kind}><i>{i + 1}</i>{fixLine(f, S)}</span>)}</span>}
+        </span>
         <Icon name="chevronRight" className="chev" />
       </button>
     )) : <div className="muted small" style={{ marginTop: 10 }}>{t('Nothing stuck. Every lift you train is holding or moving up.')}</div>}
