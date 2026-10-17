@@ -79,6 +79,11 @@ export function commitAnswers(s, answers, plan = planFor(answers)) {
   if (a.unit) s.unit = a.unit
   const rest = restFor(a.goal)
   if (rest) s.restSec = rest
+  // Effective sets and the e1RM both read how close to failure a set ended, so a new profile
+  // logs RIR from its first workout. Here and not in DEF: DEF is overlaid on every loaded
+  // profile, and one saved before the effort setting existed would switch on unasked. A scale
+  // already chosen (or 'none') stands.
+  if (s.effort == null) s.effort = 'rir'
   if (plan) {
     s.routines.push(...plan.routines)
     Object.assign(s.week, plan.week)

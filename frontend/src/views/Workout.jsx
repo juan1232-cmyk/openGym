@@ -1,9 +1,9 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { exOr } from '../lib/exercises.js'
-import { effectiveRoutine, lastEntryFor, buildSets, setsDoneActive, supersetUnits, unitOf, setLabel, modeOf, isBw, isPerSide, sideReps, EFFORT, effortOf, capEffort, fmtSec, nextUp, nextSetLabel, isLoadPR } from '../lib/history.js'
+import { effectiveRoutine, lastEntryFor, buildSets, setsDoneActive, supersetUnits, unitOf, setLabel, modeOf, isBw, isPerSide, sideReps, EFFORT, effortOf, capEffort, RIR_CHIPS, rirChip, fmtSec, nextUp, nextSetLabel, isLoadPR } from '../lib/history.js'
 import { fmtNum, fmtVol, todayISO, exCount, DAYN } from '../lib/format.js'
 import { beep, vibrate } from '../lib/sound.js'
 import { t } from '../lib/i18n.js'
@@ -83,6 +83,19 @@ function SetGrid({ entryIdx, onToggle, onField, onStartTimed }) {
   const kind = effortOf(S)
   const eff = EFFORT[kind]
   if (mode === 'reps' && eff) cols.push({ f: eff.f, eff: kind, dec: true, opt: true, hd: eff.hd, w: '46px' })
+  // RIR is rated with one tap from a chip row under the set rather than typed. You only know
+  // how many reps were left once the set is over, so the row opens when a set is ticked and the
+  // cell stays tappable on done rows too. RPE keeps the typed field: its scale has no handful
+  // of values worth a chip each.
+  const chips = mode === 'reps' && kind === 'rir'
+  const [rirAt, setRirAt] = useState(null)
+  const tick = i => {
+    const willBeDone = !entry.sets[i].done
+    onToggle(i)
+    setRirAt(chips && willBeDone && entry.sets[i].rir == null ? i : null)
+  }
+  // tapping the lit chip clears it again — empty is not 0, and a mistap has to be undoable
+  const rate = (i, v) => { onField(i, 'rir', rirChip(entry.sets[i].rir) === v ? null : v); setRirAt(null) }
   const grid = { gridTemplateColumns: ['26px', 'minmax(0,1fr)', ...cols.map(c => c.w), ...(timed ? ['36px'] : []), '36px'].join(' ') }
   const shown = (c, v) => (v == null || v === '' ? '—' : c.f === 'sec' ? fmtSec(v) : fmtNum(v))
 
@@ -90,10 +103,13 @@ function SetGrid({ entryIdx, onToggle, onField, onStartTimed }) {
     <div className="pk-set hd" style={grid}><span>{t('Set')}</span><span>{t('Last time')}</span>{cols.map(c => <span key={c.f}>{c.hd}</span>)}{timed && <span />}<span /></div>
     {entry.sets.map((s, i) => {
       const prev = last && last.sets[i] ? setLabel(entry.id, last.sets[i], last.target) : '—'
-      return <div key={i} className={'pk-set' + (s.done ? ' done' : '')} style={{ ...grid, '--i': i }} data-set={entryIdx + '-' + i}>
+      return <Fragment key={i}><div className={'pk-set' + (s.done ? ' done' : '')} style={{ ...grid, '--i': i }} data-set={entryIdx + '-' + i}>
         <span className="n">{i + 1}</span>
         <span className="prev">{prev}</span>
-        {cols.map(c => s.done
+        {cols.map(c => chips && c.eff
+          ? <button key={c.f} className={'rirc' + (rirAt === i ? ' on' : '')} aria-label={c.hd} aria-expanded={rirAt === i}
+            onClick={() => setRirAt(rirAt === i ? null : i)}>{shown(c, s[c.f])}</button>
+          : s.done
           ? <span key={c.f} className="v">{shown(c, s[c.f])}</span>
           : <NumberField key={c.f} decimal={c.dec} nullable={c.opt} value={s[c.f] ?? ''} aria-label={c.hd}
             // a typed effort is capped — there is no RPE 12, and 12 reps in reserve is a warm-up
@@ -102,8 +118,14 @@ function SetGrid({ entryIdx, onToggle, onField, onStartTimed }) {
             set off itself. The checkbox stays for anyone who timed it on their own watch. */}
         {timed && <button className="setgo" aria-label={t('Start set')} disabled={s.done || !!working}
           onClick={() => onStartTimed(i)}><Icon name="play" /></button>}
-        <Check checked={s.done} onChange={() => onToggle(i)} />
+        <Check checked={s.done} onChange={() => tick(i)} />
       </div>
+      {rirAt === i && <div className="pk-rir" role="group" aria-label={t('Reps left in the tank')}>
+        <span>{t('Reps left?')}</span>
+        {RIR_CHIPS.map(v => <button key={v} className={rirChip(s.rir) === v ? 'on' : ''} aria-pressed={rirChip(s.rir) === v}
+          onClick={() => rate(i, v)}>{v === 4 ? '4+' : v}</button>)}
+      </div>}
+      </Fragment>
     })}
   </div>
 }

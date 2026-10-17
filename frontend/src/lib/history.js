@@ -85,6 +85,12 @@ export function stepEffort(kind, cur, dir) {
   // someone entering RPE 3) still steps in even increments instead of snapping to the floor.
   return dir > 0 ? Math.min(e.max, n) : Math.max(e.min, n)
 }
+// The one-tap RIR row under a set. Past 3 in reserve the exact count stops mattering — the set
+// is already far from the effort that drives growth — so the last chip is "4+" and stores 4.
+export const RIR_CHIPS = [0, 1, 2, 3, 4]
+// Which chip a logged RIR lights up. A half step or a typed 2.5 matches none rather than being
+// shown as a value it isn't; anything from 4 up is the "4+" chip.
+export const rirChip = v => (v == null ? null : v >= 4 ? 4 : Number.isInteger(v) ? v : null)
 // A typed effort is capped but not floored — clamping up while someone types "10" would turn
 // the first keystroke into the floor and fight the input.
 export const capEffort = (kind, v) =>
