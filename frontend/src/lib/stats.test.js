@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   rangeBounds, prevBounds, inRange, adherence, buckets, bucketBy, weeksTrained, bestRun,
-  personalBests, mainLift, AREAS, areaSets, liftsToWatch, weeklySets, setStatus, bwPace, weekdayPattern
+  personalBests, mainLift, AREAS, areaSets, liftsToWatch, weeklySets, setZone, mainLiftsWeek, isMainLift, bwPace, weekdayPattern
 } from './stats.js'
 import { SCENARIOS } from '../device/scenarios.js'
 import { MUSCLES } from './muscles.js'
@@ -163,8 +163,52 @@ describe('weeklySets / setStatus', () => {
     expect(weeklySets({ chest: 6 }, rangeBounds(7, TODAY)).chest).toBe(6)
   })
 
-  it('reads under / in range / over against 10–20 a week', () => {
-    expect([4, 10, 20, 24].map(setStatus)).toEqual(['under', 'ok', 'ok', 'over'])
+  it('reads four zones: under 6, 6–10, 10–20, past 20', () => {
+    expect([0, 5.9, 6, 9.9, 10, 20, 20.1].map(setZone))
+      .toEqual(['under', 'under', 'ok', 'ok', 'productive', 'productive', 'over'])
+  })
+})
+
+describe('mainLiftsWeek', () => {
+  const SQUAT = '0043', BENCH = '0025', LEG_EXT = '0585'
+  const reps = (...rs) => rs.map(r => set(100, r))
+
+  it('counts heavy sets (8 reps or fewer) and sessions this week, per main lift', () => {
+    const ws = [
+      wo('2026-09-21', [{ id: SQUAT, sets: reps(5, 5, 10) }]),
+      wo('2026-09-23', [{ id: SQUAT, sets: reps(8, 9) }]),
+    ]
+    expect(mainLiftsWeek(ws, TODAY)).toEqual([{ id: SQUAT, sessions: 2, heavy: 3, few: false }])
+  })
+
+  it('flags a main lift trained lately but fewer than twice this week', () => {
+    const ws = [
+      wo('2026-09-08', [{ id: BENCH, sets: reps(5) }]),
+      wo('2026-09-22', [{ id: SQUAT, sets: reps(5) }]),
+    ]
+    expect(mainLiftsWeek(ws, TODAY)).toEqual([
+      { id: SQUAT, sessions: 1, heavy: 1, few: true },
+      { id: BENCH, sessions: 0, heavy: 0, few: true },
+    ])
+  })
+
+  it('leaves out isolation work and lifts not trained in the last four weeks', () => {
+    const ws = [
+      wo('2026-08-20', [{ id: BENCH, sets: reps(5) }]),
+      wo('2026-09-22', [{ id: LEG_EXT, sets: reps(5) }]),
+    ]
+    expect(mainLiftsWeek(ws, TODAY)).toEqual([])
+  })
+
+  it('goes by the strength-transfer rating where a lift has one, the name where it has none', () => {
+    expect(isMainLift('0085')).toBe(true)    // romanian deadlift, T 7
+    expect(isMainLift('0743')).toBe(false)   // sled hack squat: a compound by name, but T 6
+    expect(isMainLift('0577')).toBe(false)   // lever chest press, T 5
+    expect(isMainLift('0027')).toBe(true)    // barbell bent over row: unrated, a compound
+  })
+
+  it('ignores sets not ticked off', () => {
+    expect(mainLiftsWeek([wo('2026-09-22', [{ id: SQUAT, sets: [{ w: 100, r: 5, done: false }] }])], TODAY)).toEqual([])
   })
 })
 

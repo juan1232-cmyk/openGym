@@ -8,6 +8,7 @@
 // ankles, "cardiovascular system") maps to null and is dropped rather than guessed at.
 
 import { EXIDX } from './exercises.js'
+import { setCredit } from './effort.js'
 
 // The muscles a map can shade, in head-to-toe order — also the order of any list
 // built from them, so "what am I neglecting" reads top-down like a body.
@@ -67,7 +68,7 @@ const BY_BODYPART = {
   cardio: {},
 }
 
-const SECONDARY = 0.4   // a supporting muscle counts this much against a primary
+const SECONDARY = 0.5   // a supporting muscle counts this much against a primary
 
 /** Muscles one exercise trains: { slug: 0…1 }. */
 export function musclesOf(ex) {
@@ -86,8 +87,8 @@ export function musclesOf(ex) {
 
 /**
  * Training load per muscle, in "effective sets".
- * `items` is [{ id, sets }] — sets being a count, so a 4×8 bench press weighs four
- * times a single set. Volume in kg is deliberately not used: 100 kg of leg press
+ * `items` is [{ id, sets }] — sets being a count (or, for logged work, effective sets: see
+ * `credit` below), so a 4×8 bench press weighs four times a single set. Volume in kg is deliberately not used: 100 kg of leg press
  * against 12 kg of lateral raise says nothing about which muscle worked harder.
  */
 export function loadOf(items) {
@@ -100,6 +101,11 @@ export function loadOf(items) {
   return load
 }
 
+// Effective sets in a list of logged sets: each done set counts by its effort and rep count
+// (effort.js setCredit), so three sets left at RIR 2 weigh 2.7, not 3.
+const credit = (sets, pick) =>
+  (sets || []).reduce((n, s) => n + (s.done && (!pick || pick(s)) ? setCredit(s) : 0), 0)
+
 /**
  * Load for finished workouts (only sets actually ticked off count). `pick` narrows that
  * further — the map can then answer "where did the *hard* sets go", which is a different
@@ -108,15 +114,24 @@ export function loadOf(items) {
  */
 export const loadOfWorkouts = (workouts, pick) =>
   loadOf((workouts || []).flatMap(w =>
-    (w.entries || []).map(e => ({ id: e.id, sets: (e.sets || []).filter(s => s.done && (!pick || pick(s))).length }))))
+    (w.entries || []).map(e => ({ id: e.id, sets: credit(e.sets, pick) }))))
 
-/** Load a routine *would* produce, from its planned set counts. */
+/** Load a routine *would* produce, from its planned set counts — a plan has no effort yet. */
 export const loadOfRoutine = routine =>
   loadOf((routine?.ex || []).map(c => ({ id: c.id, sets: c.sets || 1 })))
 
 /** Load for a workout still in progress — the sets ticked so far. */
 export const loadOfActive = active =>
-  loadOf((active?.entries || []).map(e => ({ id: e.id, sets: (e.sets || []).filter(s => s.done).length })))
+  loadOf((active?.entries || []).map(e => ({ id: e.id, sets: credit(e.sets) })))
+
+/**
+ * Muscles past `cap` effective sets in this workout that `seen` doesn't list yet, in body
+ * order — the ones the workout should nudge about now, once each.
+ */
+export function overSessionCap(active, cap, seen = []) {
+  const load = loadOfActive(active)
+  return MUSCLES.filter(m => (load[m] || 0) > cap && !seen.includes(m))
+}
 
 /**
  * Shade buckets 0–4 per muscle, relative to the hardest-worked muscle in the same

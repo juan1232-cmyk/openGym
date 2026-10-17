@@ -1784,10 +1784,23 @@ button.sa-tile:active{transform:scale(.985)}
 .sa-pb .ic.down{background:color-mix(in srgb,var(--red) 12%,transparent);color:var(--red)}
 .sa-pb .chev{color:var(--label-3);font-size:14px;flex:none}
 .sa-m i{position:relative}
-.sa-m i::before{content:'';position:absolute;top:0;bottom:0;left:var(--lo);right:calc(100% - var(--hi));background:color-mix(in srgb,var(--acc) 22%,var(--surface-2))}
+/* the four weekly zones drawn on the track: OK faint, productive stronger, the ends bare */
+.sa-m i::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,
+  transparent var(--z0),
+  color-mix(in srgb,var(--acc) 10%,var(--surface-2)) var(--z0) var(--z1),
+  color-mix(in srgb,var(--acc) 24%,var(--surface-2)) var(--z1) var(--z2),
+  transparent var(--z2))}
 .sa-m i b{position:relative}
-.sa-m.under i b{background:var(--orange)}
-.sa-m.over i b{background:var(--ink)}
+.sa-m.under i b,.sa-zones .under i{background:var(--orange)}
+.sa-m.ok i b,.sa-zones .ok i{background:color-mix(in srgb,var(--acc) 50%,var(--surface-2))}
+.sa-zones .productive i{background:var(--acc)}
+.sa-m.over i b,.sa-zones .over i{background:var(--ink,var(--label))}
+.sa-zones{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:14px;font-size:12px;color:var(--label-2)}
+.sa-zones span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.sa-zones i{width:8px;height:8px;border-radius:50%}
+.sa-zones em{font-style:normal;font-family:var(--mono);color:var(--label-3)}
+.sa-pb .ic.few{background:color-mix(in srgb,var(--orange) 14%,transparent);color:var(--orange)}
+.sa-pb .l span.warn{color:var(--orange)}
 button.mchip{font:inherit;font-size:12px}
 .sa-note{margin-top:12px;font-size:12px;line-height:1.4;color:var(--label-3)}
 .sa-wd{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:14px}
@@ -1797,3 +1810,8 @@ button.mchip{font:inherit;font-size:12px}
 .sa-wd .n{font-family:var(--mono);color:var(--label-2)}
 .sa-wd .worst i b{background:var(--orange)}
 .sa-wd .worst span:last-child{color:var(--orange);font-weight:600}
+/* the once-per-muscle note when a session goes past SESSION_CAP effective sets */
+.pk-ex-b .capnote{align-items:center;margin:8px 0 4px;padding:10px 8px 10px 12px;border-radius:12px;background:color-mix(in srgb,var(--yellow) 12%,transparent)}
+.capnote span{flex:1;color:var(--label)}
+.capnote span b{font-weight:600}
+.capnote .x{flex:none;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:var(--label-3)}

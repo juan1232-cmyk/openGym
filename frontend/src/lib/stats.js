@@ -6,6 +6,10 @@ import { effectiveRoutineId, topSet, isBw } from './history.js'
 import { bestSetOf, e1rmSeries } from './onerm.js'
 import { liftTrend, liftStalls, STALL_SESSIONS } from './verdict.js'
 import { trendPer14 } from './progress.js'
+import { EXIDX } from './exercises.js'
+import { isCompound } from './scheme.js'
+import { WEEKLY_ZONES, HEAVY_REPS, MAIN_LIFT_FREQ, MAIN_LIFT_T } from './engine-config.js'
+import { RATING_OF } from './ratings.js'
 
 const DAY = 864e5
 const at = iso => new Date(iso + 'T12:00:00')
@@ -144,10 +148,8 @@ export function liftsToWatch(S, now = new Date()) {
   return out.sort((a, b) => (a.kind === b.kind ? (a.kind === 'stuck' ? b.n - a.n : a.rate - b.rate) : a.kind === 'stuck' ? -1 : 1))
 }
 
-// The common hypertrophy guideline: roughly 10–20 hard sets per muscle per week. Only the
-// big muscle groups are held to it — nobody programs 10 weekly sets for the shins, and a page
-// that flags them as "under" every week teaches you to ignore the flags.
-export const SETS_TARGET = [10, 20]
+// Only the big muscle groups are held to the weekly zones — nobody programs 6 weekly sets for
+// the shins, and a page that flags them as "too little" every week teaches you to ignore it.
 export const MAJOR = ['chest', 'upper-back', 'deltoids', 'biceps', 'triceps', 'quadriceps', 'hamstring', 'gluteal', 'calves', 'abs']
 
 // Effective sets per muscle per week over the range. A part-done current week counts as one
@@ -156,7 +158,44 @@ export function weeklySets(load, b) {
   const weeks = Math.max(1, span(b) / 7)
   return Object.fromEntries(Object.entries(load).map(([m, v]) => [m, v / weeks]))
 }
-export const setStatus = perWeek => (perWeek < SETS_TARGET[0] ? 'under' : perWeek > SETS_TARGET[1] ? 'over' : 'ok')
+
+// Which of the four weekly zones (engine-config WEEKLY_ZONES) a muscle's effective sets fall
+// in. Each line belongs to the zone above it, so exactly 10 is already productive and exactly
+// 20 still is — past 20 is where extra sets start to buy mostly tiredness.
+export const ZONES = ['under', 'ok', 'productive', 'over']
+export function setZone(perWeek) {
+  const [low, ok, high] = WEEKLY_ZONES
+  const v = perWeek || 0
+  return v < low ? 'under' : v < ok ? 'ok' : v <= high ? 'productive' : 'over'
+}
+
+// The strength side of the week: for each main lift trained lately, how many sessions this
+// calendar week had it and how many of its sets were heavy (HEAVY_REPS or fewer). A main lift
+// trained fewer than MAIN_LIFT_FREQ times this week is flagged — once a week holds strength,
+// twice is what moves it. "Lately" is the last four weeks, so a lift you dropped a month ago
+// doesn't nag every Monday.
+// A main lift is a rated lift with strength transfer T of at least MAIN_LIFT_T (layer 1, ratings.js).
+// Only 19 lifts are rated, so an unrated one falls back to "is it a compound". Without that,
+// a deadlift or an overhead press would never count just because nobody has rated it yet.
+export const isMainLift = id => (RATING_OF[id] ? RATING_OF[id].T >= MAIN_LIFT_T : isCompound(EXIDX[id]))
+export function mainLiftsWeek(workouts, now = new Date()) {
+  const week = rangeBounds(7, now)
+  const lately = { from: addDays(week.to, -27), to: week.to }
+  const out = new Map()
+  inRange(workouts, lately).forEach(w => (w.entries || []).forEach(e => {
+    if (!isMainLift(e.id)) return
+    const done = (e.sets || []).filter(s => s.done)
+    if (!done.length) return
+    let x = out.get(e.id)
+    if (!x) out.set(e.id, x = { id: e.id, sessions: 0, heavy: 0 })
+    if (w.d < week.from || w.d > week.to) return
+    x.sessions++
+    x.heavy += done.filter(s => s.r > 0 && s.r <= HEAVY_REPS).length
+  }))
+  return [...out.values()]
+    .map(x => ({ ...x, few: x.sessions < MAIN_LIFT_FREQ }))
+    .sort((a, b) => b.heavy - a.heavy || b.sessions - a.sessions)
+}
 
 // Body-weight pace from the last four weeks of weigh-ins (the same best-fit line the lift
 // trends use, so one salty dinner doesn't swing it), and — when there's a goal and the pace
