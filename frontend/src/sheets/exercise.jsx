@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import { useStore } from '../store/useStore.js'
 import { EXDB, EXIDX, BODYPARTS, isCardio, isBodyweightEq, allExercises } from '../lib/exercises.js'
-import { searchExercises, browseOrder, usageOf, recentIds, regionOf, secondaryOf, muscleChips, matchesMuscle, suggestionFor, similarTo, gymFilter, wordsFrom, quickConfig } from '../lib/pick.js'
+import { searchExercises, browseOrder, usageOf, recentIds, regionOf, secondaryOf, muscleChips, matchesMuscle, suggestionFor, similarTo, gymFilter, wordsFrom, quickConfig, fitScore } from '../lib/pick.js'
 import { MUSCLE_NAME } from '../lib/muscles.js'
 import Orb from '../components/Orb.jsx'
 import { fmtDate, fmtNum, uid, exCount } from '../lib/format.js'
@@ -20,6 +20,7 @@ import { glyphOf, DEFAULT_GLYPH } from '../lib/glyphs.js'
 import { estimate1RM, best1RM, REP_CAP } from '../lib/onerm.js'
 import { policyFor, defaultIncrement, nextPrescription, POLICIES_FOR, POLICY_NAME, POLICY_DESC } from '../lib/progression.js'
 import { S, update, ui, toast, confirmSheet } from './common.jsx'
+import { ScoreCard } from './compare.jsx'
 
 /* ============================ exercise detail ============================ */
 // Estimated 1RM for one exercise (issue #18): what the log already implies, plus a calculator
@@ -79,6 +80,7 @@ function ExerciseDetail({ ex, close }) {
       <Button icon="pencil" style={{ flex: 1 }} onClick={() => { close(); customExSheet(ex) }}>{t('Edit')}</Button>
       <Button variant="danger" icon="trash" style={{ flex: 1 }} onClick={() => deleteCustomEx(ex, close)}>{t('Delete')}</Button>
     </div>}
+    <ScoreCard ex={ex} />
     {!isCardio(ex) && <OneRM ex={ex} />}
     {instrFor(ex).length > 0 &&<><h4 className="sec">{t('How to')}{!INSTR_LANGS.includes(getLang()) && <span className="dim" style={{ textTransform: 'none', letterSpacing: 0 }}> · {t('instructions in English')}</span>}</h4><ol className="steps-list">{instrFor(ex).map((s, i) => <li key={i}>{s}</li>)}</ol></>}
   </>
@@ -185,10 +187,13 @@ export const muscleLine = ex => t(regionOf(ex) || ex.tg || ex.bp || '')
 export const chipLabel = m => (m === 'cardio' ? t('Cardio') : t(MUSCLE_NAME[m]))
 
 function PickRow({ ex, onPick, inList, icon = 'plus', onInfo, note }) {
-  // TODO(score): fit score + one-line reason go here — see fitScore in lib/pick.js
+  // The engine score for the ~20 rated lifts (lib/score.js); every other row stays as it was.
+  const comfort = useStore(s => s.S.comfort)
+  const fit = fitScore(ex, { comfort })
   return <div className="item pick-row" onClick={() => onPick(ex)}>
     <Thumb ex={ex} /><div className="grow"><div className="tt capitalize">{ex.n}</div>
-      <div className="ss">{muscleLine(ex)}{note && <> · {note}</>}</div></div>
+      <div className="ss">{muscleLine(ex)}{note ? <> · {note}</> : fit && <> · {t(fit.reason)}</>}</div></div>
+    {fit && <span className="pick-score" title={t('Peek score')}>{fit.score}</span>}
     {onInfo && <button className="pick-info" aria-label={t('How to')} onClick={e => { e.stopPropagation(); onInfo(ex) }}><Icon name="info" /></button>}
     <span className={'pick-mark' + (inList ? ' on' : '') + (note ? ' pre' : '')}><Icon name={inList ? 'check' : icon} /></span>
   </div>

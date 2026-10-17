@@ -9,9 +9,10 @@ import { bwSheet, calendarSheet } from '../sheets.jsx'
 import { loadOfWorkouts, rankOf, MUSCLE_NAME } from '../lib/muscles.js'
 import {
   rangeBounds, prevBounds, inRange, volumeOf, minutesOf, adherence, buckets, bucketBy,
-  weeksTrained, personalBests, mainLift, liftsToWatch, weeklySets, setStatus, MAJOR, SETS_TARGET,
-  bwPace, weekdayPattern
+  weeksTrained, personalBests, mainLift, liftsToWatch, weeklySets, setZone, ZONES, MAJOR,
+  mainLiftsWeek, bwPace, weekdayPattern
 } from '../lib/stats.js'
+import { WEEKLY_ZONES, HEAVY_REPS, MAIN_LIFT_FREQ } from '../lib/engine-config.js'
 import BodyMap from '../components/BodyMap.jsx'
 import Spark from '../components/Spark.jsx'
 import Icon from '../components/Icon.jsx'
@@ -55,11 +56,15 @@ function Delta({ pct }) {
   return <span className={'sa-delta ' + (r > 0 ? 'up' : r < -10 ? 'down' : '')}>{(r > 0 ? '+' : '') + r + '%'}</span>
 }
 
-// Which muscles the range hit, as sets per week against the 10–20 guideline (lib/stats.js).
-// The bar's track runs to 25 a week with the target band marked on it, so "in range" is a
-// place on the bar rather than a number to remember. The chips are the big muscle groups
-// below the band — the ones to add a few sets for.
+// Which muscles the range hit, as effective sets per week (hard sets count in full, easy ones
+// less — lib/effort.js setCredit) against the four weekly zones in lib/engine-config.js. The
+// bar's track runs to 25 a week with the zones drawn on it, so "productive" is a place on the
+// bar rather than a number to remember. The chips are the big muscle groups in the lowest
+// zone — the ones to add a few sets for.
 const TRACK = 25
+const [Z_LOW, Z_OK, Z_HIGH] = WEEKLY_ZONES
+const ZONE_NAME = { under: 'Too little', ok: 'OK', productive: 'Productive', over: 'Diminishing' }
+const ZONE_RANGE = { under: '<' + Z_LOW, ok: Z_LOW + '–' + Z_OK, productive: Z_OK + '–' + Z_HIGH, over: '>' + Z_HIGH }
 function MuscleBalance({ S, ws, b }) {
   const [sel, setSel] = useState(null)
   const load = loadOfWorkouts(ws)
@@ -67,29 +72,31 @@ function MuscleBalance({ S, ws, b }) {
   const { worked } = rankOf(load)
   const top = worked.slice(0, 4)
   // the furthest behind first, and only a handful — nine orange chips is a wall, not a hint
-  const under = MAJOR.filter(m => (pw[m] || 0) < SETS_TARGET[0]).sort((x, y) => (pw[x] || 0) - (pw[y] || 0))
+  const under = MAJOR.filter(m => setZone(pw[m]) === 'under').sort((x, y) => (pw[x] || 0) - (pw[y] || 0))
   const perWk = m => t('{0}/wk', fmtNum(pw[m] || 0))
+  const pct = v => v / TRACK * 100 + '%'
   return <div className="card sa-card">
     <div className="pk-card-h">
       <b>{t('Muscle balance')}</b>
-      <span>{sel ? t(MUSCLE_NAME[sel]) + ' · ' + (pw[sel] ? perWk(sel) : t('not trained')) : t('Sets per week')}</span>
+      <span>{sel ? t(MUSCLE_NAME[sel]) + ' · ' + (pw[sel] ? perWk(sel) + ' · ' + t(ZONE_NAME[setZone(pw[sel])]) : t('not trained')) : t('Effective sets per week')}</span>
     </div>
     {ws.length ? <>
       <div className="sa-mb">
         <BodyMap className="tappable" load={load} body={S.body} selected={sel} onMuscle={m => setSel(s => (s === m ? null : m))} />
-        <div className="sa-mlist">{top.map(m => <div key={m} className={'sa-m ' + setStatus(pw[m])}>
+        <div className="sa-mlist">{top.map(m => <div key={m} className={'sa-m ' + setZone(pw[m])}>
           <div className="row between"><span>{t(MUSCLE_NAME[m])}</span><span className="mono">{perWk(m)}</span></div>
-          <i style={{ '--lo': SETS_TARGET[0] / TRACK * 100 + '%', '--hi': SETS_TARGET[1] / TRACK * 100 + '%' }}>
+          <i style={{ '--z0': pct(Z_LOW), '--z1': pct(Z_OK), '--z2': pct(Z_HIGH) }}>
             <b style={{ width: Math.min(100, (pw[m] || 0) / TRACK * 100) + '%' }} />
           </i>
         </div>)}</div>
       </div>
+      <div className="sa-zones">{ZONES.map(z => <span key={z} className={z}><i />{t(ZONE_NAME[z])} <em>{ZONE_RANGE[z]}</em></span>)}</div>
       {under.length > 0 && <div className="sa-miss">
-        <span>{t('Under {0}/wk', SETS_TARGET[0])}</span>
+        <span>{t('Under {0}/wk', Z_LOW)}</span>
         {under.slice(0, 5).map(m => <button key={m} className="mchip miss" onClick={() => setSel(m)}>{t(MUSCLE_NAME[m])}</button>)}
         {under.length > 5 && <span>+{under.length - 5}</span>}
       </div>}
-      <div className="sa-note">{t('Guide: {0}–{1} sets per muscle a week. The shaded band on each bar.', SETS_TARGET[0], SETS_TARGET[1])}</div>
+      <div className="sa-note">{t('Effective sets: a set near failure counts as one, an easy one less. {0}–{1} a week is the productive band; past {1} more sets mostly add tiredness.', Z_OK, Z_HIGH)}</div>
     </> : <div className="muted small" style={{ marginTop: 10 }}>{t('No workouts in this period yet.')}</div>}
   </div>
 }
@@ -124,6 +131,28 @@ function LiftsToWatch({ S }) {
         <Icon name="chevronRight" className="chev" />
       </button>
     )) : <div className="muted small" style={{ marginTop: 10 }}>{t('Nothing stuck. Every lift you train is holding or moving up.')}</div>}
+  </div>
+}
+
+// The strength side of the week, which effective sets don't show: heavy sets per main lift,
+// and the lifts trained less than twice. Always this calendar week, whatever the range —
+// like Lifts to watch, it's about what to do next, and only this week can still change.
+function MainLifts({ S }) {
+  const nav = useNavigate()
+  const list = mainLiftsWeek(S.workouts).slice(0, 5)
+  if (!list.length) return null
+  return <div className="card sa-card">
+    <div className="pk-card-h"><b>{t('Main lifts')}</b><span>{t('This week')}</span></div>
+    {list.map(x => (
+      <button key={x.id} className="sa-pb" onClick={() => nav('/exercise/' + x.id)}>
+        <span className={'ic' + (x.few ? ' few' : '')}><Icon name={x.few ? 'lightbulb' : 'check'} /></span>
+        <span className="l"><b>{nameOf(x.id)}</b><span className={x.few ? 'warn' : ''}>{x.sessions === 1
+          ? t('Once so far. Twice a week builds strength faster.')
+          : x.sessions === 0 ? t('Not yet this week') : t('{0}× this week', x.sessions)}</span></span>
+        <span className="v">{t('{0} heavy', x.heavy)}</span>
+      </button>
+    ))}
+    <div className="sa-note">{t('Heavy = {0} reps or fewer. Main lifts are the big compound movements; aim for {1} sessions each a week.', HEAVY_REPS, MAIN_LIFT_FREQ)}</div>
   </div>
 }
 
@@ -223,6 +252,7 @@ export default function Stats() {
 
     {S.workouts.length > 0 && <LiftsToWatch S={S} />}
     <MuscleBalance S={S} ws={ws} b={b} />
+    <MainLifts S={S} />
     {S.workouts.length > 0 && <WeekPattern S={S} b={b} ws={ws} />}
 
     <div className="sa-pair">

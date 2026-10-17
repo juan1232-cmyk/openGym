@@ -8,6 +8,7 @@
 // floor of 6 is only a convention about which sets are worth rating. RPE 8 == RIR 2.
 import { EFFORT, effortOf } from './history.js'
 import { weekKey } from './format.js'
+import { RIR_CREDIT, UNRATED_CREDIT, REPS_VALID_MAX, HIGH_REP_CREDIT } from './engine-config.js'
 
 // At or below this a set is close enough to failure to be the kind that drives adaptation.
 // 3 rather than 2: the line is a convention, and drawn one rep too generously it still
@@ -137,3 +138,14 @@ export function effortHistogram(S, days) {
 
 /** A set that counts as hard — the filter behind the muscle map's "hard sets" mode. */
 export const isHardSet = s => { const r = rirOf(s); return r != null && r <= HARD_RIR }
+
+/**
+ * How much one done set counts toward its muscles, 0…1: the effort weight for its reps in
+ * reserve times whether the rep count is still a growth set at all. A half step (RPE 7.5 is
+ * RIR 2.5) reads as the whole RIR below it — the benefit of the doubt, as for an unrated set.
+ */
+export function setCredit(s) {
+  const r = rirOf(s)
+  const effort = r == null ? UNRATED_CREDIT : RIR_CREDIT[Math.min(RIR_CREDIT.length - 1, Math.max(0, Math.floor(r)))]
+  return effort * (s && s.r > REPS_VALID_MAX ? HIGH_REP_CREDIT : 1)
+}

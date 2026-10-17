@@ -75,6 +75,17 @@ describe('commitAnswers', () => {
     expect(s.goal).toBe('muscle')
   })
 
+  it('turns RIR logging on for a profile that never chose a scale, and keeps one that did', () => {
+    const fresh = blank()
+    commitAnswers(fresh, { goal: 'muscle', weekdays: [1] })
+    expect(fresh.effort).toBe('rir')
+    for (const chosen of ['rpe', 'none']) {
+      const s = { ...blank(), effort: chosen }
+      commitAnswers(s, { goal: 'muscle', weekdays: [1] })
+      expect(s.effort).toBe(chosen)
+    }
+  })
+
   it('has no plan to build without picked days or when making your own', () => {
     expect(planFor({ mode: 'you', weekdays: [] })).toBeNull()
     expect(planFor({ mode: 'own', weekdays: [1, 3] })).toBeNull()
