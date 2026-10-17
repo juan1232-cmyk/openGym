@@ -407,7 +407,7 @@ export function suggestionFor(list, exId, all, { gymEq = null, usage = {} } = {}
   const group = GROUPS.find(g => g.includes(overlap.muscle))
   if (!group) return { overlap }
   const load = loadOf((list || []).map(e => ({ id: e.id, sets: 1 })))
-  // "Short of work" = less than one exercise's worth, counting supporting roles at 0.4.
+  // "Short of work" = less than one exercise's worth, counting supporting roles at 0.5.
   const short = group.filter(m => m !== overlap.muscle && (load[m] || 0) < 1)
     .sort((a, b) => (load[a] || 0) - (load[b] || 0) || group.indexOf(a) - group.indexOf(b))
   for (const muscle of short) {

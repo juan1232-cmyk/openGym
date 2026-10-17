@@ -16,6 +16,8 @@ import { Button, Check, NumberField } from '../components/ui.jsx'
 import { nextPrescription, applyPrescription } from '../lib/progression.js'
 import { glyphOf } from '../lib/glyphs.js'
 import { setVsLast } from '../lib/verdict.js'
+import { overSessionCap, MUSCLE_NAME } from '../lib/muscles.js'
+import { SESSION_CAP } from '../lib/engine-config.js'
 
 /* ---------- start chooser (no active workout) ---------- */
 function StartChooser() {
@@ -148,6 +150,7 @@ function ExerciseBody({ entryIdx, inSuperset, onToggle, onField, onAddSet, onRem
   // What the progression policy decided for this session, and why (issue #17). Computed when
   // the session was built so the reason matches the numbers already in the rows.
   const plan = entry.plan
+  const note = S.active.capNote && S.active.capNote.id === entry.id ? S.active.capNote : null
   const update = useStore(s => s.update)
   const swap = () => swapSheet(ex, S.active.entries.map(e => e.id), alt => update(s => {
     const e = s.active.entries[entryIdx]
@@ -174,6 +177,11 @@ function ExerciseBody({ entryIdx, inSuperset, onToggle, onField, onAddSet, onRem
       <span>{t(...plan.why)}</span>
     </div>}
     <SetGrid entryIdx={entryIdx} onToggle={onToggle} onField={onField} onStartTimed={onStartTimed} />
+    {note && <div className="progline warn capnote" role="status">
+      <Icon name="lightbulb" />
+      <span><b>{t('{0}: past {1} sets today.', t(MUSCLE_NAME[note.m]), SESSION_CAP)}</b> {t('More sets here mostly add tiredness. Move them to another day.')}</span>
+      <button className="x" aria-label={t('Dismiss')} onClick={() => update(s => { s.active.capNote = null })}><Icon name="xmark" /></button>
+    </div>}
     <div className="pk-ex-acts">
       <Button size="sm" variant="soft" icon="minus" disabled={entry.sets.length <= 1} onClick={onRemoveSet}>{t('Remove set')}</Button>
       <Button size="sm" variant="soft" icon="plus" onClick={onAddSet}>{t('Add set')}</Button>
@@ -356,6 +364,13 @@ function ActiveWorkout() {
       if (exJustDone && cardioEntry) useUI.getState().toast(t('Cardio logged'))
       else if (exJustDone && m === 'time') useUI.getState().toast(t('Hold logged'))
     }
+    // A muscle past the per-session cap gets one note, under the exercise that took it there.
+    // `capped` lives in the session, so leaving the screen and coming back doesn't repeat it.
+    const over = overSessionCap(useStore.getState().S.active, SESSION_CAP, A.capped)
+    if (over.length) update(s => {
+      s.active.capped = [...(s.active.capped || []), ...over]
+      s.active.capNote = { m: over[0], id: s.active.entries[idx].id }
+    }, true)
   }
 
   // Leaving mid-beat still moves on, so coming back lands on the next exercise (but doesn't

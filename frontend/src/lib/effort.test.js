@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   rirOf, toScale, displayScale, avgRir, effortSummary, hasEffort, effortWeeks,
-  effortHistogram, isHardSet, HARD_RIR, MIN_RATED
+  effortHistogram, isHardSet, setCredit, HARD_RIR, MIN_RATED
 } from './effort.js'
 import { isoOf } from './format.js'
 
@@ -171,5 +171,30 @@ describe('isHardSet', () => {
     expect(isHardSet({ rir: HARD_RIR + 0.5 })).toBe(false)
     expect(isHardSet({ rpe: 10 })).toBe(true)
     expect(isHardSet({})).toBe(false)          // unrated is not hard, and not easy either
+  })
+})
+
+describe('setCredit', () => {
+  it('weighs a set by its reps in reserve: full near failure, falling off past two', () => {
+    expect([0, 1, 2, 3, 4, 5, 8].map(rir => setCredit({ r: 8, rir }))).toEqual([1, 1, 0.9, 0.75, 0.5, 0.25, 0.25])
+  })
+
+  it('reads RPE through RIR — RPE 8 is RIR 2', () => {
+    expect(setCredit({ r: 8, rpe: 8 })).toBe(0.9)
+  })
+
+  it('reads a half step as the whole RIR below it', () => {
+    expect(setCredit({ r: 8, rir: 2.5 })).toBe(0.9)
+  })
+
+  it('counts an unrated set in full, so history from before rating keeps its weight', () => {
+    expect(setCredit({ r: 8 })).toBe(1)
+    expect(setCredit({ sec: 45 })).toBe(1)
+  })
+
+  it('halves a set past 30 reps, on top of its effort', () => {
+    expect(setCredit({ r: 30 })).toBe(1)
+    expect(setCredit({ r: 31 })).toBe(0.5)
+    expect(setCredit({ r: 40, rir: 3 })).toBe(0.375)
   })
 })
