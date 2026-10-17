@@ -48,3 +48,5 @@ export const SESSION_CAP = 11
 export const HEAVY_REPS = 8
 // Times a week a main lift should be trained to keep the strength side moving.
 export const MAIN_LIFT_FREQ = 2
+// A rated lift counts as a main lift from this strength-transfer rating up.
+export const MAIN_LIFT_T = 7

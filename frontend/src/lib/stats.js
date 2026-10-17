@@ -8,7 +8,8 @@ import { liftTrend, liftStalls, STALL_SESSIONS } from './verdict.js'
 import { trendPer14 } from './progress.js'
 import { EXIDX } from './exercises.js'
 import { isCompound } from './scheme.js'
-import { WEEKLY_ZONES, HEAVY_REPS, MAIN_LIFT_FREQ } from './engine-config.js'
+import { WEEKLY_ZONES, HEAVY_REPS, MAIN_LIFT_FREQ, MAIN_LIFT_T } from './engine-config.js'
+import { RATING_OF } from './ratings.js'
 
 const DAY = 864e5
 const at = iso => new Date(iso + 'T12:00:00')
@@ -173,9 +174,10 @@ export function setZone(perWeek) {
 // trained fewer than MAIN_LIFT_FREQ times this week is flagged — once a week holds strength,
 // twice is what moves it. "Lately" is the last four weeks, so a lift you dropped a month ago
 // doesn't nag every Monday.
-// TODO(layer 1, juan1232-cmyk/openGym#31): a main lift is T ≥ 7 in ratings.js once that lands;
-// until then any compound counts.
-export const isMainLift = id => isCompound(EXIDX[id])
+// A main lift is a rated lift with strength transfer T of at least MAIN_LIFT_T (layer 1, ratings.js).
+// Only 19 lifts are rated, so an unrated one falls back to "is it a compound". Without that,
+// a deadlift or an overhead press would never count just because nobody has rated it yet.
+export const isMainLift = id => (RATING_OF[id] ? RATING_OF[id].T >= MAIN_LIFT_T : isCompound(EXIDX[id]))
 export function mainLiftsWeek(workouts, now = new Date()) {
   const week = rangeBounds(7, now)
   const lately = { from: addDays(week.to, -27), to: week.to }

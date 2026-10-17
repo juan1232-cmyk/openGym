@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   rangeBounds, prevBounds, inRange, adherence, buckets, bucketBy, weeksTrained, bestRun,
-  personalBests, mainLift, AREAS, areaSets, liftsToWatch, weeklySets, setZone, mainLiftsWeek, bwPace, weekdayPattern
+  personalBests, mainLift, AREAS, areaSets, liftsToWatch, weeklySets, setZone, mainLiftsWeek, isMainLift, bwPace, weekdayPattern
 } from './stats.js'
 import { SCENARIOS } from '../device/scenarios.js'
 import { MUSCLES } from './muscles.js'
@@ -198,6 +198,13 @@ describe('mainLiftsWeek', () => {
       wo('2026-09-22', [{ id: LEG_EXT, sets: reps(5) }]),
     ]
     expect(mainLiftsWeek(ws, TODAY)).toEqual([])
+  })
+
+  it('goes by the strength-transfer rating where a lift has one, the name where it has none', () => {
+    expect(isMainLift('0085')).toBe(true)    // romanian deadlift, T 7
+    expect(isMainLift('0743')).toBe(false)   // sled hack squat: a compound by name, but T 6
+    expect(isMainLift('0577')).toBe(false)   // lever chest press, T 5
+    expect(isMainLift('0027')).toBe(true)    // barbell bent over row: unrated, a compound
   })
 
   it('ignores sets not ticked off', () => {
