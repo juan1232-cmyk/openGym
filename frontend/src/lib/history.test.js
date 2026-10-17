@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { modeOf, isTimed, fmtSec, setLabel, defaultConfig, buildSets, exLine, workoutVolume, effortOf, stepEffort, capEffort, isBw, isPerSide, sideReps, repStep, nextUp, nextSetLabel, previousSession, topSet, isLoadPR, moveItem } from './history.js'
+import { modeOf, isTimed, fmtSec, setLabel, defaultConfig, buildSets, exLine, workoutVolume, effortOf, stepEffort, capEffort, rirChip, isBw, isPerSide, sideReps, repStep, nextUp, nextSetLabel, previousSession, topSet, isLoadPR, moveItem } from './history.js'
 import { EXDB } from './exercises.js'
 
 // Real ids out of the shipped catalogue, so the body-part fallback is exercised for real.
@@ -536,5 +536,18 @@ describe('moveItem', () => {
   it('breaks a pair it lands inside rather than joining it', () => {
     const ex = [{ id: 'a' }, { id: 'b', sg: 'x' }, { id: 'c', sg: 'x' }]
     expect(ids(moveItem(ex, 0, 1))).toBe('b a c')
+  })
+})
+
+describe('rirChip', () => {
+  it('lights the chip for a whole RIR and folds everything from 4 into "4+"', () => {
+    expect([0, 1, 2, 3].map(rirChip)).toEqual([0, 1, 2, 3])
+    expect(rirChip(4)).toBe(4)
+    expect(rirChip(7.5)).toBe(4)
+  })
+  it('lights nothing for an empty cell or a half step it cannot show', () => {
+    expect(rirChip(null)).toBeNull()
+    expect(rirChip(undefined)).toBeNull()
+    expect(rirChip(1.5)).toBeNull()
   })
 })

@@ -1470,6 +1470,22 @@ button.pk-tile:active{background:var(--surface-2)}
   background:var(--bg);color:var(--acc-ink);font-size:14px;
 }
 .pk-set .setgo:disabled{opacity:.3}
+/* the RIR cell is a button that opens the chip row — drawn like the number fields beside it */
+.pk-set .rirc{
+  width:100%;height:36px;border-radius:10px;background:var(--bg);
+  font-family:var(--mono);font-size:16px;font-weight:500;color:var(--label);
+  box-shadow:inset 0 0 0 1.5px transparent;transition:box-shadow var(--fast);
+}
+.pk-set .rirc.on{box-shadow:inset 0 0 0 1.5px var(--ink)}
+/* one tap per set: 0 · 1 · 2 · 3 · 4+ under the row it rates */
+.pk-rir{display:flex;align-items:center;gap:6px;padding:2px 6px 6px 38px;animation:pk-up 260ms var(--spring) backwards}
+.pk-rir span{flex:1;font-size:12px;color:var(--label-2);white-space:nowrap}
+.pk-rir button{
+  min-width:40px;height:36px;padding:0 8px;border-radius:10px;background:var(--bg);
+  font-family:var(--mono);font-size:15px;font-weight:600;color:var(--label);
+  box-shadow:inset 0 0 0 1.5px var(--line);transition:background var(--fast),color var(--fast);
+}
+.pk-rir button.on{background:var(--ink);color:var(--on-ink);box-shadow:none}
 .pk-ex-acts{display:flex;gap:8px;padding:10px 6px 0}
 .pk-discard{display:block;margin:10px auto 0;color:var(--red)}
 
