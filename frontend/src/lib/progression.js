@@ -18,6 +18,7 @@
 
 import { modeOf, repStep } from './history.js'
 import { EXIDX } from './exercises.js'
+import { rirOf } from './effort.js'
 
 export const POLICIES = ['off', 'linear', 'greyskull', 'double', 'time']
 
@@ -46,7 +47,7 @@ export const POLICY_DESC = {
 // Sessions of repeated misses before a deload. Greyskull resets on the first failure by
 // design; the general linear policy gives you two more cracks at it first.
 export const DELOAD_AFTER = { linear: 3, greyskull: 1, double: 3, time: 3 }
-const DELOAD_FACTOR = 0.9
+export const DELOAD_FACTOR = 0.9
 
 // Body parts where a 5 kg jump is normal rather than brutal.
 const HEAVY_BP = ['upper legs', 'lower legs', 'back', 'hips', 'glutes']
@@ -83,7 +84,7 @@ function snap(v, step) {
 // nearest step keeps the cut close to the intended 10 %, but on small weights the nearest
 // step can be the weight you started from — so a deload that did not actually reduce
 // anything takes one step down instead. Never goes below a single step.
-function deloadTo(cur, step) {
+export function deloadTo(cur, step) {
   let next = snap(cur * DELOAD_FACTOR, step)
   if (next >= cur) next = snap(cur - step, step)
   return Math.max(step, next)
@@ -120,6 +121,7 @@ export function readSession(entry, fallback) {
   return {
     mode, goal, reps,
     weight: Math.max(0, ...sets.filter(s => s.done).map(s => s.w || 0)),
+    rirs: sets.map(s => (s.done ? rirOf(s) : null)),      // null = not rated, see reachedTop
     count: reps.length,                                   // the dimension bodyweight work grows (#33)
     low: reps.length ? Math.min(...reps) : 0,
     amrap: reps.length ? reps[reps.length - 1] : 0,       // Greyskull's final set
@@ -136,6 +138,14 @@ export function sessionsFor(S, exId, fallback) {
   })
   return out
 }
+
+// Double progression's "top of the range", with an optional target RIR (`cfg.rir`): the
+// reps alone don't say the weight has become light enough to add to — 10 grinding reps at
+// RIR 0 and 10 with two still in the tank are different sessions. Every set has to have
+// kept at least the target in reserve. An unrated set passes: it says nothing either way,
+// and a profile that doesn't rate effort must progress exactly as it always did.
+export const reachedTop = (session, minRir) =>
+  !!session.ok && (minRir == null || (session.rirs || []).every(r => r == null || r >= minRir))
 
 // How many sessions in a row ended in a miss, counting back from the most recent.
 export function stallCount(sessions) {
@@ -209,11 +219,16 @@ export function nextPrescription(S, cfg, routine) {
   if (policy === 'double') {
     const top = cfg.reps || last.goal || 10
     const bottom = Math.min(cfg.repsMin || Math.max(1, top - 2), top)
-    if (last.ok) return { policy, kind: 'up', weight: snap(w + inc, inc), reps: bottom, why: ['Top of the rep range in every set — {0} {1} more, back to {2} reps.', inc, unit, bottom] }
-    if (stalls >= deloadAt) {
+    const minRir = cfg.rir != null && cfg.rir >= 0 ? cfg.rir : null
+    if (reachedTop(last, minRir)) return { policy, kind: 'up', weight: snap(w + inc, inc), reps: bottom, why: ['Top of the rep range in every set — {0} {1} more, back to {2} reps.', inc, unit, bottom] }
+    // A session that hit the reps but not the reserve is still not the top, so it counts
+    // toward a stall the same way: three grinding sessions in a row means the weight is wrong.
+    const dstalls = minRir == null ? stalls : stallCount(sessions.map(s => ({ ok: reachedTop(s, minRir) })))
+    if (dstalls >= deloadAt) {
       const dw = deloadTo(w, inc)
-      return { policy, kind: 'deload', weight: dw, reps: bottom, why: ['Stalled {0} sessions — deload to {1} {2}.', stalls, dw, unit] }
+      return { policy, kind: 'deload', weight: dw, reps: bottom, why: ['Stalled {0} sessions — deload to {1} {2}.', dstalls, dw, unit] }
     }
+    if (last.ok) return { policy, kind: 'hold', weight: w, reps: top, why: ['{0} reps in every set, but with less than {1} in reserve — same weight until it comes easier.', top, minRir] }
     const aim = Math.min(top, Math.max(bottom, last.low + repStep(cfg)))
     return { policy, kind: 'hold', weight: w, reps: aim, why: ['Same weight — aim for {0} reps this time.', aim] }
   }

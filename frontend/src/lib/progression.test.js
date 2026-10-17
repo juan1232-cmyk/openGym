@@ -450,3 +450,61 @@ describe('applyPrescription', () => {
     expect(applyPrescription(sets, { kind: 'up', weight: 60, sets: 1 })).toHaveLength(sets.length)
   })
 })
+
+describe('double progression with a target RIR', () => {
+  const cfg = { id: LIFT, sets: 3, reps: 12, repsMin: 8, weight: 40, prog: 'double', rir: 2 }
+  // sessions as lists of [reps, rir] per set, all at 40; rir undefined = never rated
+  const rated = rows => ({
+    unit: 'kg',
+    workouts: rows.map((row, i) => ({
+      d: '2026-03-0' + (i + 1),
+      entries: [{ id: LIFT, target: { ...cfg }, sets: row.map(([r, rir]) => ({ w: 40, r, done: true, ...(rir != null ? { rir } : {}) })) }]
+    }))
+  })
+
+  it('holds the weight at the top of the range when a set had less than the target left', () => {
+    const p = nextPrescription(rated([[[12, 2], [12, 2], [12, 1]]]), cfg)
+    expect(p.kind).toBe('hold')
+    expect(p.weight).toBe(40)
+    expect(p.reps).toBe(12)
+    expect(p.why[0]).toContain('reserve')
+  })
+
+  it('advances once every set reaches the top with the target in reserve', () => {
+    const p = nextPrescription(rated([[[12, 2], [12, 3], [12, 2]]]), cfg)
+    expect(p.kind).toBe('up')
+    expect(p.weight).toBe(42.5)
+    expect(p.reps).toBe(8)
+  })
+
+  it('reads RPE through the same scale — RPE 8 is RIR 2', () => {
+    const S = rated([[[12], [12], [12]]])
+    S.workouts[0].entries[0].sets.forEach(s => { s.rpe = 8 })
+    expect(nextPrescription(S, cfg).kind).toBe('up')
+    S.workouts[0].entries[0].sets[2].rpe = 9
+    expect(nextPrescription(S, cfg).kind).toBe('hold')
+  })
+
+  it('lets unrated sets through, so a profile that never rates progresses as before', () => {
+    expect(nextPrescription(rated([[[12], [12], [12]]]), cfg).kind).toBe('up')
+    expect(nextPrescription(rated([[[12, 2], [12], [12]]]), cfg).kind).toBe('up')
+  })
+
+  it('changes nothing without a target', () => {
+    const { rir, ...plain } = cfg
+    expect(nextPrescription(rated([[[12, 0], [12, 0], [12, 0]]]), plain).kind).toBe('up')
+  })
+
+  it('still asks for more reps inside the range, whatever the reserve', () => {
+    const p = nextPrescription(rated([[[10, 4], [9, 4], [9, 4]]]), cfg)
+    expect(p.kind).toBe('hold')
+    expect(p.reps).toBe(10)
+  })
+
+  it('counts grinding at the top toward a deload like any other stall', () => {
+    const grind = [[12, 0], [12, 0], [12, 0]]
+    const p = nextPrescription(rated([grind, grind, grind]), cfg)
+    expect(p.kind).toBe('deload')
+    expect(p.weight).toBe(35)
+  })
+})

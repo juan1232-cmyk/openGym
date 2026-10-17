@@ -35,7 +35,10 @@ function OneRM({ ex }) {
     <h4 className="sec">{t('Estimated 1RM')}</h4>
     {best && <div className="small" style={{ marginBottom: 8 }}>
       {t('From your log:')} <b className="accent">{fmtNum(best.est)} {st.unit}</b>
-      <span className="dim"> · {t('{0} × {1} on {2}', fmtNum(best.w) + ' ' + st.unit, best.r, fmtDate(best.d, true))}</span>
+      <span className="dim"> · {t('{0} × {1} on {2}', fmtNum(best.w) + ' ' + st.unit, best.r, fmtDate(best.d, true))}
+        {/* the estimate counted the reps left in the tank, so say so — otherwise 60 × 8
+            "giving" 80 reads like a wrong sum */}
+        {best.rir != null && ' · ' + t('{0} in reserve', fmtNum(best.rir))}</span>
     </div>}
     <div className="row cfgrow" style={{ marginBottom: 10 }}>
       <Stepper label={t('Weight ({0})', st.unit)} value={w} step={2.5} onChange={setW} />
@@ -384,6 +387,17 @@ function ProgressionFields({ ex, mode, c, setC, routine, unit }) {
       <Stepper label={mode === 'time' ? t('Step (seconds)') : t('Step ({0})', unit)} value={inc}
         step={mode === 'time' ? 5 : 1.25} decimal={mode !== 'time'} onChange={v => setC(x => ({ ...x, inc: v }))} />
     </div>}
+    {/* Only double progression has a "top of the range" for a reserve to qualify — the other
+        rules add weight on the reps alone. Unrated sets always pass, so this is safe to set
+        before effort is switched on. */}
+    {active === 'double' && <>
+      <div className="cfg-lbl">{t('Reps in reserve at the top')}</div>
+      <Segmented className="seg-range" value={c.rir != null ? c.rir : ''} onChange={v => setC(x => ({ ...x, rir: v === '' ? undefined : v }))}
+        options={[{ value: '', label: t('Any') }, ...[1, 2, 3].map(n => ({ value: n, label: String(n) }))]} />
+      <div className="small dim" style={{ marginBottom: 18 }}>{c.rir != null
+        ? t('The weight goes up only once every set reaches the top of the range with {0} or more reps left.', c.rir)
+        : t('The weight goes up on the reps alone, however hard the sets were.')}</div>
+    </>}
   </>
 }
 
@@ -451,6 +465,9 @@ function ExConfig({ ex, existing, onSave, onDelete, close, routine, ctx }) {
     const prog = {}
     if (c.prog) prog.prog = c.prog
     if (c.inc > 0) prog.inc = c.inc
+    // Only kept while the lift is on double progression — left behind on another rule it
+    // would come back unasked the day the rule is switched back.
+    if (c.rir != null && mode === 'reps' && policyFor({ ...c, id: ex.id }, routine, mode) === 'double') prog.rir = c.rir
     // Written only when it differs from what the dataset already says, so a barbell config
     // stays exactly the shape it was before these flags existed.
     // `bodyweight` is true of a hold as much as of a set of reps; `side` is not — it counts

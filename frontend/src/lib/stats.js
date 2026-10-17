@@ -4,9 +4,11 @@
 import { isoOf, weekKey } from './format.js'
 import { effectiveRoutineId, topSet, isBw } from './history.js'
 import { bestSetOf, e1rmSeries } from './onerm.js'
-import { liftTrend, liftStalls, STALL_SESSIONS } from './verdict.js'
+import { liftTrend, liftStalls, STALL_SESSIONS, RECENT_DAYS } from './verdict.js'
 import { trendPer14 } from './progress.js'
-import { EXIDX } from './exercises.js'
+import { deloadTo, defaultIncrement, DELOAD_FACTOR } from './progression.js'
+import { similarTo, usageOf } from './pick.js'
+import { EXIDX, allExercises } from './exercises.js'
 import { isCompound } from './scheme.js'
 import { WEEKLY_ZONES, HEAVY_REPS, MAIN_LIFT_FREQ, MAIN_LIFT_T } from './engine-config.js'
 import { RATING_OF } from './ratings.js'
@@ -126,9 +128,42 @@ export const areaSets = load => AREAS.map(([area, ms]) => ({ area, sets: ms.redu
 
 // ---- what to act on --------------------------------------------------------------------
 
+// A lift is flat once this many sessions in a row have failed to set a new estimated-1RM best.
+// e1RM rather than the target, so it catches what "stuck" can't: a lift that hits its reps
+// every time and still isn't getting any stronger, or one with no plan to miss at all.
+export const FLAT_SESSIONS = 3
+
+// Sessions since the exercise last set a new e1RM best — matching the best is not beating it.
+// Null with no estimate at all. The first session is a best by definition, so it is only after
+// it that anything can come up short.
+export function sessionsSinceBest(S, exId) {
+  let best = -Infinity, since = null
+  e1rmSeries(S, exId).forEach(p => { if (p.y > best) { best = p.y; since = 0 } else since++ })
+  return since
+}
+
+// What to do about a flat lift, in the order to try it: more work on it first (the cheapest
+// change, and often all it needed), then a different movement for the same muscle, and only
+// then a lighter week — a deload costs a week of training, so it is the last thing to spend.
+function flatFixes(S, id, cfg, planned) {
+  const all = allExercises(S)
+  const ex = all.find(e => e.id === id)
+  const alt = ex ? similarTo(ex, all, { exclude: [...planned], gymEq: S.gymEq, usage: usageOf(S) })[0] : null
+  const last = [...(S.workouts || [])].reverse().map(w => w.entries.find(e => e.id === id)).find(e => e && e.sets.some(s => s.done))
+  const w = Math.max(0, ...((last && last.sets) || []).filter(s => s.done).map(s => s.w || 0))
+  const inc = cfg && cfg.inc > 0 ? cfg.inc : defaultIncrement(id, S.unit || 'kg')
+  return [
+    { kind: 'sets', add: [1, 2] },
+    { kind: 'swap', alt: alt ? alt.id : null },
+    { kind: 'deload', factor: DELOAD_FACTOR, weight: w > 0 ? deloadTo(w, inc) : null }
+  ]
+}
+
 // Lifts worth a look right now: planned lifts stuck on their target (the same stall count the
-// orb's "Stalled" verdict uses), then lifts whose estimated 1RM is trending down. Stuck comes
-// first because it already says what's wrong; a falling trend only says that something is.
+// orb's "Stalled" verdict uses), then lifts whose estimated 1RM is trending down, then lifts
+// that have gone FLAT_SESSIONS without a new e1RM best. Stuck comes first because it already
+// says what's wrong; a falling trend only says that something is. One entry per lift: a flat
+// lift that is also stuck or falling stays under that heading and carries the fixes with it.
 // Not range-bound on purpose — "is this lift stuck" is a question about today.
 export function liftsToWatch(S, now = new Date()) {
   const planned = new Map()
@@ -145,7 +180,21 @@ export function liftsToWatch(S, now = new Date()) {
     const tr = liftTrend(S, id, now)
     if (tr && tr.dir === 'down') out.push({ id, kind: 'down', rate: tr.rate })
   })
-  return out.sort((a, b) => (a.kind === b.kind ? (a.kind === 'stuck' ? b.n - a.n : a.rate - b.rate) : a.kind === 'stuck' ? -1 : 1))
+  const byId = new Map(out.map(x => [x.id, x]))
+  const today = at(isoOf(now))
+  recent.forEach(id => {
+    const since = sessionsSinceBest(S, id)
+    if (since == null || since < FLAT_SESSIONS) return
+    // the same "still trained" window the orb uses — a lift dropped a month ago isn't flat
+    const pts = e1rmSeries(S, id)
+    if ((today - at(pts[pts.length - 1].d)) / DAY > RECENT_DAYS) return
+    const fixes = flatFixes(S, id, planned.get(id), planned.keys())
+    const x = byId.get(id)
+    if (x) Object.assign(x, { flat: since, fixes })
+    else out.push({ id, kind: 'flat', n: since, fixes })
+  })
+  const RANK = { stuck: 0, down: 1, flat: 2 }
+  return out.sort((a, b) => (a.kind === b.kind ? (a.kind === 'down' ? a.rate - b.rate : b.n - a.n) : RANK[a.kind] - RANK[b.kind]))
 }
 
 // Only the big muscle groups are held to the weekly zones — nobody programs 6 weekly sets for

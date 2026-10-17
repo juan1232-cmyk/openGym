@@ -6,6 +6,7 @@ import {
 import { SCENARIOS } from '../device/scenarios.js'
 import { MUSCLES } from './muscles.js'
 import { EXDB } from './exercises.js'
+import { isoOf } from './format.js'
 
 // Wednesday 23 Sep 2026
 const TODAY = new Date('2026-09-23T09:00:00')
@@ -137,20 +138,64 @@ describe('AREAS', () => {
 
 describe('liftsToWatch', () => {
   const NOW = new Date()
+  // Every demo profile holds its row at 60 × 5 for eight sessions — flat by e1RM, so it shows
+  // up after whatever the scenario is named for.
+  const ROW = '0027'
   it('flags planned lifts stuck on their target, most-stuck first', () => {
     const w = liftsToWatch(SCENARIOS.stalled.state(NOW), NOW)
-    expect(w.map(x => x.kind)).toEqual(['stuck', 'stuck'])
-    expect(w.every(x => x.n >= 2)).toBe(true)
+    expect(w.map(x => x.kind)).toEqual(['stuck', 'stuck', 'flat'])
+    expect(w.filter(x => x.kind === 'stuck').every(x => x.n >= 2)).toBe(true)
   })
 
   it('flags lifts whose estimated 1RM is falling', () => {
     const w = liftsToWatch(SCENARIOS.slipping.state(NOW), NOW)
-    expect(w.length).toBeGreaterThan(0)
-    expect(w.every(x => x.kind === 'down')).toBe(true)
+    expect(w.map(x => x.kind)).toEqual(['down', 'down', 'flat'])
   })
 
-  it('has nothing to say about a profile that is progressing', () => {
-    expect(liftsToWatch(SCENARIOS.progressing.state(NOW), NOW)).toEqual([])
+  it('has nothing to say about a progressing lift, only the one that isn\'t moving', () => {
+    expect(liftsToWatch(SCENARIOS.progressing.state(NOW), NOW).map(x => [x.id, x.kind])).toEqual([[ROW, 'flat']])
+  })
+
+  // sessions of 3 × 5 at the given weights, the last one yesterday, two days apart
+  const sessions = (ws, cfg) => ({
+    unit: 'kg', routines: cfg ? [{ id: 'r', ex: [cfg] }] : [], customEx: [],
+    workouts: ws.map((w, i) => {
+      const d = isoOf(new Date(NOW.getTime() - (ws.length - i) * 2 * 864e5))
+      return wo(d, [{ id: LIFT, sets: [set(w, 5), set(w, 5), set(w, 5)] }], { start: new Date(d + 'T18:00:00').getTime() })
+    })
+  })
+
+  it('calls a lift flat after 3 sessions without a new e1RM best, not after 2', () => {
+    expect(liftsToWatch(sessions([100, 100, 100]), NOW)).toEqual([])
+    const w = liftsToWatch(sessions([100, 100, 100, 100]), NOW)
+    expect(w.map(x => [x.id, x.kind, x.n])).toEqual([[LIFT, 'flat', 3]])
+  })
+
+  it('starts counting again from a new best', () => {
+    expect(liftsToWatch(sessions([100, 100, 100, 102.5, 100, 100]), NOW)).toEqual([])
+    expect(liftsToWatch(sessions([100, 100, 100, 102.5, 100, 100, 100]), NOW)[0].n).toBe(3)
+  })
+
+  it('lists the fixes in order: more sets, a similar exercise, then a deload week', () => {
+    const [x] = liftsToWatch(sessions([100, 100, 100, 100]), NOW)
+    expect(x.fixes.map(f => f.kind)).toEqual(['sets', 'swap', 'deload'])
+    expect(x.fixes[0].add).toEqual([1, 2])
+    expect(x.fixes[1].alt).toBeTruthy()
+    expect(x.fixes[1].alt).not.toBe(LIFT)
+    expect(x.fixes[2].factor).toBe(0.9)
+    expect(x.fixes[2].weight).toBeLessThan(100)
+  })
+
+  it('shows a lift that is both stuck and flat once, as stuck, with the fixes', () => {
+    const w = liftsToWatch(sessions([100, 100, 100, 100], { id: LIFT, sets: 3, reps: 8 }), NOW)
+    expect(w.map(x => x.kind)).toEqual(['stuck'])
+    expect(w[0].fixes.map(f => f.kind)).toEqual(['sets', 'swap', 'deload'])
+  })
+
+  it('leaves out a flat lift that hasn\'t been trained in a month', () => {
+    const S = sessions([100, 100, 100, 100])
+    S.workouts.forEach(w => { w.d = isoOf(new Date(new Date(w.d + 'T12:00:00').getTime() - 40 * 864e5)) })
+    expect(liftsToWatch(S, NOW)).toEqual([])
   })
 })
 

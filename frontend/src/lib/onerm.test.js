@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { estimate1RM, bestSetOf, e1rmSeries, best1RM, is1RMRecord, REP_CAP, FORMULAS } from './onerm.js'
+import { estimate1RM, estimateSet, bestSetOf, e1rmSeries, best1RM, is1RMRecord, REP_CAP, FORMULAS } from './onerm.js'
 
 describe('estimate1RM', () => {
   it('returns the load unchanged for a single rep', () => {
@@ -142,5 +142,60 @@ describe('is1RMRecord', () => {
   it('says nothing for a timed or unfinished entry', () => {
     expect(is1RMRecord(S, 'plank', { id: 'plank', sets: [{ sec: 90, done: true }] })).toBeNull()
     expect(is1RMRecord(S, 'bench', { id: 'bench', sets: [{ w: 200, r: 5, done: false }] })).toBeNull()
+  })
+})
+
+// A rated set is read as the set it would have been taken to failure: reps + reps in reserve.
+describe('estimateSet', () => {
+  it('counts the reps left in reserve', () => {
+    expect(estimateSet({ w: 60, r: 8, rir: 2 })).toBe(80)       // 60 · (1 + 10/30)
+    expect(estimateSet({ w: 100, r: 5, rir: 0 })).toBe(116.7)   // RIR 0 is a rating: to failure
+  })
+
+  it('reads RPE 8 exactly as RIR 2', () => {
+    expect(estimateSet({ w: 60, r: 8, rpe: 8 })).toBe(estimateSet({ w: 60, r: 8, rir: 2 }))
+    expect(estimateSet({ w: 60, r: 8, rpe: 10 })).toBe(estimate1RM(60, 8))
+  })
+
+  it('applies the rep cap to reps + RIR', () => {
+    expect(estimateSet({ w: 60, r: 10, rir: 2 })).not.toBeNull()   // 12, right at the cap
+    expect(estimateSet({ w: 60, r: 10, rir: 3 })).toBeNull()       // 13
+    expect(estimateSet({ w: 60, r: 12, rpe: 9 })).toBeNull()
+  })
+
+  it('gives an unrated set exactly what estimate1RM always gave', () => {
+    for (const [w, r] of [[100, 1], [100, 5], [80, 8], [101.25, 7], [60, 12], [60, 13], [0, 5], [100, 0]]) {
+      expect(estimateSet({ w, r })).toBe(estimate1RM(w, r))
+      expect(estimateSet({ w, r, rir: null, rpe: null })).toBe(estimate1RM(w, r))
+    }
+  })
+
+  it('still needs a rep — RIR alone is not a set', () => {
+    expect(estimateSet({ w: 60, r: 0, rir: 5 })).toBeNull()
+    expect(estimateSet(null)).toBeNull()
+  })
+})
+
+describe('e1RM from rated sets', () => {
+  const R = {
+    workouts: [
+      { d: '2026-02-01', start: 1, entries: [{ id: 'bench', sets: [{ w: 60, r: 8, done: true }] }] },
+      { d: '2026-02-08', start: 2, entries: [{ id: 'bench', sets: [{ w: 60, r: 8, rir: 2, done: true }] }] },
+    ]
+  }
+
+  it('lets the reserve move the series and the best, and says where it came from', () => {
+    expect(e1rmSeries(R, 'bench').map(p => p.y)).toEqual([76, 80])
+    expect(best1RM(R, 'bench')).toEqual({ est: 80, w: 60, r: 8, rir: 2, d: '2026-02-08', t: 2 })
+  })
+
+  it('picks the best set by its reserve-adjusted estimate, not its reps', () => {
+    const best = bestSetOf({ sets: [{ w: 60, r: 10, rir: 0, done: true }, { w: 60, r: 8, rir: 4, done: true }] })
+    expect(best).toEqual({ est: 84, w: 60, r: 8, rir: 4 })
+  })
+
+  it('counts the same reps with more in reserve as a record', () => {
+    const rec = is1RMRecord(R, 'bench', { id: 'bench', sets: [{ w: 60, r: 8, rir: 3, done: true }] })
+    expect(rec).toMatchObject({ est: 82, prev: 80 })
   })
 })
