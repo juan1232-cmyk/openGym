@@ -27,6 +27,7 @@ export default defineConfig({
       '/pose': { target: media, changeOrigin: true }
     }
   },
+  test: { setupFiles: ['./src/test-setup.js'] },
   build: {
     chunkSizeWarningLimit: 1500,
     // the app, and the device page that shows it inside an iPhone (device.html)

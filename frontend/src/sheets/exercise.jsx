@@ -2,6 +2,7 @@
 // sets/reps/progression config, the exercise picker, and custom (user-created) exercises.
 import { useState, useRef } from 'react'
 import { useStore } from '../store/useStore.js'
+import { useRatings } from '../store/useRatings.js'
 import { EXDB, EXIDX, BODYPARTS, isCardio, isBodyweightEq, allExercises } from '../lib/exercises.js'
 import { searchExercises, browseOrder, usageOf, recentIds, regionOf, secondaryOf, muscleChips, matchesMuscle, suggestionFor, similarTo, gymFilter, wordsFrom, quickConfig, fitScore } from '../lib/pick.js'
 import { MUSCLE_NAME } from '../lib/muscles.js'
@@ -186,10 +187,12 @@ export function deleteCustomEx(ex, afterDelete) {
 export const muscleLine = ex => t(regionOf(ex) || ex.tg || ex.bp || '')
 export const chipLabel = m => (m === 'cardio' ? t('Cardio') : t(MUSCLE_NAME[m]))
 
-function PickRow({ ex, onPick, inList, icon = 'plus', onInfo, note }) {
-  // The engine score for the ~20 rated lifts (lib/score.js); every other row stays as it was.
+function PickRow({ ex, onPick, inList, icon = 'plus', onInfo, note, muscle }) {
+  // The engine score for the rated lifts (lib/score.js); every other row stays as it was. `muscle` is
+  // the picker's chip, so a pull-up under Biceps shows its biceps score, not its lats one.
+  useRatings()
   const comfort = useStore(s => s.S.comfort)
-  const fit = fitScore(ex, { comfort })
+  const fit = fitScore(ex, { comfort, muscle })
   return <div className="item pick-row" onClick={() => onPick(ex)}>
     <Thumb ex={ex} /><div className="grow"><div className="tt capitalize">{ex.n}</div>
       <div className="ss">{muscleLine(ex)}{note ? <> · {note}</> : fit && <> · {t(fit.reason)}</>}</div></div>
@@ -275,7 +278,7 @@ function ExercisePicker({ onPick, close, listOf, unique }) {
     </div></div>
     <div className="pick-list" onTouchStart={blur}><div className="pick-col">
       <div className="list">
-        {f.slice(0, shown).map(e => <PickRow key={e.id} ex={e} onPick={tap} inList={inList.has(e.id)} onInfo={exerciseDetailSheet}
+        {f.slice(0, shown).map(e => <PickRow key={e.id} ex={e} muscle={mu} onPick={tap} inList={inList.has(e.id)} onInfo={exerciseDetailSheet}
           note={unique && inList.has(e.id) ? t('already in') : null} />)}
         {f.length === 0 && <div className="empty">{t('No match')}</div>}
         {elsewhere > 0 && <button className="pk-link" onClick={() => { setMu(''); reset() }}>{t('Show {0} matches in all muscles', elsewhere)}</button>}

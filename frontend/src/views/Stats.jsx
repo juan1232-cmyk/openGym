@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
+import { useRatings } from '../store/useRatings.js'
 import { EXIDX } from '../lib/exercises.js'
 import { lastBW, streakWeeks } from '../lib/history.js'
 import { fmtNum, fmtDate, fmtDur, fmtVol, todayISO, isoOf } from '../lib/format.js'
@@ -139,6 +140,7 @@ function LiftsToWatch({ S }) {
 // like Lifts to watch, it's about what to do next, and only this week can still change.
 function MainLifts({ S }) {
   const nav = useNavigate()
+  useRatings()      // which lifts are main lifts depends on the ratings table
   const list = mainLiftsWeek(S.workouts).slice(0, 5)
   if (!list.length) return null
   return <div className="card sa-card">
