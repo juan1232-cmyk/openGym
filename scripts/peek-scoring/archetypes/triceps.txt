@@ -1,0 +1,33 @@
+# Movement archetypes for the Peek exercise scoring (spec v2). One line each:
+# key | muscle:S:L[,muscle:S:L] | secondary,… | St P T C | studied | conf | note
+# Archetypes marked [anchor] reproduce a row of the spec's section-3 table exactly.
+
+## ---------------- triceps ----------------
+tri_oh_cable   | triceps:9:9 | - | 8 8 2 2 | overhead_triceps_ext | high | Arms overhead stretch the long head; cable keeps load at the bottom. [anchor]
+tri_oh_db      | triceps:8:9 | - | 6 5 2 2 | overhead_triceps_ext | high | Arms overhead stretch the long head; the dumbbell is hardest with the forearm near horizontal at the bottom.
+tri_oh_bar     | triceps:8:9 | - | 6 7 3 3 | overhead_triceps_ext | high | Arms overhead stretch the long head; the bar is hardest with the forearm near horizontal at the bottom.
+tri_lying_cable| triceps:8:9 | - | 8 8 2 2 | - | high | Lying with the cable behind the head keeps tension on the long head in the stretch.
+tri_pushdown   | triceps:4:9 | - | 9 8 2 1 | triceps_pushdown | high | Hardest at lockout with the arm at the side, where the long head is short. [anchor]
+tri_pushdown_rev | triceps:4:8 | - | 9 8 1 1 | triceps_pushdown | medium | Same pushdown curve; the reverse grip makes the wrists and forearms give out a bit sooner.
+tri_kick_db    | triceps:2:8 | - | 6 5 1 1 | - | high | Hardest at lockout with the forearm horizontal, where the triceps is short; holding the torso costs a little.
+tri_kick_cable | triceps:5:8 | - | 8 7 1 1 | - | high | The low pulley pulls hardest with the forearm hanging, but the arm is back so the long head is not stretched.
+tri_skull_bar  | triceps:7:9 | - | 5 7 3 2 | - | high | Hardest with the forearm horizontal at the bottom, with the arm vertical so the long head is moderately stretched.
+tri_skull_db   | triceps:7:9 | - | 5 5 2 1 | - | high | Hardest with the forearm horizontal at the bottom, with the arm vertical so the long head is moderately stretched.
+tri_skull_back | triceps:8:9 | - | 5 7 3 2 | - | high | Lowering behind the head puts the arm past vertical, so the long head is stretched more than in a skullcrusher.
+tri_jm         | triceps:6:8 | chest,front_delts | 5 8 5 3 | - | medium | A skullcrusher-press hybrid: hardest low where the elbows are bent, with the chest helping a little.
+tri_cgbp_bar   | triceps:5:7 | chest,front_delts | 6 9 8 5 | - | high | Hardest in the bottom half; chest and front delts share the load so the triceps quit first only about half the time.
+tri_cgbp_smith | triceps:5:7 | chest,front_delts | 8 8 6 4 | - | high | Same curve as the barbell close-grip bench, steadier on the Smith track.
+tri_press_db   | triceps:5:6 | chest,front_delts | 5 5 5 4 | - | medium | A neutral-grip dumbbell press: the chest shares the work, so the triceps give out first less often.
+tri_pin_press  | triceps:2:7 | chest,front_delts | 6 9 6 4 | - | medium | A lockout-only partial from the pins, in the short range where the triceps load is lowest.
+tri_floor_press| triceps:3:7 | chest,front_delts | 6 8 7 4 | - | medium | The floor stops the bar short of the bottom, so the stretched range is cut out.
+tri_dip_par    | triceps:6:6 | chest,front_delts | 6 6 6 4 | - | high | Hardest at the bottom, but chest and front delts often quit before the triceps.
+tri_dip_mach   | triceps:6:7 | chest,front_delts | 9 8 5 3 | - | medium | A dip on a machine: same shape as the free dip, locked into a path with a weight stack.
+tri_dip_assist | triceps:6:7 | chest,front_delts | 8 7 4 3 | - | medium | A counterweight lightens the dip; the shape is the same as the free dip.
+tri_dip_bench  | triceps:6:6 | chest,front_delts | 6 4 2 2 | - | high | Hardest at the bottom with the shoulders pulled back; the shoulders and chest often quit first.
+tri_dip_ring   | triceps:6:5 | chest,front_delts | 3 5 5 5 | - | medium | A dip on rings: the same range, but balance and shoulder stability limit it sooner.
+tri_bw_ext     | triceps:7:8 | - | 6 3 2 2 | - | medium | Body leaning over the hands (or forearms) is hardest at the bottom, where the triceps are lengthened.
+tri_pushup_cg  | triceps:5:6 | chest,front_delts | 8 3 2 3 | - | high | A close-grip push-up is hardest at the bottom; chest and delts share the work.
+tri_machine    | triceps:5:9 | - | 10 8 2 1 | - | medium | A seated triceps extension machine: the cam is unknown, so stretch is assumed moderate.
+tri_hspu       | front_delts:6:7,triceps:5:6 | - | 4 3 6 4 | - | medium | Upside-down push-up: hardest at the bottom, but balance and shoulder strength limit it.
+tri_cable_misc | triceps:6:9 | - | 8 7 1 1 | - | low | Cable extension where the arm and pulley position are unclear from the name, so stretch is assumed moderate.
+tri_band       | triceps:2:8 | - | 6 2 1 1 | - | medium | Band tension peaks as the band stretches, which is at lockout where the triceps is short.

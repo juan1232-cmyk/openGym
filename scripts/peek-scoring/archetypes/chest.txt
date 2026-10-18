@@ -1,0 +1,39 @@
+## ---------------- chest / upper chest ----------------
+ch_bench_bb      | chest:6:7 | triceps,front_delts | 6 9 10 6 | - | high | Hardest in the bottom half where the chest is stretched; triceps and front delts quit first about as often as the chest. [anchor]
+ch_bench_smith   | chest:6:7 | triceps,front_delts | 8 8 8 5 | - | high | Same curve as the barbell bench press, steadier on the Smith track.
+ch_bench_db      | chest:6:7 | triceps,front_delts | 5 6 7 5 | - | high | Hardest in the bottom half where the chest is stretched; triceps and front delts quit first about as often as the chest.
+ch_decline_bb    | chest:5:8 | triceps,front_delts | 5 9 9 5 | - | high | The decline shortens the stretched range, but takes the front delts out so the chest limits more often.
+ch_decline_db    | chest:5:8 | triceps,front_delts | 5 6 7 5 | - | high | The decline shortens the stretched range, but takes the front delts out so the chest limits more often.
+ch_decline_smith | chest:5:8 | triceps,front_delts | 8 8 7 4 | - | high | The decline shortens the stretched range, but takes the front delts out so the chest limits more often.
+ch_decline_mach  | chest:5:8 | triceps,front_delts | 9 8 4 3 | - | medium | The decline shortens the stretched range; the cam is unknown so stretch is assumed moderate.
+ch_press_mach    | chest:6:8 | triceps,front_delts | 9 8 5 4 | - | high | Hardest in the bottom half where the chest is stretched; the back pad keeps the chest doing the work. [anchor]
+ch_press_cable   | chest:6:8 | triceps,front_delts | 8 7 3 3 | - | high | The cables pull hardest in the stretched half, and the back support keeps the chest doing the work.
+ch_press_band    | chest:3:7 | triceps,front_delts | 6 2 2 2 | - | medium | Band tension peaks at lockout, so it is hardest where the chest is short.
+ch_guillotine    | chest:8:7 | triceps,front_delts | 3 8 5 5 | - | low | Lowering to the neck stretches the chest more than a standard bench but is harder to fail safely.
+ch_floor_press   | chest:4:7 | triceps,front_delts | 6 4 4 3 | - | medium | The floor cuts off the bottom of the range, so the stretched part of the press is lost.
+ch_floor_fly     | chest:5:7 | front_delts | 3 6 1 2 | - | low | A barbell fly to the floor stops short of a full stretch and is awkward to control.
+ch_svend         | chest:2:8 | front_delts | 8 5 1 1 | - | medium | A plate squeeze is hardest at the short, squeezed position with almost no load at the stretch.
+uc_incline_bb    | upper_chest:6:6 | chest,triceps,front_delts | 6 9 8 5 | - | high | Hardest in the bottom half; front delts take a big share, so the upper chest gives out first only some of the time.
+uc_incline_db    | upper_chest:6:6 | chest,triceps,front_delts | 5 6 6 5 | - | high | Hardest in the bottom half; front delts take a big share, so the upper chest gives out first only some of the time.
+uc_incline_smith | upper_chest:6:6 | chest,triceps,front_delts | 8 8 7 4 | - | high | Hardest in the bottom half; front delts take a big share, so the upper chest gives out first only some of the time.
+uc_incline_mach  | upper_chest:6:7 | chest,triceps,front_delts | 9 8 4 3 | - | medium | Hardest in the bottom half; the cam is unknown so stretch is assumed moderate.
+uc_incline_cable | upper_chest:6:7 | chest,triceps,front_delts | 7 7 3 3 | - | high | The cables pull hardest in the stretched half; front delts still help, so the upper chest gives out first more often than with a barbell.
+ch_fly_cable     | chest:8:8 | front_delts | 8 7 2 2 | - | high | Arms wide and back put the pecs at full stretch where the cables pull hardest. [anchor]
+ch_fly_cable_mid | chest:6:8 | front_delts | 8 7 2 2 | - | medium | With the pulleys at chest height the pull is across the body, so it is hardest as the hands meet, not at the stretch.
+ch_fly_cable_high| chest:7:8 | front_delts | 8 7 2 2 | - | high | Crossing from high pulleys keeps tension through the stretch, but it peaks nearer the squeeze.
+ch_fly_cable_dec | chest:7:8 | front_delts | 8 7 2 2 | - | high | The pull is down and across, so it is hard from the stretch through to the squeeze.
+uc_fly_cable_low | upper_chest:7:8 | chest,front_delts | 8 7 2 2 | - | high | Low pulleys pull up and across into the upper chest, hard at the stretch and across the middle.
+uc_fly_cable_inc | upper_chest:8:8 | chest,front_delts | 8 7 2 2 | - | high | On an incline with the cables below, the pull is hardest with the arms wide at the stretch.
+ch_fly_cable_lie | chest:8:8 | front_delts | 8 7 2 2 | - | high | Lying with the cables below, the pull is vertical and hardest with the arms out wide at the stretch.
+ch_fly_db        | chest:9:8 | front_delts | 4 5 1 2 | - | high | The dumbbells are hardest with the arms level at the bottom, which is exactly the stretched position.
+ch_fly_db_dec    | chest:8:8 | front_delts | 4 5 1 2 | - | high | The dumbbells are hardest with the arms level at the bottom, though the decline shortens the stretch a little.
+uc_fly_db        | upper_chest:9:8 | chest,front_delts | 4 5 1 2 | - | high | The dumbbells are hardest with the arms level at the bottom, which is exactly the stretched position.
+ch_pec_deck      | chest:6:9 | front_delts | 10 8 1 1 | - | medium | A pec deck with an unknown cam, so stretch is assumed moderate; the machine isolates the chest.
+ch_pushup        | chest:6:7 | triceps,front_delts | 8 3 3 3 | - | high | Hardest at the bottom where the chest is stretched; triceps and front delts share the work.
+uc_pushup        | upper_chest:6:6 | chest,triceps,front_delts | 7 4 4 3 | - | medium | Feet raised shifts the work toward the upper chest; hardest at the bottom where it is stretched.
+ch_dip           | chest:7:6 | triceps,front_delts | 6 6 6 4 | - | high | Leaning forward is hardest at the bottom where the chest is stretched; triceps and front delts often quit first.
+ch_dip_assist    | chest:7:6 | triceps,front_delts | 8 7 4 3 | - | medium | A counterweight lightens the dip; the shape is the same as the free dip.
+pull_db          | lats:8:6,chest:7:5 | triceps | 5 5 2 3 | - | medium | Arms back overhead is hardest at the stretch, but the triceps, grip and shoulder joint make it hard to fail on the target.
+pull_bb          | lats:8:6,chest:7:5 | triceps | 4 7 3 3 | - | low | Arms back overhead is hardest at the stretch, but a barbell is awkward to control there.
+sh_pike_pushup   | front_delts:5:7 | triceps,upper_chest | 5 3 3 3 | - | medium | A pike push-up is hardest at the bottom, but the arm and shoulder angle limit how much the shoulders stretch.
+rd_cable_bent    | rear_delts:6:8 | upper_back | 8 6 1 1 | - | medium | The cable crosses the body and is hardest as the arm comes level, short of the full stretch.

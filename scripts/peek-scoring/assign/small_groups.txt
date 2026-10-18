@@ -1,0 +1,113 @@
+## spine
+1314 hyper_45 St-3 conf=medium
+1010 hinge_band
+1333 hyper_45 St-3 conf=medium
+1334 hyper_45 St-3 conf=medium
+1335 hyper_45 St-3 conf=medium
+1336 hyper_45 St-3 conf=medium
+1338 SKIP Stretch
+1343 glute_kick_cable St-2 P-4 conf=low
+0489 hyper_45
+0488 hyper_45 St-1 conf=medium
+0573 hyper_mach
+1352 hyper_45 conf=low
+2208 SKIP Stretch
+1362 SKIP Stretch
+1363 SKIP Stretch
+1364 SKIP Mobility_drill
+3231 SKIP Stretch
+1366 SKIP Stretch
+0835 hyper_45 St-3 P+2 conf=medium
+## traps
+1018 shrug_band
+0095 shrug_bb
+0220 shrug_cable
+0305 shrug_incline conf=medium
+0304 shrug_incline conf=medium
+0329 shrug_incline
+0406 shrug_db
+0548 SKIP Ballistic_kettlebell_pull
+0580 shrug_gripless
+1439 shrug_gripless
+0604 shrug_mach
+3012 SKIP Scapular_activation_drill
+0688 SKIP Scapular_activation_drill
+0746 shrug_smith
+0767 shrug_smith
+## serratus anterior
+0050 SKIP Serratus_anterior_is_not_a_listed_muscle
+0328 SKIP Serratus_anterior_is_not_a_listed_muscle
+3011 SKIP Scapular_activation_drill
+3021 SKIP Scapular_activation_drill
+0759 SKIP Serratus_anterior_is_not_a_listed_muscle
+## levator scapulae
+1403 SKIP Stretch
+0716 SKIP Stretch
+## forearms
+0994 fore_wrist_rev S-5 St-2 P-3 conf=medium
+1016 fore_wrist S-5 St-2 P-3 conf=medium
+1411 fore_wrist_rev P+2
+1412 fore_wrist_bb
+0079 fore_wrist_rev P+2
+0082 fore_wrist_rev P+2
+0104 fore_wrist_bb S-1 St-1 conf=medium
+0126 fore_wrist_bb
+0125 fore_wrist_bb
+0210 fore_wrist_rev P+1 conf=medium
+0224 fore_wrist S-1 P+2 conf=medium
+0247 fore_wrist P+2 conf=medium
+1437 fore_finger
+0347 fore_rotate
+2705 fore_rotate
+0349 fore_rotate
+2706 fore_rotate
+0358 fore_wrist_rev P-1
+1415 fore_wrist_neutral P-1
+0364 fore_wrist P-1
+1441 fore_wrist_rev P-1
+0367 fore_wrist P-1
+0368 fore_wrist_rev
+0369 fore_wrist
+0385 fore_wrist_rev
+0399 fore_rotate conf=low
+0401 fore_wrist
+0455 fore_finger P+2
+0518 SKIP Olympic-style_ballistic_lift
+2288 fore_grip
+1421 tri_bw_ext conf=medium
+0721 SKIP Stretch
+1426 fore_wrist_bb conf=medium
+0771 fore_wrist_bb S-1 conf=medium
+0854 fore_grip
+1428 SKIP Mobility_drill
+0859 fore_roller
+## cardiovascular system
+3220 SKIP Cardio
+3672 SKIP Cardio
+3360 SKIP Cardio
+1160 SKIP Cardio
+2331 SKIP Cardio
+1201 SKIP Cardio
+3221 SKIP Cardio
+3636 SKIP Cardio
+0501 SKIP Cardio
+3224 SKIP Cardio
+2612 SKIP Cardio
+0630 SKIP Cardio
+3638 SKIP Cardio
+0685 SKIP Cardio
+0684 SKIP Cardio
+3219 SKIP Cardio
+3222 SKIP Cardio
+3656 SKIP Cardio
+3361 SKIP Cardio
+3671 SKIP Cardio
+3223 SKIP Cardio
+2138 SKIP Cardio
+0798 SKIP Cardio
+3318 SKIP Cardio
+2141 SKIP Cardio
+3655 SKIP Cardio
+3666 SKIP Cardio
+2311 SKIP Cardio
+3637 SKIP Cardio

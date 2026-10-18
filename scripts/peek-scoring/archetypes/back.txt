@@ -1,0 +1,24 @@
+## ---------------- lats / upper back ----------------
+lat_pd           | lats:8:7 | biceps,upper_back | 9 8 5 3 | - | high | Arms overhead put the lats at full length where the bar pulls hardest, though the biceps and grip also give out. [anchor]
+lat_pd_under     | lats:8:6 | biceps,upper_back | 9 8 5 3 | - | high | Arms overhead put the lats at full length where the bar pulls hardest, but the underhand grip makes the biceps give out sooner.
+lat_pd_mach      | lats:8:7 | biceps,upper_back | 10 8 4 2 | - | medium | A pulldown machine; the cam is unknown but lats are lengthened at the top, so stretch is kept high.
+lat_pd_band      | lats:3:7 | biceps,upper_back | 6 2 1 1 | - | medium | Band tension peaks at the bottom of the pulldown, where the lats are short.
+lat_pullover_cab | lats:7:7 | triceps | 8 7 2 2 | - | medium | The cable keeps tension on the lats with the arms overhead, though the triceps and shoulders also tire.
+lat_pullover_mach| lats:6:8 | triceps | 10 8 3 2 | - | medium | A pullover machine with an unknown cam, so stretch is assumed moderate.
+pu_assist        | lats:7:6 | biceps,upper_back | 9 8 3 2 | - | medium | The counterweight lightens the lengthened hang, but the shape is the same as a pull-up.
+row_chest_db     | upper_back:6:8 | lats,rear_delts,biceps | 9 8 5 3 | - | high | Chest support removes the lower back; the load is highest as the arm reaches back but the stretch at the start is smaller. [anchor]
+row_chest_bb     | upper_back:6:8 | lats,rear_delts,biceps | 8 9 6 4 | - | high | Chest support removes the lower back and grip limits less; the load is highest as the arm reaches back.
+row_chest_cable  | upper_back:6:8 | lats,rear_delts,biceps | 9 8 4 2 | - | high | Chest support removes the lower back; the cable stays loaded through the stretched start.
+row_tbar_chest   | upper_back:6:8 | lats,rear_delts,biceps | 9 6 6 4 | - | medium | Chest support removes the lower back; plate jumps are bigger than on a weight stack.
+row_mach         | upper_back:6:8 | lats,rear_delts,biceps | 10 8 5 3 | - | medium | A supported row machine with an unknown cam, so stretch is assumed moderate.
+row_mach_hi      | lats:6:7,upper_back:5:7 | rear_delts,biceps | 10 8 4 2 | - | medium | A high row machine: moderate stretch at the start, and the biceps and grip share the work.
+row_bb_bent      | upper_back:4:5 | lats,biceps,rear_delts,lower_back | 5 8 7 6 | - | high | Hardest at the top with the bar at the torso; the lower back and grip often give out before the upper back.
+row_db_bent      | upper_back:4:5 | lats,biceps,rear_delts | 5 6 6 5 | - | high | Hardest near the top; the lower back and grip often give out before the upper back.
+row_db_1arm      | lats:6:6,upper_back:5:6 | biceps,rear_delts | 7 5 5 3 | - | high | The dumbbell hangs at full stretch for the lat, but the grip and arm often tire first.
+row_cable_seat   | upper_back:5:7 | lats,biceps,rear_delts | 8 8 4 3 | - | high | The cable pulls along the arm at the stretched start, so it is hardest later in the rep; grip and the lower back share the work.
+row_cable_hi     | lats:6:7,upper_back:6:7 | rear_delts,biceps | 8 7 3 3 | - | medium | A high-pulley row loads the lats near the stretch, with the biceps and grip sharing the work.
+row_cable_stand  | upper_back:5:6 | lats,biceps | 6 7 3 3 | - | medium | The cable pulls along the arm at the stretched start; standing, the lower back and balance share the work.
+row_smith        | upper_back:4:5 | lats,biceps,lower_back | 7 8 6 5 | - | high | Hardest near the top; the lower back and grip often give out before the upper back.
+row_inv          | upper_back:4:6 | lats,biceps,rear_delts | 7 4 3 3 | - | high | Bodyweight row is hardest near the top; grip and the arms share the work.
+row_bw_towel     | upper_back:4:6 | lats,biceps | 6 2 1 2 | - | low | A light bodyweight pull with little load to add; hardest near the top.
+row_band         | upper_back:3:7 | lats,biceps | 6 2 1 1 | - | medium | Band tension peaks at the end of the pull, where the upper back is short.

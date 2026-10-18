@@ -1,0 +1,170 @@
+# abs (dataset target: abs)
+0001 abs_situp
+0002 obl_sidebend_bw
+0003 abs_bicycle conf=low
+0006 obl_crunch_bw
+2355 SKIP Dynamic_shoulder_swing_drill
+2333 SKIP Dynamic_shoulder_swing_drill
+3204 abs_situp
+0011 abs_legraise_hang St+3 conf=medium
+0010 SKIP Ballistic_throw-down_drill
+0012 SKIP Ballistic_throw-down_drill
+0013 SKIP Ballistic_throw-down_drill
+0014 obl_twist_bw conf=low
+1714 SKIP Stretch
+1758 abs_situp
+0969 abs_legraise_lie conf=low
+0971 abs_roll St+1 conf=medium
+0972 abs_bicycle conf=medium
+0979 SKIP Isometric_anti-rotation_hold
+0981 abs_situp conf=medium
+0985 obl_cable_twist S-1 P-4 St-1 conf=medium
+1002 abs_legraise_lie conf=low
+0992 abs_situp conf=low
+1011 obl_cable_twist P-4 conf=medium
+1005 abs_cable_crunch S-3 P-5 St-2 conf=medium
+1007 obl_cable_twist P-4 conf=medium
+1014 abs_legraise_lie conf=low
+1015 SKIP Isometric_anti-rotation_hold
+0071 abs_situp P+4 T+2 St-3 conf=low
+0084 abs_roll P+2 conf=medium
+0083 abs_roll P+2 conf=medium
+0094 obl_twist_wt P+2 St-1 conf=low
+0096 obl_sidebend_bb
+2799 abs_legraise_lie conf=low
+2800 abs_legraise_lie conf=low
+0103 abs_roll_stand P+3 conf=medium
+0112 obl_twist_wt P+2 St-1 conf=low
+3544 SKIP Isometric_hold
+0138 abs_revcrunch conf=low
+2466 SKIP Cardio
+0870 abs_revcrunch conf=low
+0174 obl_cable_twist conf=low
+0175 abs_cable_crunch
+0873 abs_revcrunch P+4 conf=medium
+0211 obl_cable_twist St-3 conf=low
+0212 abs_cable_crunch
+2399 obl_cable_twist
+0222 obl_sidebend_cable
+0221 obl_sidebend_cable St-3 conf=low
+0223 obl_crunch_cable
+0226 abs_cable_crunch conf=medium
+0874 abs_cable_crunch conf=medium
+0230 obl_cable_twist conf=low
+0242 abs_revcrunch P+4 conf=medium
+0243 obl_cable_twist
+0862 obl_cable_twist conf=low
+2963 abs_legraise_chair
+0260 abs_revcrunch conf=low
+1468 obl_crunch_bw St-1 conf=low
+0262 obl_crunch_bw
+0267 abs_crunch_bw
+0272 abs_crunch_ball
+0271 abs_crunch_ball
+0274 abs_crunch_bw
+3016 abs_crunch_bw
+0276 SKIP Stability_drill_with_no_load_progression
+0277 abs_crunch_decl
+0282 abs_situp_decl
+0407 obl_sidebend_db
+0443 obl_crunch_bw
+3303 SKIP Static_gymnastics_skill_hold
+0456 abs_situp
+0457 abs_situp
+2429 abs_crunch_bw conf=medium
+3301 SKIP Static_gymnastics_skill_hold
+3296 SKIP Static_gymnastics_skill_hold
+0464 SKIP Isometric_hold
+3315 SKIP Static_gymnastics_skill_hold
+3299 SKIP Static_gymnastics_skill_hold
+0467 SKIP Gymnastics_skill_with_unclear_loading
+0469 abs_crunch_bw conf=low
+3202 abs_situp
+1764 abs_legraise_hang
+0472 abs_legraise_hang
+1761 obl_hang_knee
+0473 abs_legraise_hang conf=medium
+0474 abs_legraise_hang
+0475 abs_legraise_hang
+0476 obl_hang_knee conf=medium
+0484 bridge_bw
+1471 SKIP Mobility_drill
+3698 SKIP Mobility_drill
+0491 abs_legraise_lie P+1 conf=medium
+0495 obl_crunch_bw P+1 conf=medium
+0507 abs_situp conf=medium
+0508 abs_situp conf=low
+0517 obl_windmill
+0524 obl_windmill conf=low
+0530 obl_windmill
+0532 SKIP Kettlebell_skill_drill
+0554 obl_windmill
+3640 abs_crunch_bw
+3239 SKIP Isometric_plank_variation
+3419 SKIP Static_gymnastics_skill_hold
+0562 obl_cable_twist P+2 St-2 C+3 conf=low
+3300 SKIP Static_gymnastics_skill_hold
+0570 abs_legraise_lie conf=medium
+0583 obl_mach_twist
+1452 abs_mach_crunch
+0595 abs_mach_crunch
+3760 abs_mach_crunch
+0600 abs_mach_crunch S-1 L-2 conf=medium
+1688 SKIP Mobility_drill
+2312 abs_bicycle conf=low
+0620 abs_legraise_lie
+0865 abs_revcrunch
+0634 abs_crunch_bw
+1495 obl_crunch_bw
+0635 obl_crunch_bw
+0640 SKIP Plyometric_slam
+0641 abs_situp_decl P+2 conf=low
+3147 SKIP Mobility_drill
+1687 SKIP Mobility_drill
+3119 sq_bw conf=low
+3665 SKIP Isometric_plank_variation
+3203 abs_situp
+1707 obl_twist_bw St-3 conf=low
+0650 abs_legraise_lie St-2 conf=medium
+0664 SKIP Mobility_and_core_flow
+3201 abs_situp
+0872 abs_revcrunch
+3663 SKIP Isometric_plank_variation
+2204 abs_fallout St-1 conf=low
+2206 abs_revcrunch St-1 conf=medium
+0687 obl_twist_bw
+0689 abs_legraise_lie conf=medium
+0691 obl_crunch_bw conf=low
+3699 SKIP Isometric_plank_variation
+0705 SKIP Isometric_hold
+0709 obl_hang_knee conf=low
+3213 obl_crunch_bw conf=low
+0735 abs_situp
+3679 abs_situp
+1496 SKIP Sport_and_conditioning_drill
+0756 bridge_smith
+0777 obl_twist_wt St-1 P-1 conf=low
+2329 obl_twist_bw conf=low
+2297 abs_crunch_ball
+0796 abs_roll_stand
+3314 SKIP Static_gymnastics_skill_hold
+3298 SKIP Static_gymnastics_skill_hold
+0805 abs_fallout
+0807 abs_revcrunch St-1 conf=medium
+0871 abs_crunch_bw
+2802 obl_hang_knee St+3 conf=low
+2801 obl_hang_knee St+3 conf=low
+3420 SKIP Static_gymnastics_skill_hold
+0826 abs_legraise_chair
+0832 abs_crunch_bw P+3 conf=medium
+3670 abs_situp_decl P+2
+2135 SKIP Isometric_hold
+0866 abs_legraise_hang P+2
+0840 abs_crunch_ball P+3 conf=medium
+0846 obl_twist_wt
+0845 obl_twist_wt St-1
+2371 obl_twist_wt
+0849 obl_twist_wt St-2 conf=low
+0850 obl_sidebend_db St-2 conf=medium
+0857 abs_roll
+0858 SKIP Cardio

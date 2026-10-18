@@ -1,0 +1,144 @@
+# delts (dataset target: delts)
+0977 fd_raise_band
+0978 fd_raise_band
+0993 rd_band
+0997 press_band
+1022 rd_band
+1012 press_band St-1 conf=low
+1017 rd_band conf=low
+0041 fd_raise_bar
+0067 SKIP Olympic_lift,_a_ballistic_power_movement
+0075 rd_row_bb conf=low
+0076 rd_row_bb
+0086 press_bb_seat S+1 St-2 conf=medium
+0087 press_bb_seat S+1 St-1 conf=low
+0091 press_bb_seat
+0100 SKIP Ballistic_jumping_drill
+0105 press_bb_stand S+1 St-1 conf=low
+1456 press_bb_stand L-1 conf=medium
+0107 fd_raise_bar conf=medium
+1457 press_bb_stand conf=medium
+3305 SKIP Conditioning_compound_(thruster)_with_no_stable_target
+0120 ur_bb
+0119 ur_bb
+0121 ur_bb
+0123 ur_bb conf=medium
+0128 SKIP Conditioning_drill
+0148 press_cable P-1 St-1
+0154 rd_fly_cable
+0161 fd_raise_cable
+0162 fd_raise_cable
+0164 fd_raise_cable
+3697 rd_row_cable
+0178 sd_lat_cable
+0192 sd_lat_cable
+0202 rd_row_cable
+0203 rd_row_cable
+0215 rd_fly_cable St+1 conf=medium
+0216 SKIP Rotator_cuff_rehab_drill
+0219 press_cable
+0225 rd_fly_cable
+0233 rd_row_cable
+0235 SKIP Rotator_cuff_rehab_drill
+0240 rd_fly_cable St+1 conf=medium
+0246 ur_bb St+1 P-1 T-1 C-1
+0286 press_db_stand conf=medium
+2137 press_db_seat S+1 conf=medium
+0287 press_db_seat S+1 conf=medium
+0290 press_db_seat
+0299 press_db_stand L-1 T-3 conf=low
+2136 press_db_stand L-1 T-3 conf=low
+0310 fd_raise_db
+0309 fd_raise_db
+0311 sd_lat_db
+0323 sd_lat_db S+3 St+0 P-1 conf=medium note=Lateral_raise_lying_on_an_incline_bench_on_its_side_loads_the_side_delt_nearer_the_stretch_than_a_standing_raise.
+0325 sd_lat_db S+3 conf=low
+0326 rd_raise_db_sup
+3542 rd_raise_db_sup conf=medium
+0332 sd_lat_db conf=medium
+0334 sd_lat_db
+0335 sd_lat_db conf=medium
+0863 SKIP Rotator_cuff_rehab_drill
+2470 rd_raise_db_sup St+1 conf=medium
+0341 rd_raise_db_sup P-1
+0345 rd_raise_db_sup P-1
+0348 rd_raise_db_sup
+0355 sd_lat_db P-1
+0356 sd_lat_db St+1 P-1
+0359 rd_raise_db_sup P-1
+0361 press_db_stand St-1 P-1 C-1 conf=medium
+0360 press_db_stand St-1 P-1 C-1 conf=medium
+0363 ur_bb St-1 P-2 T-1 C-1
+1700 press_db_stand S-2 T+1 C+1 conf=medium
+0376 rd_raise_db conf=low
+2292 rd_raise_db
+0377 rd_row_db
+0378 rd_raise_db
+0380 rd_raise_db
+0379 rd_raise_db_sup
+0383 rd_raise_db
+0386 rd_raise_db conf=medium
+2397 press_db_seat
+0387 fd_raise_db St+1
+3546 press_db_seat
+2317 rd_raise_db St+1
+0392 fd_raise_db St+1
+0396 sd_lat_db St+1
+0395 sd_lat_db St+1
+0405 press_db_seat
+0404 press_db_seat
+0408 sd_lat_db St+1 conf=low
+3548 SKIP Loaded_carry
+0414 press_db_stand
+0415 sd_lat_db
+2143 sd_lat_db conf=low
+0419 fd_raise_db S+1 conf=medium
+0424 press_db_stand St-1 P-1 C-1
+0426 press_db_stand
+0427 press_db_stand
+0437 ur_bb St-1 P-1 T-1 C-1
+1765 ur_bb St-1 P-1 T-1 C-1
+0864 SKIP Rotator_cuff_rehab_drill
+0438 press_db_seat conf=medium
+0445 press_bb_stand St-1 T-2 conf=low
+0520 press_db_stand P-2 conf=medium
+0523 press_db_stand S+1 P-2 conf=medium
+0527 SKIP Olympic-style_ballistic_lift
+0528 press_db_stand S-2 T+1 C+1 P-2 conf=medium
+0529 SKIP Olympic-style_ballistic_lift
+0537 SKIP Olympic-style_ballistic_lift
+0538 SKIP Olympic-style_ballistic_lift
+0539 press_db_stand St-2 P-2 conf=low
+0540 press_db_stand S-2 T+1 C+1 P-2 conf=medium
+0542 SKIP Olympic-style_ballistic_lift
+0543 press_db_stand P-2 T-3 conf=low
+0546 press_db_seat P-2 conf=medium
+1438 press_db_seat P-2 conf=medium
+0547 press_db_stand P-2 conf=medium
+0550 SKIP Conditioning_compound_(thruster)_with_no_stable_target
+0552 SKIP Olympic-style_ballistic_lift
+0553 press_db_stand P-2 conf=medium
+3237 sd_lat_landmine
+2271 SKIP Sports_drill_(boxing)
+0584 sd_lat_mach
+0587 press_mach
+0590 press_mach P-1
+0602 rd_fly_mach
+0601 rd_fly_mach
+0603 press_mach
+0869 press_mach
+2318 press_mach
+0669 SKIP Stretch
+3122 press_band St+1
+0747 press_smith S+1 St-1 conf=medium
+0762 rd_row_smith
+0765 press_smith
+0766 press_smith
+0772 press_smith S+1 St-1 conf=medium
+0774 press_smith St-1 C+1
+0775 ur_bb St+1 C-1
+0788 press_bb_stand S+1 St-2 conf=medium
+0834 fd_raise_bar conf=medium
+3641 SKIP Ballistic_swing_drill
+0844 rd_raise_db conf=low
+0388 press_db_seat

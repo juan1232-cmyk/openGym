@@ -1,0 +1,142 @@
+# triceps (dataset target: triceps)
+0018 SKIP Towel-assisted_mobility_drill_with_no_real_load
+0019 tri_dip_assist
+0975 tri_pushup_cg S-1 P+1 conf=medium note=Close-grip_push-up_with_a_band_that_adds_load_at_the_top,_so_the_stretched_bottom_is_easier.
+0998 tri_band
+0030 tri_cgbp_bar
+0035 tri_jm conf=low
+1719 tri_cgbp_bar L-1 T-2 conf=medium
+0048 tri_cgbp_bar L-1 T-2 conf=medium
+0052 tri_jm
+1720 tri_skull_back
+0055 tri_cgbp_bar conf=medium
+0056 tri_skull_bar
+0057 tri_skull_bar
+0061 tri_skull_bar
+0060 tri_skull_bar
+0065 tri_floor_press St-1 P-1 T-1 conf=low
+1751 tri_pin_press
+2187 tri_cgbp_bar L-1 conf=medium
+1721 tri_skull_bar L-1 conf=medium
+1718 tri_oh_bar conf=medium
+0092 tri_oh_bar
+0109 tri_oh_bar St-1 C+1
+0129 tri_dip_bench
+1399 tri_dip_bench conf=low
+0137 tri_dip_bench
+1771 tri_bw_ext P+1 T-1
+0149 tri_cable_misc
+0152 tri_pushdown P-1 conf=low
+1722 tri_oh_cable
+0173 tri_oh_cable conf=medium
+0860 tri_kick_cable
+0176 tri_oh_cable S-2 conf=medium
+0186 tri_lying_cable
+1723 tri_pushdown P-1
+0194 tri_oh_cable
+0201 tri_pushdown
+0200 tri_pushdown
+0204 tri_kick_cable conf=low
+2406 tri_pushdown_rev
+0207 tri_pushdown_rev
+1724 tri_oh_cable
+1725 tri_oh_cable S-1 conf=medium
+1726 tri_lying_cable
+0231 tri_oh_cable P-1 conf=medium
+1727 tri_oh_cable P-1 conf=medium
+0241 tri_pushdown
+2405 tri_pushdown
+1728 tri_kick_cable
+0259 tri_pushup_cg
+2398 tri_pushup_cg T-1 C-1
+0283 tri_pushup_cg conf=high
+1731 tri_press_db
+0296 tri_press_db
+1617 tri_press_db St-1 P-1 conf=low
+0306 tri_skull_db
+1732 SKIP Lunge_plus_triceps_extension_combo_drill;_the_lunge_dominates_and_neither_part_can_be_loaded_properly
+1618 tri_press_db St-3 conf=low
+1619 tri_press_db St-1 P-1 conf=low
+1620 tri_press_db St-3 P-1 conf=low
+0330 tri_oh_db
+1733 tri_oh_db
+0333 tri_kick_db
+1734 tri_kick_db St-3 conf=medium
+1729 tri_skull_db
+0338 tri_skull_db S-1 conf=low note=Elbow-press_variation_of_the_lying_dumbbell_extension,_less_range_at_the_stretch.
+0337 tri_skull_db
+0344 tri_skull_db P-1 conf=medium
+0346 tri_skull_db P-1 conf=medium
+1735 tri_skull_db P-1
+0351 tri_skull_db
+0352 tri_press_db
+1736 tri_oh_db St-2 P-1 conf=medium
+1621 tri_press_db St-3 P-1 conf=low
+0354 tri_kick_db
+0362 tri_oh_db P-1
+1623 tri_press_db L-1 conf=low
+0373 tri_skull_db L-1 conf=medium
+0389 tri_oh_db St+1
+1730 tri_kick_db
+1737 tri_oh_db S-2 conf=medium note=Bent-over_extension_keeps_the_upper_arm_back,_so_the_long_head_is_less_stretched_than_overhead.
+0394 tri_kick_db
+0398 tri_kick_db
+1738 tri_oh_db P-1 conf=medium
+2188 tri_oh_db St+1
+1739 tri_kick_db
+1740 tri_oh_db S-3 St-1 conf=medium note=Bent-over_one-arm_extension_keeps_the_upper_arm_back,_so_the_long_head_is_less_stretched_than_overhead.
+1741 tri_oh_db S-3 St-1 conf=medium note=Bent-over_extension_keeps_the_upper_arm_back,_so_the_long_head_is_less_stretched_than_overhead.
+0420 tri_kick_db St-1
+0423 tri_oh_db St-1 P-1
+0430 tri_oh_db St-1
+0436 tri_skull_db S-1 conf=medium note=Tate_press:_dumbbells_lowered_to_the_chest_with_elbows_flared,_hardest_at_the_bottom_but_with_less_stretch_than_a_skullcrusher.
+1742 tri_kick_db St-1 conf=medium
+1743 tri_press_db L-1 conf=low
+2189 tri_oh_db St+1
+3287 tri_dip_bench conf=low
+1744 tri_dip_bench St-3 conf=low
+1745 SKIP Stretch
+1746 tri_skull_db St-3 conf=low
+1747 tri_oh_bar St-3 conf=low
+1748 tri_skull_back
+1749 tri_oh_bar St-1 C+1
+0448 tri_jm conf=medium
+2186 tri_skull_bar
+0449 tri_skull_bar S+1 conf=medium
+0450 tri_jm
+0453 tri_oh_bar St+1
+2432 tri_cgbp_bar
+3302 SKIP Static_balance_skill_hold,_not_resistance_training_for_growth
+0471 tri_hspu
+3289 tri_dip_bench conf=low
+0490 tri_pushup_cg T-1 C-1
+0591 tri_dip_mach
+1451 tri_dip_mach
+0607 tri_machine
+1701 tri_pushup_cg St-2 conf=medium
+1750 SKIP Plyometric_chest_throw
+2328 tri_pushup_cg St-4 conf=medium
+0637 tri_oh_bar St-1 C+1 conf=medium
+0639 tri_dip_bench St-2 P-1 conf=low
+0643 SKIP Stretch
+0660 tri_pushup_cg S+1 St-2 conf=medium note=Close-grip_push-up_with_hands_on_dumbbells_gives_extra_depth_at_the_stretch_but_is_less_stable.
+1467 tri_bw_ext conf=medium
+0672 tri_dip_bench conf=medium
+0677 tri_dip_ring
+0717 tri_pushup_cg St-2 conf=low
+2142 SKIP Cardio_ergometer
+0751 tri_cgbp_smith
+1625 tri_cgbp_smith conf=medium
+1752 tri_skull_bar St+3 T-1 conf=medium note=Smith_machine_incline_extension_gives_a_stable_stretch_with_a_fixed_path.
+3291 SKIP Gymnastics_skill,_not_loadable_resistance_training
+1753 tri_dip_bench conf=medium
+0814 tri_dip_bench
+0812 tri_dip_bench
+0813 tri_dip_bench
+0815 tri_dip_bench S-2 conf=low
+0816 tri_bw_ext conf=low
+0817 SKIP Stretch
+0830 tri_dip_bench P+2 T+1
+1754 tri_dip_bench P+2 T+1 conf=medium
+1755 tri_dip_par
+1767 tri_dip_par

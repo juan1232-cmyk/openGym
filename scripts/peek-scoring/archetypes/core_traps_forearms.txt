@@ -1,0 +1,44 @@
+## ---------------- traps / forearms ----------------
+shrug_bb         | traps:5:5 | forearms | 8 8 3 3 | - | high | The load is vertical and constant, so there is no extra load at the stretch; grip gives out before the traps.
+shrug_db         | traps:5:5 | forearms | 8 6 2 2 | - | high | The load is vertical and constant, so there is no extra load at the stretch; grip gives out before the traps.
+shrug_incline    | traps:5:7 | forearms | 8 6 2 2 | - | medium | Chest support removes most grip limits, but the load is still constant through the range.
+shrug_cable      | traps:6:6 | forearms | 8 7 2 2 | - | medium | The cable keeps tension through the range; grip still gives out first.
+shrug_smith      | traps:5:6 | forearms | 9 8 3 3 | - | high | The load is constant on a fixed track; grip gives out before the traps.
+shrug_mach       | traps:5:7 | forearms | 10 8 3 1 | - | medium | A shrug machine with an unknown cam, so stretch is assumed moderate.
+shrug_gripless   | traps:5:8 | - | 10 8 3 1 | - | medium | A gripless machine removes grip as a limiter, with an unknown cam so stretch is assumed moderate.
+shrug_band       | traps:2:6 | forearms | 6 2 1 1 | - | medium | Band tension peaks at the top of the shrug, where the traps are short.
+fore_wrist_bb    | forearms:8:9 | - | 8 7 1 1 | - | medium | Hardest with the wrist extended at the bottom, where the forearm flexors are stretched.
+fore_wrist_rev   | forearms:8:8 | - | 8 5 1 1 | - | medium | Hardest with the wrist flexed at the bottom, where the forearm extensors are stretched.
+fore_roller      | forearms:5:9 | - | 8 5 1 1 | - | medium | A wrist roller loads the forearms through the whole range, roughly evenly.
+fore_finger      | forearms:7:8 | - | 8 5 1 1 | - | medium | Rolling the bar down to the fingers puts the finger flexors at stretch where the load is highest.
+fore_rotate      | forearms:3:8 | - | 6 3 0 1 | - | low | A light forearm rotation with a lever arm; load is hardest mid-rotation.
+fore_grip        | forearms:3:9 | - | 8 4 1 1 | - | low | A squeeze is hardest at the closed, short end of the range.
+
+## ---------------- abs / obliques ----------------
+abs_crunch_bw    | abs:3:7 | - | 8 3 1 1 | - | high | A floor crunch is hardest at the squeeze with the spine curled; almost no load when the spine is extended.
+abs_crunch_ball  | abs:5:7 | - | 6 3 1 1 | - | high | The ball lets the spine extend further, adding load at the stretch, but balance limits it.
+abs_crunch_decl  | abs:4:7 | - | 7 4 1 1 | - | high | The decline adds load through more of the range, though the squeeze is still the hardest part.
+abs_situp        | abs:4:4 | - | 8 3 1 2 | - | high | A sit-up is hardest early with the torso flat, and the hip flexors take over from the abs.
+abs_situp_decl   | abs:5:4 | - | 7 4 1 2 | - | high | The decline adds load at the start, but the hip flexors take over from the abs.
+abs_cable_crunch | abs:5:9 | - | 8 8 1 1 | - | high | The cable keeps tension through the range, and the abs do all the flexion.
+abs_mach_crunch  | abs:5:9 | - | 10 8 1 1 | - | medium | A crunch machine with an unknown cam, so stretch is assumed moderate.
+abs_revcrunch    | abs:3:6 | - | 8 3 1 1 | - | medium | A reverse crunch is hardest at the top with the pelvis curled, and the hip flexors help.
+abs_legraise_hang| abs:4:4 | - | 5 4 1 2 | - | high | The hip flexors and grip give out before the abs do, and the load is greatest with the legs level.
+abs_legraise_lie | abs:3:4 | - | 8 3 1 1 | - | high | The hip flexors do most of the work, and the load is greatest with the legs level.
+abs_legraise_chair | abs:4:5 | - | 7 3 1 2 | - | high | The arm support removes grip, but the hip flexors still do most of the work.
+abs_roll         | abs:9:7 | lats,lower_back | 6 4 1 3 | - | high | An ab wheel is hardest at full extension where the abs are lengthened, though the lats and lower back share the work.
+abs_roll_stand   | abs:9:6 | lats,lower_back | 4 3 1 4 | - | medium | A standing rollout is hardest at full extension where the abs are lengthened, but the load is very hard to scale.
+abs_fallout      | abs:8:7 | lats | 5 4 1 3 | - | medium | A suspended fallout is hardest at full extension where the abs are lengthened.
+abs_bicycle      | abs:3:6,obliques:3:6 | - | 8 2 1 1 | - | medium | Alternating crunches are hardest at the squeeze with little load at the stretch.
+obl_twist_bw     | obliques:3:7 | abs | 8 3 1 1 | - | medium | A seated twist is hardest in the twisted position, where the obliques are short.
+obl_twist_wt     | obliques:3:7 | abs | 7 5 1 1 | - | medium | A weighted twist is hardest in the twisted position, where the obliques are short.
+obl_cable_twist  | obliques:4:7 | abs | 7 6 1 1 | - | medium | The cable keeps tension through the twist, hardest mid-range.
+obl_mach_twist   | obliques:4:8 | abs | 10 8 1 1 | - | medium | A rotary torso machine with an unknown cam, so stretch is assumed moderate.
+obl_sidebend_db  | obliques:7:8 | - | 7 5 1 1 | - | high | The dumbbell hangs at full lateral stretch, which is where the lever arm is longest.
+obl_sidebend_cable | obliques:6:8 | - | 8 7 1 1 | - | high | The cable keeps tension through the range, with high load at the lateral stretch.
+obl_sidebend_bb  | obliques:7:8 | lower_back | 5 7 1 2 | - | medium | The bar hangs at full lateral stretch, but balance and the back limit it.
+obl_sidebend_bw  | obliques:6:8 | - | 8 3 1 1 | - | medium | A bodyweight side bend on a 45-degree bench is light and hardest at the lateral stretch.
+obl_crunch_bw    | obliques:3:7 | abs | 8 3 1 1 | - | medium | A side crunch is hardest at the squeeze, with almost no load at the stretch.
+obl_crunch_cable | obliques:5:8 | abs | 8 7 1 1 | - | high | The cable keeps tension through the range, hardest near the squeeze.
+obl_hang_knee    | obliques:4:4 | abs | 5 3 1 2 | - | medium | The hip flexors and grip give out before the obliques do.
+obl_windmill     | obliques:7:6 | front_delts | 3 3 2 3 | - | low | A windmill stretches the obliques under load but is a balance and mobility skill first.

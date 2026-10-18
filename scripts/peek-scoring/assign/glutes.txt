@@ -1,0 +1,145 @@
+# glutes (dataset target: glutes)
+3214 SKIP Mobility_drill
+1709 SKIP Stretch
+1710 SKIP Stretch
+0980 hinge_band conf=medium
+1408 bridge_band
+0984 SKIP Hip_rotation_rehab_drill
+0991 hinge_band conf=medium
+0996 SKIP Hip_rotation_rehab_drill
+1004 sq_bw S-2 conf=medium
+1003 sq_bw St-1 conf=low
+1008 sq_stepup P-3 conf=low
+1009 hinge_band
+1023 hinge_band
+0029 sq_front
+0032 dead_conv
+0039 sq_front
+0042 sq_front
+0043 sq_bb_back
+1461 sq_bb_back
+1462 sq_bb_back
+1545 sq_front St-1 conf=medium
+1409 bridge_floor_bb
+3562 bridge_bb conf=medium
+0046 sq_hack_bb
+1436 sq_bb_back
+0051 sq_bb_back St-1 L-1 conf=low
+0053 SKIP Plyometric_jump_squat
+1410 sq_lunge_bb L-1 St-1 conf=low
+1435 sq_bb_back
+0054 sq_lunge_bb
+0058 bridge_floor_bb conf=medium
+0063 sq_bb_back
+0066 dead_conv St-1 T-3 conf=low
+0074 dead_rack
+0078 sq_lunge_bb
+0077 sq_lunge_bb
+0085 hinge_rdl_bb
+0090 hinge_gm_seated
+1756 hinge_rdl_1leg P+2 conf=medium
+0101 sq_bb_back T-1 conf=medium
+0114 sq_stepup St-1 P+2 T+1 conf=medium
+0115 hinge_gm_bb conf=medium
+0117 dead_sumo
+0127 sq_front St-1 conf=medium
+3212 SKIP Mobility_drill
+0130 hyper_45 conf=low
+3639 SKIP Stretch
+3543 SKIP Plyometric_jump
+0157 dead_db P+1 St+1 T-1 conf=medium
+0196 hinge_pull_cable
+0228 glute_kick_cable
+3769 sq_split_bw conf=medium
+0291 sq_db conf=medium
+0295 SKIP Olympic-style_ballistic_lift
+3635 sq_lunge_db conf=medium
+0300 dead_db
+0336 sq_lunge_db
+3888 SKIP Olympic-style_ballistic_lift
+0371 SKIP Plyometric_jump_squat
+0381 sq_lunge_db
+1459 hinge_rdl_db
+1757 hinge_rdl_1leg
+2805 hinge_rdl_1leg St+1
+0411 sq_pistol P+3 conf=medium
+0413 sq_db
+0431 sq_stepup
+0432 hinge_rdl_db
+0434 hinge_rdl_db
+2808 hinge_rdl_db conf=low
+1559 SKIP Stretch
+1416 SKIP Mobility_drill
+1417 curl_ball P-1 conf=low
+0459 SKIP Low-load_isometric_leg_hold_drill
+3470 sq_lunge_bw
+3194 sq_front conf=medium
+3561 bridge_bw St-2 conf=low
+3523 bridge_bw
+3218 SKIP Mobility_drill
+3215 SKIP Mobility_drill
+1418 SKIP Stretch
+1419 SKIP Stretch
+0514 SKIP Plyometric_jump_squat
+0513 SKIP Plyometric_jump_squat
+0533 sq_goblet T+1 conf=medium
+0534 sq_goblet P-1
+0536 sq_lunge_db P-1 conf=low
+0544 sq_pistol conf=medium
+0549 SKIP Ballistic_kettlebell_swing
+0551 SKIP Skill_movement_(Turkish_get-up)
+1420 SKIP Plyometric_jump_squat
+0578 dead_mach
+2286 glute_kick_mach
+2611 sq_legpress P-1 C-1 conf=medium
+0593 hyper_rev_mach
+3759 hinge_gm_mach
+3013 bridge_bw
+3582 SKIP Plyometric_jump_lunge
+0624 SKIP Isometric_wall_sit
+0628 abd_band conf=low
+1476 sq_pistol
+0642 ch_pushup St-1 conf=low
+1422 bridge_bw conf=low
+3662 SKIP Mobility_flow
+3132 sq_bw conf=low
+0661 ch_pushup St-1 conf=low
+0668 bridge_bw St-1 L-1 conf=low
+3236 bridge_band
+0675 hyper_rev_mach St-4 P-4 conf=low
+1423 hyper_rev_mach St-3 P-4 conf=low
+2571 SKIP Stretch
+2205 SKIP Stretch
+2202 SKIP Stretch
+1424 SKIP Stretch
+2567 SKIP Stretch
+3645 bridge_1leg
+1759 sq_pistol
+1425 sq_legpress P-1 C-1
+1463 sq_legpress
+0739 sq_legpress
+1464 sq_legpress
+0740 sq_legpress
+0741 sq_hack
+0743 sq_hack
+0744 sq_legpress conf=medium
+0749 hinge_gm_bb St+2 conf=medium
+0752 dead_conv St+1 T-1 conf=medium
+1433 sq_smith
+3281 sq_smith
+0755 sq_hack_smith
+0760 sq_legpress conf=medium
+1434 sq_smith
+0769 sq_lunge_bb St+3 C-1 conf=medium
+0770 sq_smith
+3142 sq_smith
+0778 ch_pushup St-2 conf=low
+3433 SKIP Low-load_prone_activation_drill
+2459 SKIP Strongman_event_with_no_way_to_scale_load
+0811 dead_trap
+1466 bridge_bw St-1 conf=low
+1460 sq_lunge_bw
+3643 sq_split_db L-1 St-2 conf=low
+3644 SKIP Ballistic_swing_drill
+0852 sq_db conf=low
+3642 sq_lunge_db conf=medium

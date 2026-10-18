@@ -1,0 +1,159 @@
+# pectorals (dataset target: pectorals)
+3294 ch_pushup T+1 St-2 P-1 conf=medium
+0009 ch_dip_assist
+1716 SKIP Stretch
+2364 ch_dip_assist conf=medium
+1254 ch_press_band
+0989 ch_press_band St-1 conf=low
+0025 ch_bench_bb
+0033 ch_decline_bb
+1255 pull_bb
+0036 ch_decline_bb conf=medium
+0040 pull_bb conf=low
+0045 ch_guillotine
+0047 uc_incline_bb
+1256 ch_decline_bb L-1 conf=medium
+1257 uc_incline_bb L-1 conf=medium
+0122 ch_bench_bb conf=medium
+1258 ch_bench_bb L-1 conf=medium
+1259 SKIP Stretch
+0151 ch_press_cable
+0155 ch_fly_cable_high conf=medium
+0158 ch_fly_cable_dec
+1260 ch_press_cable S-1 P-1 conf=medium
+1261 ch_press_cable S-1 conf=medium
+0169 uc_incline_cable
+0171 uc_fly_cable_inc
+0170 uc_fly_cable_inc St-2 conf=medium
+0179 uc_fly_cable_low
+0185 ch_fly_cable_lie
+0188 ch_fly_cable_mid
+1262 ch_fly_cable_dec P-1
+1263 ch_fly_cable_mid S+1 P-1 St-2 conf=medium
+1264 uc_fly_cable_inc P-1 St-2 conf=medium
+1265 uc_incline_cable P-1
+1266 uc_incline_cable P-1 St-3 conf=medium
+0191 rd_cable_bent P-1
+1267 ch_press_cable P-1 St-3 conf=medium
+1268 ch_press_cable St-3 conf=medium
+2144 ch_press_cable
+0227 ch_fly_cable
+1269 ch_fly_cable_high
+1270 uc_fly_cable_low
+1271 SKIP Stretch
+0251 ch_dip
+1430 ch_dip
+2462 ch_dip L-0 St-1 conf=medium
+1272 SKIP Stretch
+3216 ch_pushup conf=low
+1273 SKIP Plyometric_push-up
+0258 ch_pushup St-2 conf=low
+0279 uc_pushup
+1274 ch_pushup S+1 St-1 conf=medium
+1275 SKIP Plyometric_push-up
+0288 pull_db conf=low
+0289 ch_bench_db
+0301 ch_decline_db
+0302 ch_fly_db_dec
+0303 ch_decline_db
+1276 ch_fly_db_dec St-1 P-1
+0307 ch_fly_db_dec conf=medium
+0308 ch_fly_db
+1277 ch_fly_db St-2
+3545 uc_incline_db St-1 P-1 conf=medium
+0314 uc_incline_db
+0316 uc_fly_db conf=low
+0319 uc_fly_db
+1278 uc_fly_db St-2
+0321 uc_incline_db
+1279 uc_fly_db St-1 P-1
+1280 uc_fly_db St-2 P-1
+1281 uc_incline_db St-1 P-1 C-1
+1282 uc_incline_db St-3 P-1 C-1 conf=medium
+0324 uc_incline_db
+1283 uc_incline_db St-2 conf=medium
+0331 uc_fly_db conf=medium
+0340 ch_bench_db
+0343 ch_bench_db St-1 P-1 C-1
+0342 ch_bench_db St-1 P-1 C-1
+1284 pull_db St-2 conf=medium
+1285 ch_fly_db St-1 P-1
+1286 ch_fly_db St-3 P-1 conf=medium
+1287 ch_decline_db St-1 P-1 C-1
+1288 ch_fly_db St-3 P-1 conf=medium
+1289 uc_incline_db St-1 P-1 C-1
+1290 ch_bench_db St-3 P-1 C-1 conf=medium
+1291 pull_db St-2 P-1 conf=medium
+1622 ch_bench_db L-1 St-1 P-1 C-1 conf=medium
+1292 ch_fly_db St-3 conf=low
+1293 ch_bench_db St-2 conf=medium
+0375 pull_db
+1294 pull_db St-2 C+1 conf=low
+1295 pull_db St-2 conf=medium
+1624 ch_bench_db L-1 conf=medium
+0433 pull_db conf=medium
+1167 SKIP Stretch
+1296 sh_pike_pushup St-2
+0458 ch_floor_fly
+3327 ch_pushup T+2 St-4 C+2 P-1 conf=low
+2139 SKIP Cardio_ergometer
+3234 ch_fly_db conf=medium
+0492 SKIP Plyometric_jump_drill
+0493 ch_pushup T-2 C-1
+3785 ch_pushup T-2 C-1
+0494 ch_pushup T-2 C-1 L-1 conf=medium
+1297 SKIP Isometric_squeeze_with_no_way_to_load_it
+0500 SKIP Isometric_core_and_shoulder_stability_drill
+0519 ch_floor_press St-1 P-1 conf=medium
+0531 ch_floor_press S+1 St-1 P-1 conf=medium
+1298 ch_floor_press St-1 P-1
+0545 SKIP Plyometric_push-up
+3211 ch_pushup T-2 C-1
+3288 ch_dip S+1 L-1 St-2 T-2 conf=low
+0577 ch_press_mach
+0576 ch_press_mach
+1300 ch_decline_mach
+1299 uc_incline_mach
+1479 uc_incline_mach
+0596 ch_pec_deck
+3758 ch_press_mach St-1 conf=medium
+1301 ch_press_mach L+1 conf=medium
+1302 SKIP Plyometric_medicine_ball_throw
+1303 SKIP Plyometric_medicine_ball_throw
+1304 SKIP Plyometric_medicine_ball_throw
+1305 SKIP Plyometric_medicine_ball_throw
+1312 SKIP Plyometric_medicine_ball_throw
+3217 ch_pushup St-2 conf=low
+1306 SKIP Plyometric_push-up
+1689 ch_pushup conf=low
+1307 ch_pushup St-4 conf=medium
+0662 ch_pushup
+0653 ch_pushup St-4 conf=medium
+0655 ch_pushup St-4 conf=medium
+0656 ch_pushup St-4 conf=medium
+0659 ch_pushup T-2 P-1 C-1
+0658 ch_pushup T-2 P-1 C-1
+0663 ch_pushup St-3 conf=medium
+3145 ch_pushup conf=low note=Push-up_plus_adds_a_shoulder-blade_protraction_at_the_top_aimed_at_the_serratus;_the_press_itself_is_hardest_at_the_bottom.
+0666 ch_pushup T+1 P-1 St-2 conf=medium
+3124 ch_press_band St+1
+2203 SKIP Mobility_roller_drill
+2209 SKIP Mobility_roller_drill
+0699 ch_pushup St-1 conf=low
+0725 ch_pushup T+1 P-1 St-2 conf=medium
+0748 ch_bench_smith
+0753 ch_decline_smith
+0754 ch_decline_smith L-1 conf=medium
+0757 uc_incline_smith
+0758 uc_incline_smith L-1 conf=medium
+1626 ch_decline_smith L-1 conf=medium
+0764 ch_bench_smith L-1 conf=medium
+1308 ch_bench_smith conf=medium
+1309 ch_decline_smith conf=medium
+0803 ch_pushup St-3 conf=low
+0806 ch_pushup St-3 S+1 conf=medium
+1310 SKIP Plyometric_push-up
+3313 ch_dip P+0 T+1 L-1 conf=medium
+0856 ch_svend
+1311 ch_pushup
+2363 ch_dip

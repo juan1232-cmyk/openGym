@@ -1,0 +1,208 @@
+# Low-confidence ratings for human review (206)
+
+- **Air bike** (0003, bodyweight) — abs S3 L6, obliques S3 L6; St8 P2 T1 C1. Alternating crunches are hardest at the squeeze with little load at the stretch.
+- **Assisted motion russian twist** (0014, other) — obliques S3 L7; St8 P3 T1 C1. A seated twist is hardest in the twisted position, where the obliques are short.
+- **Band alternating v-up** (0969, band) — abs S3 L4; St8 P3 T1 C1. The hip flexors do most of the work, and the load is greatest with the legs level.
+- **Band lying straight leg raise** (1002, band) — abs S3 L4; St8 P3 T1 C1. The hip flexors do most of the work, and the load is greatest with the legs level.
+- **Band one arm overhead biceps curl** (0986, band) — biceps S3 L8; St6 P2 T1 C1. Band tension peaks at the top of the curl, where the biceps is short.
+- **Band one arm twisting chest press** (0989, band) — chest S3 L7; St5 P2 T2 C2. Band tension peaks at lockout, so it is hardest where the chest is short.
+- **Band one arm twisting seated row** (0990, band) — upper_back S3 L7; St5 P2 T1 C1. Band tension peaks at the end of the pull, where the upper back is short.
+- **Band push sit-up** (0992, band) — abs S4 L4; St8 P3 T1 C2. A sit-up is hardest early with the torso flat, and the hip flexors take over from the abs.
+- **Band squat row** (1003, band) — quads S6 L6, glutes S6 L5; St7 P3 T1 C3. Hardest at the bottom where the quads are stretched, but bodyweight is light so sets turn into endurance work.
+- **Band step-up** (1008, band) — quads S5 L5, glutes S6 L5; St4 P2 T3 C4. Hardest at the bottom, but the step height limits the stretch and balance limits the sets.
+- **Band twisting overhead press** (1012, band) — front_delts S3 L6, side_delts S3 L5; St5 P2 T2 C2. Band tension peaks at lockout, so it is hardest where the delts are short.
+- **Band v-up** (1014, band) — abs S3 L4; St8 P3 T1 C1. The hip flexors do most of the work, and the load is greatest with the legs level.
+- **Band y-raise** (1017, band) — rear_delts S3 L7; St6 P2 T1 C1. Band tension peaks as the band stretches, which is when the arms are out wide and the rear delt is short.
+- **Barbell alternate biceps curl** (0023, barbell) — biceps S4 L8; St6 P8 T3 C2. Hardest with the forearm horizontal mid-rep, with the arm at the side so the biceps is not stretched.
+- **Barbell bent arm pullover** (1316, barbell) — lats S8 L6, chest S7 L5; St4 P7 T3 C3. Arms back overhead is hardest at the stretch, but a barbell is awkward to control there.
+- **Barbell decline bent arm pullover** (0034, barbell) — lats S8 L6, chest S7 L5; St4 P7 T3 C3. Arms back overhead is hardest at the stretch, but a barbell is awkward to control there.
+- **Barbell decline close grip to skull press** (0035, barbell) — triceps S6 L8; St5 P8 T5 C3. A skullcrusher-press hybrid: hardest low where the elbows are bent, with the chest helping a little.
+- **Barbell decline pullover** (1255, barbell) — lats S8 L6, chest S7 L5; St4 P7 T3 C3. Arms back overhead is hardest at the stretch, but a barbell is awkward to control there.
+- **Barbell decline wide-grip pullover** (0037, barbell) — lats S8 L6, chest S7 L5; St4 P7 T3 C3. Arms back overhead is hardest at the stretch, but a barbell is awkward to control there.
+- **Barbell front raise and pullover** (0040, barbell) — lats S8 L6, chest S7 L5; St4 P7 T3 C3. Arms back overhead is hardest at the stretch, but a barbell is awkward to control there.
+- **Barbell guillotine bench press** (0045, barbell) — chest S8 L7; St3 P8 T5 C5. Lowering to the neck stretches the chest more than a standard bench but is harder to fail safely.
+- **Barbell jefferson squat** (0051, barbell) — quads S7 L5, glutes S8 L5; St4 P8 T10 C9. Hardest at the bottom where the quads are stretched, but breathing, the trunk and balance often give out first.
+- **Barbell lateral lunge** (1410, barbell) — quads S7 L4, glutes S8 L5; St2 P7 T5 C6. A long step puts both muscles at stretch at the bottom, but balance and the loaded back give out before the legs do.
+- **Barbell lying preacher curl** (0059, barbell) — biceps S7 L9; St8 P7 T3 C1. The pad holds the arm forward, so the biceps is lengthened at the bottom where the bar is hardest.
+- **Barbell one arm floor press** (0065, barbell) — triceps S3 L7; St5 P7 T6 C4. The floor stops the bar short of the bottom, so the stretched range is cut out.
+- **Barbell one arm side deadlift** (0066, barbell) — glutes S7 L4, hamstrings S7 L4; St4 P8 T7 C10. Hardest off the floor with the hips low, but grip and the lower back give out before the glutes and hamstrings do.
+- **Barbell one leg squat** (0068, barbell) — quads S8 L5, glutes S8 L5; St2 P6 T5 C5. A deep single-leg squat is very hard at the bottom, but balance and mobility limit it.
+- **Barbell press sit-up** (0071, barbell) — abs S4 L4; St5 P7 T3 C2. A sit-up is hardest early with the torso flat, and the hip flexors take over from the abs.
+- **Barbell pullover** (0073, barbell) — lats S8 L6, chest S7 L5; St4 P7 T3 C3. Arms back overhead is hardest at the stretch, but a barbell is awkward to control there.
+- **Barbell pullover to press** (0022, barbell) — lats S8 L6, chest S7 L5; St4 P7 T3 C4. Arms back overhead is hardest at the stretch, but a barbell is awkward to control there.
+- **Barbell rear delt raise** (0075, barbell) — rear_delts S5 L6; St5 P8 T4 C4. A flared-elbow bent-over row loads the rear delt mid-range; the lower back and upper back share it.
+- **Barbell seated bradford rocky press** (0087, barbell) — front_delts S7 L6, side_delts S5 L5; St6 P9 T8 C4. Hardest off the shoulders at the bottom where the delts are lengthened; triceps often quit first.
+- **Barbell seated close-grip concentration curl** (0089, barbell) — biceps S5 L9; St6 P8 T2 C1. The elbows are braced on the thighs, which is hardest mid-curl with a small stretch at the bottom.
+- **Barbell seated twist** (0094, barbell) — obliques S3 L7; St6 P7 T1 C1. A weighted twist is hardest in the twisted position, where the obliques are short.
+- **Barbell sitted alternate leg raise** (2799, barbell) — abs S3 L4; St8 P3 T1 C1. The hip flexors do most of the work, and the load is greatest with the legs level.
+- **Barbell sitted alternate leg raise (female)** (2800, barbell) — abs S3 L4; St8 P3 T1 C1. The hip flexors do most of the work, and the load is greatest with the legs level.
+- **Barbell squat (on knees)** (0102, barbell) — glutes S3 L7; St6 P8 T6 C3. A hip thrust is hardest at lockout where the glutes are short, and the bench support lets them be the limiter.
+- **Barbell standing bradford press** (0105, barbell) — front_delts S7 L6, side_delts S5 L5; St5 P9 T9 C5. Hardest off the shoulders at the bottom where the delts are lengthened; triceps and the trunk often quit first.
+- **Barbell standing concentration curl** (2414, barbell) — biceps S5 L9; St5 P8 T2 C1. The elbows are braced on the thighs, which is hardest mid-curl with a small stretch at the bottom.
+- **Barbell standing rocking leg calf raise** (0111, barbell) — calves S9 L8; St6 P7 T1 C2. Straight knees and a deep heel drop stretch the gastrocnemius where the load is highest.
+- **Barbell standing twist** (0112, barbell) — obliques S3 L7; St6 P7 T1 C1. A weighted twist is hardest in the twisted position, where the obliques are short.
+- **Bench dip on floor** (1399, bodyweight) — triceps S6 L6; St6 P4 T2 C2. Hardest at the bottom with the shoulders pulled back; the shoulders and chest often quit first.
+- **Bench hip extension** (0130, bodyweight) — lower_back S3 L7, glutes S4 L6; St8 P4 T3 C3. A back extension is hardest near the top where the spine is extended and the muscles are short.
+- **Bench pull-ups** (3019, bodyweight) — lats S7 L6; St7 P6 T7 C4. Hardest at the dead hang where the lats are lengthened; the arms and grip often give out first.
+- **Bodyweight side lying biceps curl** (1769, bodyweight) — biceps S5 L8; St6 P2 T1 C1. A light bodyweight-assisted curl with little load to add; stretch is assumed moderate.
+- **Bodyweight squatting row** (3168, bodyweight) — upper_back S4 L6; St6 P2 T1 C2. A light bodyweight pull with little load to add; hardest near the top.
+- **Bodyweight squatting row (with towel)** (3167, bodyweight) — upper_back S4 L6; St6 P2 T1 C2. A light bodyweight pull with little load to add; hardest near the top.
+- **Bodyweight standing close-grip one arm row** (3156, bodyweight) — upper_back S4 L6; St6 P2 T1 C2. A light bodyweight pull with little load to add; hardest near the top.
+- **Bodyweight standing close-grip row** (3158, bodyweight) — upper_back S4 L6; St6 P2 T1 C2. A light bodyweight pull with little load to add; hardest near the top.
+- **Bodyweight standing one arm row** (3162, bodyweight) — upper_back S4 L6; St6 P2 T1 C2. A light bodyweight pull with little load to add; hardest near the top.
+- **Bodyweight standing one arm row (with towel)** (3161, bodyweight) — upper_back S4 L6; St6 P2 T1 C2. A light bodyweight pull with little load to add; hardest near the top.
+- **Bodyweight standing row** (3166, bodyweight) — upper_back S4 L6; St6 P2 T1 C2. A light bodyweight pull with little load to add; hardest near the top.
+- **Bodyweight standing row (with towel)** (3165, bodyweight) — upper_back S4 L6; St6 P2 T1 C2. A light bodyweight pull with little load to add; hardest near the top.
+- **Bottoms-up** (0138, bodyweight) — abs S3 L6; St8 P3 T1 C1. A reverse crunch is hardest at the top with the pelvis curled, and the hip flexors help.
+- **Butt-ups** (0870, bodyweight) — abs S3 L6; St8 P3 T1 C1. A reverse crunch is hardest at the top with the pelvis curled, and the hip flexors help.
+- **Cable alternate triceps extension** (0149, cable) — triceps S6 L9; St8 P7 T1 C1. Cable extension where the arm and pulley position are unclear from the name, so stretch is assumed moderate.
+- **Cable assisted inverse leg curl** (3235, cable) — hamstrings S8 L7; St6 P3 T3 C3. The body is hardest to hold near horizontal where the hamstrings are lengthened, but there is no way to add load easily.
+- **Cable concentration extension (on knee)** (0152, cable) — triceps S4 L9; St9 P7 T2 C1. Hardest at lockout with the arm at the side, where the long head is short.
+- **Cable judo flip** (0174, cable) — obliques S4 L7; St7 P6 T1 C1. The cable keeps tension through the twist, hardest mid-range.
+- **Cable overhead curl on exercise ball** (1637, cable) — biceps S3 L9; St6 P7 T1 C1. The pulley pulls hardest once the elbows are bent, and there is little load with the arm straight.
+- **Cable rear drive** (0204, cable) — triceps S5 L8; St8 P7 T1 C1. The low pulley pulls hardest with the forearm hanging, but the arm is back so the long head is not stretched.
+- **Cable russian twists (on stability ball)** (0211, cable) — obliques S4 L7; St4 P6 T1 C1. The cable keeps tension through the twist, hardest mid-range.
+- **Cable side bend crunch (bosu ball)** (0221, cable) — obliques S6 L8; St5 P7 T1 C1. The cable keeps tension through the range, with high load at the lateral stretch.
+- **Cable squat row (with rope attachment)** (1717, cable) — upper_back S5 L6; St4 P7 T3 C4. The cable pulls along the arm at the stretched start; standing, the lower back and balance share the work.
+- **Cable squatting curl** (1644, cable) — biceps S6 L7; St5 P7 T2 C2. The low pulley loads the hanging start of the curl, so tension is higher near the stretch than with free weights.
+- **Cable standing lift** (0230, cable) — obliques S4 L7; St7 P6 T1 C1. The cable keeps tension through the twist, hardest mid-range.
+- **Cable standing pulldown (with rope)** (0232, cable) — lats S6 L8; St8 P7 T1 C1. A straight-arm pulldown is hardest in the mid-range, not at the lengthened top, and the lats isolate well.
+- **Cable standing twist row (v-bar)** (0236, cable) — upper_back S5 L6; St6 P7 T3 C3. The cable pulls along the arm at the stretched start; standing, the lower back and balance share the work.
+- **Cable thibaudeau kayak row** (2464, cable) — lats S6 L7, upper_back S6 L7; St8 P7 T3 C3. A high-pulley row loads the lats near the stretch, with the biceps and grip sharing the work.
+- **Cable twist (up-down)** (0862, cable) — obliques S4 L7; St7 P6 T1 C1. The cable keeps tension through the twist, hardest mid-range.
+- **Cable twisting pull** (0244, cable) — upper_back S5 L6; St6 P7 T3 C3. The cable pulls along the arm at the stretched start; standing, the lower back and balance share the work.
+- **Chest tap push-up (male)** (3216, bodyweight) — chest S6 L7; St8 P3 T3 C3. Hardest at the bottom where the chest is stretched; triceps and front delts share the work.
+- **Clock push-up** (0258, bodyweight) — chest S6 L7; St6 P3 T3 C3. Hardest at the bottom where the chest is stretched; triceps and front delts share the work.
+- **Cocoons** (0260, bodyweight) — abs S3 L6; St8 P3 T1 C1. A reverse crunch is hardest at the top with the pelvis curled, and the hip flexors help.
+- **Crab twist toe touch** (1468, bodyweight) — obliques S3 L7; St7 P3 T1 C1. A side crunch is hardest at the squeeze, with almost no load at the stretch.
+- **Dumbbell alternating bicep curl with leg raised on exercise ball** (1649, dumbbell) — biceps S4 L7; St3 P6 T2 C1. Hardest with the forearm horizontal mid-rep, with the arm at the side so the biceps is not stretched.
+- **Dumbbell around pullover** (0288, dumbbell) — lats S8 L6, chest S7 L5; St5 P5 T2 C3. Arms back overhead is hardest at the stretch, but the triceps, grip and shoulder joint make it hard to fail on the target.
+- **Dumbbell bicep curl lunge with bowling motion** (1651, dumbbell) — biceps S4 L5; St3 P6 T2 C3. Hardest with the forearm horizontal mid-rep, with the arm at the side so the biceps is not stretched.
+- **Dumbbell bicep curl on exercise ball with leg raised** (1652, dumbbell) — biceps S4 L7; St3 P6 T2 C1. Hardest with the forearm horizontal mid-rep, with the arm at the side so the biceps is not stretched.
+- **Dumbbell bicep curl with stork stance** (1653, dumbbell) — biceps S4 L7; St4 P6 T2 C1. Hardest with the forearm horizontal mid-rep, with the arm at the side so the biceps is not stretched.
+- **Dumbbell biceps curl squat** (1655, dumbbell) — biceps S4 L5; St4 P6 T2 C3. Hardest with the forearm horizontal mid-rep, with the arm at the side so the biceps is not stretched.
+- **Dumbbell biceps curl v sit on bosu ball** (1656, dumbbell) — biceps S4 L6; St3 P6 T2 C2. Hardest with the forearm horizontal mid-rep, with the arm at the side so the biceps is not stretched.
+- **Dumbbell cuban press** (0299, dumbbell) — front_delts S6 L5, side_delts S5 L5; St5 P6 T3 C5. Hardest off the shoulders at the bottom where the delts are lengthened; triceps and the trunk often quit first.
+- **Dumbbell cuban press v. 2** (2136, dumbbell) — front_delts S6 L5, side_delts S5 L5; St5 P6 T3 C5. Hardest off the shoulders at the bottom where the delts are lengthened; triceps and the trunk often quit first.
+- **Dumbbell decline one arm hammer press** (1617, dumbbell) — triceps S5 L6; St4 P4 T5 C4. A neutral-grip dumbbell press: the chest shares the work, so the triceps give out first less often.
+- **Dumbbell incline breeding** (0316, dumbbell) — upper_chest S9 L8; St4 P5 T1 C2. The dumbbells are hardest with the arms level at the bottom, which is exactly the stretched position.
+- **Dumbbell incline hammer press on exercise ball** (1618, dumbbell) — triceps S5 L6; St2 P5 T5 C4. A neutral-grip dumbbell press: the chest shares the work, so the triceps give out first less often.
+- **Dumbbell incline one arm hammer press** (1619, dumbbell) — triceps S5 L6; St4 P4 T5 C4. A neutral-grip dumbbell press: the chest shares the work, so the triceps give out first less often.
+- **Dumbbell incline one arm hammer press on exercise ball** (1620, dumbbell) — triceps S5 L6; St2 P4 T5 C4. A neutral-grip dumbbell press: the chest shares the work, so the triceps give out first less often.
+- **Dumbbell incline raise** (0325, dumbbell) — side_delts S5 L8; St7 P5 T1 C1. Hardest with the arm level at the top, where the side delt is short; almost no load at the stretch.
+- **Dumbbell incline y-raise** (3541, dumbbell) — rear_delts S3 L8; St7 P5 T1 C1. Hardest with the arms level at the top, where the rear delt is short; chest support lets the delt limit.
+- **Dumbbell kneeling bicep curl exercise ball** (1660, dumbbell) — biceps S4 L8; St4 P6 T2 C1. Hardest with the forearm horizontal mid-rep, with the arm at the side so the biceps is not stretched.
+- **Dumbbell lunge with bicep curl** (1658, dumbbell) — biceps S4 L4; St4 P6 T2 C3. Hardest with the forearm horizontal mid-rep, with the arm at the side so the biceps is not stretched.
+- **Dumbbell lying elbow press** (0338, dumbbell) — triceps S6 L9; St5 P5 T2 C1. Elbow-press variation of the lying dumbbell extension, less range at the stretch.
+- **Dumbbell lying femoral** (0339, dumbbell) — hamstrings S5 L7; St5 P4 T1 C1. A dumbbell held between the feet is hardest mid-range with the hips open, and awkward to load.
+- **Dumbbell lying pronation** (0347, dumbbell) — forearms S3 L8; St6 P3 T0 C1. A light forearm rotation with a lever arm; load is hardest mid-rotation.
+- **Dumbbell lying pronation on floor** (2705, dumbbell) — forearms S3 L8; St6 P3 T0 C1. A light forearm rotation with a lever arm; load is hardest mid-rotation.
+- **Dumbbell lying supination** (0349, dumbbell) — forearms S3 L8; St6 P3 T0 C1. A light forearm rotation with a lever arm; load is hardest mid-rotation.
+- **Dumbbell lying supination on floor** (2706, dumbbell) — forearms S3 L8; St6 P3 T0 C1. A light forearm rotation with a lever arm; load is hardest mid-rotation.
+- **Dumbbell lying supine biceps curl** (1661, dumbbell) — biceps S7 L8; St7 P6 T2 C1. The arm hangs behind the body, so the biceps is fully lengthened where the dumbbell is hardest.
+- **Dumbbell lying supine curl** (0350, dumbbell) — biceps S7 L8; St7 P6 T2 C1. The arm hangs behind the body, so the biceps is fully lengthened where the dumbbell is hardest.
+- **Dumbbell lying wide curl** (1662, dumbbell) — biceps S4 L8; St6 P6 T2 C1. Hardest with the forearm horizontal mid-rep, with the arm at the side so the biceps is not stretched.
+- **Dumbbell one arm hammer press on exercise ball** (1621, dumbbell) — triceps S5 L6; St2 P4 T5 C4. A neutral-grip dumbbell press: the chest shares the work, so the triceps give out first less often.
+- **Dumbbell one leg fly on exercise ball** (1292, dumbbell) — chest S9 L8; St1 P5 T1 C2. The dumbbells are hardest with the arms level at the bottom, which is exactly the stretched position.
+- **Dumbbell palms in incline bench press** (1623, dumbbell) — triceps S5 L5; St5 P5 T5 C4. A neutral-grip dumbbell press: the chest shares the work, so the triceps give out first less often.
+- **Dumbbell preacher curl over exercise ball** (1673, dumbbell) — biceps S7 L9; St5 P6 T2 C1. The pad holds the arm forward, so the biceps is lengthened at the bottom where the dumbbell is hardest.
+- **Dumbbell pullover hip extension on exercise ball** (1294, dumbbell) — lats S8 L6, chest S7 L5; St3 P5 T2 C4. Arms back overhead is hardest at the stretch, but the triceps, grip and shoulder joint make it hard to fail on the target.
+- **Dumbbell raise** (0376, dumbbell) — rear_delts S3 L7; St5 P5 T1 C1. Hardest with the arms level at the top, where the rear delt is short; the upper back shares the work.
+- **Dumbbell seated biceps curl to shoulder press** (3547, dumbbell) — biceps S4 L7; St6 P6 T2 C2. Hardest with the forearm horizontal mid-rep, with the arm at the side so the biceps is not stretched.
+- **Dumbbell seated one arm bicep curl on exercise ball with leg raised** (1679, dumbbell) — biceps S4 L8; St3 P5 T2 C1. Hardest with the forearm horizontal mid-rep, with the arm at the side so the biceps is not stretched.
+- **Dumbbell seated one arm rotate** (0399, dumbbell) — forearms S3 L8; St6 P3 T0 C1. A light forearm rotation with a lever arm; load is hardest mid-rotation.
+- **Dumbbell side lying one hand raise** (0408, dumbbell) — side_delts S2 L8; St8 P5 T1 C1. Hardest with the arm level at the top, where the side delt is short; almost no load at the stretch.
+- **Dumbbell side plank with rear fly** (3664, dumbbell) — rear_delts S3 L7; St3 P5 T1 C1. Hardest with the arms level at the top, where the rear delt is short; the upper back shares the work.
+- **Dumbbell standing alternate hammer curl and press** (3560, dumbbell) — biceps S4 L5; St6 P6 T2 C2. Hardest with the forearm horizontal mid-rep; the brachialis and forearm share the work so the biceps give out first less often.
+- **Dumbbell standing around world** (2143, dumbbell) — side_delts S2 L8; St7 P5 T1 C1. Hardest with the arm level at the top, where the side delt is short; almost no load at the stretch.
+- **Dumbbell step up single leg balance with bicep curl** (1684, dumbbell) — biceps S4 L4; St3 P6 T2 C4. Hardest with the forearm horizontal mid-rep, with the arm at the side so the biceps is not stretched.
+- **Dumbbell sumo pull through** (2808, dumbbell) — hamstrings S8 L6, glutes S7 L5; St5 P6 T5 C6. Hips bent with straight knees stretches the hamstrings where the dumbbells are hardest, but grip and the lower back give out first.
+- **Dumbbell twisting bench press** (1743, dumbbell) — triceps S5 L5; St5 P5 T5 C4. A neutral-grip dumbbell press: the chest shares the work, so the triceps give out first less often.
+- **Dumbbell waiter biceps curl** (5201, dumbbell) — biceps S4 L8; St6 P6 T2 C1. Hardest with the forearm horizontal mid-rep, with the arm at the side so the biceps is not stretched.
+- **Elbow dips** (3287, bodyweight) — triceps S6 L6; St6 P4 T2 C2. Hardest at the bottom with the shoulders pulled back; the shoulders and chest often quit first.
+- **Elbow lift - reverse push-up** (1772, bodyweight) — upper_back S4 L6; St7 P4 T3 C3. Bodyweight row is hardest near the top; grip and the arms share the work.
+- **Exercise ball dip** (1744, other) — triceps S6 L6; St3 P4 T2 C2. Hardest at the bottom with the shoulders pulled back; the shoulders and chest often quit first.
+- **Exercise ball on the wall calf raise** (1382, dumbbell) — calves S8 L7; St6 P3 T1 C1. Straight knees and a heel drop off a step stretch the gastrocnemius, but bodyweight is light.
+- **Exercise ball on the wall calf raise (tennis ball between ankles)** (3241, dumbbell) — calves S8 L7; St6 P3 T1 C1. Straight knees and a heel drop off a step stretch the gastrocnemius, but bodyweight is light.
+- **Exercise ball on the wall calf raise (tennis ball between knees)** (3240, dumbbell) — calves S8 L7; St6 P3 T1 C1. Straight knees and a heel drop off a step stretch the gastrocnemius, but bodyweight is light.
+- **Exercise ball one legged diagonal kick hamstring curl** (1417, other) — hamstrings S5 L6; St4 P2 T2 C2. Bodyweight leg curl on a ball is hardest near the top, and balance limits it.
+- **Exercise ball prone leg raise** (1343, other) — glutes S3 L8; St5 P2 T1 C1. A kickback is hardest near lockout where the glutes are short.
+- **Exercise ball supine triceps extension** (1746, dumbbell) — triceps S7 L9; St2 P5 T2 C1. Hardest with the forearm horizontal at the bottom, with the arm vertical so the long head is moderately stretched.
+- **Ez bar french press on exercise ball** (1747, barbell) — triceps S8 L9; St3 P7 T3 C3. Arms overhead stretch the long head; the bar is hardest with the forearm near horizontal at the bottom.
+- **Ez bar lying bent arms pullover** (3010, barbell) — lats S8 L6, chest S7 L5; St4 P7 T3 C3. Arms back overhead is hardest at the stretch, but a barbell is awkward to control there.
+- **Ez bar seated close grip concentration curl** (1682, barbell) — biceps S5 L9; St6 P8 T2 C1. The elbows are braced on the thighs, which is hardest mid-curl with a small stretch at the bottom.
+- **Ez barbell anti gravity press** (0445, barbell) — front_delts S6 L6, side_delts S5 L5; St5 P9 T7 C5. Hardest off the shoulders at the bottom where the delts are lengthened; triceps and the trunk often quit first.
+- **Floor fly (with barbell)** (0458, barbell) — chest S5 L7; St3 P6 T1 C2. A barbell fly to the floor stops short of a full stretch and is awkward to control.
+- **Full planche push-up** (3327, bodyweight) — chest S6 L7; St4 P2 T5 C5. Hardest at the bottom where the chest is stretched; triceps and front delts share the work.
+- **Glute bridge march** (3561, bodyweight) — glutes S2 L8; St6 P3 T1 C1. Hardest at lockout where the glutes are short, and bodyweight is light.
+- **Groin crunch** (0469, bodyweight) — abs S3 L7; St8 P3 T1 C1. A floor crunch is hardest at the squeeze with the spine curled; almost no load when the spine is extended.
+- **Impossible dips** (3289, bodyweight) — triceps S6 L6; St6 P4 T2 C2. Hardest at the bottom with the shoulders pulled back; the shoulders and chest often quit first.
+- **Janda sit-up** (0508, bodyweight) — abs S4 L4; St8 P3 T1 C2. A sit-up is hardest early with the torso flat, and the hip flexors take over from the abs.
+- **Kettlebell advanced windmill** (0517, kettlebell) — obliques S7 L6; St3 P3 T2 C3. A windmill stretches the obliques under load but is a balance and mobility skill first.
+- **Kettlebell alternating renegade row** (0521, kettlebell) — lats S6 L5, upper_back S5 L6; St4 P5 T5 C4. The dumbbell hangs at full stretch for the lat, but the grip and arm often tire first.
+- **Kettlebell bent press** (0524, kettlebell) — obliques S7 L6; St3 P3 T2 C3. A windmill stretches the obliques under load but is a balance and mobility skill first.
+- **Kettlebell double windmill** (0530, kettlebell) — obliques S7 L6; St3 P3 T2 C3. A windmill stretches the obliques under load but is a balance and mobility skill first.
+- **Kettlebell lunge pass through** (0536, kettlebell) — quads S7 L5, glutes S8 L5; St4 P4 T4 C5. A long step puts both muscles at stretch at the bottom, but balance gives out before the legs do.
+- **Kettlebell one arm military press to the side** (0539, kettlebell) — front_delts S6 L6, side_delts S5 L5; St3 P4 T6 C5. Hardest off the shoulders at the bottom where the delts are lengthened; triceps and the trunk often quit first.
+- **Kettlebell pirate supper legs** (0543, kettlebell) — front_delts S6 L6, side_delts S5 L5; St5 P4 T3 C5. Hardest off the shoulders at the bottom where the delts are lengthened; triceps and the trunk often quit first.
+- **Kettlebell windmill** (0554, kettlebell) — obliques S7 L6; St3 P3 T2 C3. A windmill stretches the obliques under load but is a balance and mobility skill first.
+- **Korean dips** (3288, bodyweight) — chest S8 L5; St4 P6 T4 C4. Leaning forward is hardest at the bottom where the chest is stretched; triceps and front delts often quit first.
+- **Landmine 180** (0562, barbell) — obliques S4 L7; St5 P8 T1 C4. The cable keeps tension through the twist, hardest mid-range.
+- **Landmine lateral raise** (3237, barbell) — side_delts S4 L8; St6 P7 T1 C1. The barbell arcs up and across, adding load earlier in the rep than a dumbbell does.
+- **Lever gripper hands** (2288, machine) — forearms S3 L9; St8 P4 T1 C1. A squeeze is hardest at the closed, short end of the range.
+- **Lever rotary calf** (2315, machine) — calves S8 L8; St8 P8 T1 C2. Straight knees and a deep heel drop stretch the gastrocnemius where the load is highest.
+- **Lower back curl** (1352, bodyweight) — lower_back S3 L7, glutes S4 L6; St8 P4 T3 C3. A back extension is hardest near the top where the spine is extended and the muscles are short.
+- **Lying elbow to knee** (2312, bodyweight) — abs S3 L6, obliques S3 L6; St8 P2 T1 C1. Alternating crunches are hardest at the squeeze with little load at the stretch.
+- **Modified hindu push-up (male)** (3217, bodyweight) — chest S6 L7; St6 P3 T3 C3. Hardest at the bottom where the chest is stretched; triceps and front delts share the work.
+- **Monster walk** (0628, bodyweight) — abductors S2 L8; St6 P2 T1 C1. Band tension peaks as the leg opens, where the abductors are short.
+- **Muscle up** (0631, bodyweight) — lats S7 L4; St6 P6 T6 C5. Hardest at the dead hang where the lats are lengthened; the arms and grip often give out first.
+- **Muscle-up (on vertical bar)** (1401, bodyweight) — lats S7 L4; St6 P6 T6 C5. Hardest at the dead hang where the lats are lengthened; the arms and grip often give out first.
+- **One arm chin-up** (0638, bodyweight) — lats S7 L5, biceps S6 L7; St5 P2 T7 C4. Hardest at the dead hang where lats and biceps are lengthened; the biceps and grip give out before the lats.
+- **One arm dip** (0639, bodyweight) — triceps S6 L6; St4 P3 T2 C2. Hardest at the bottom with the shoulders pulled back; the shoulders and chest often quit first.
+- **One arm towel row** (1773, bodyweight) — upper_back S4 L6; St6 P2 T1 C2. A light bodyweight pull with little load to add; hardest near the top.
+- **Otis up** (0641, bodyweight) — abs S5 L4; St7 P6 T1 C2. The decline adds load at the start, but the hip flexors take over from the abs.
+- **Outside leg kick push-up** (0642, bodyweight) — chest S6 L7; St7 P3 T3 C3. Hardest at the bottom where the chest is stretched; triceps and front delts share the work.
+- **Pelvic tilt into bridge** (1422, bodyweight) — glutes S2 L8; St8 P3 T1 C1. Hardest at lockout where the glutes are short, and bodyweight is light.
+- **Potty squat** (3119, bodyweight) — quads S6 L6, glutes S6 L5; St8 P3 T1 C3. Hardest at the bottom where the quads are stretched, but bodyweight is light so sets turn into endurance work.
+- **Potty squat with support** (3132, bodyweight) — quads S6 L6, glutes S6 L5; St8 P3 T1 C3. Hardest at the bottom where the quads are stretched, but bodyweight is light so sets turn into endurance work.
+- **Prone twist on stability ball** (1707, other) — obliques S3 L7; St5 P3 T1 C1. A seated twist is hardest in the twisted position, where the obliques are short.
+- **Push and pull bodyweight** (1689, bodyweight) — chest S6 L7; St8 P3 T3 C3. Hardest at the bottom where the chest is stretched; triceps and front delts share the work.
+- **Push-up inside leg kick** (0661, bodyweight) — chest S6 L7; St7 P3 T3 C3. Hardest at the bottom where the chest is stretched; triceps and front delts share the work.
+- **Push-up plus** (3145, bodyweight) — chest S6 L7; St8 P3 T3 C3. Push-up plus adds a shoulder-blade protraction at the top aimed at the serratus; the press itself is hardest at the bottom.
+- **Rear decline bridge** (0668, bodyweight) — glutes S2 L7; St7 P3 T1 C1. Hardest at lockout where the glutes are short, and bodyweight is light.
+- **Reverse hyper extension (on stability ball)** (0675, other) — glutes S5 L7, hamstrings S5 L6; St4 P3 T3 C3. The legs swing from a flexed position behind the body; moderate stretch is assumed.
+- **Reverse hyper on flat bench** (1423, bodyweight) — glutes S5 L7, hamstrings S5 L6; St5 P3 T3 C3. The legs swing from a flexed position behind the body; moderate stretch is assumed.
+- **Roller body saw** (2204, other) — abs S8 L7; St4 P4 T1 C3. A suspended fallout is hardest at full extension where the abs are lengthened.
+- **Seated side crunch (wall)** (0691, bodyweight) — obliques S3 L7; St8 P3 T1 C1. A side crunch is hardest at the squeeze, with almost no load at the stretch.
+- **Self assisted inverse leg curl** (0697, bodyweight) — hamstrings S8 L7; St5 P2 T2 C3. The body is hardest to hold near horizontal where the hamstrings are lengthened, but there is no way to add load easily.
+- **Self assisted inverse leg curl** (1766, bodyweight) — hamstrings S8 L7; St5 P2 T2 C3. The body is hardest to hold near horizontal where the hamstrings are lengthened, but there is no way to add load easily.
+- **Self assisted inverse leg curl (on floor)** (0696, bodyweight) — hamstrings S8 L7; St5 P2 T2 C3. The body is hardest to hold near horizontal where the hamstrings are lengthened, but there is no way to add load easily.
+- **Shoulder tap push-up** (0699, bodyweight) — chest S6 L7; St7 P3 T3 C3. Hardest at the bottom where the chest is stretched; triceps and front delts share the work.
+- **Side bridge hip abduction** (1774, bodyweight) — abductors S3 L8; St6 P3 T1 C1. Bodyweight is light and hardest where the leg is raised and the muscle is short.
+- **Side hip (on parallel bars)** (0709, bodyweight) — obliques S4 L4; St5 P3 T1 C2. The hip flexors and grip give out before the obliques do.
+- **Side plank hip adduction** (1775, bodyweight) — adductors S5 L8; St5 P3 T1 C1. Bodyweight is light, so the squeeze is hardest at the short end.
+- **Side push-up** (0717, bodyweight) — triceps S5 L6; St6 P3 T2 C3. A close-grip push-up is hardest at the bottom; chest and delts share the work.
+- **Side-to-side toe touch (male)** (3213, bodyweight) — obliques S3 L7; St8 P3 T1 C1. A side crunch is hardest at the squeeze, with almost no load at the stretch.
+- **Single leg calf raise (on a dumbbell)** (0727, dumbbell) — calves S9 L8; St5 P5 T1 C1. Straight knees and a deep heel drop stretch the gastrocnemius where the load is highest.
+- **Smith machine bicep curl** (1683, smith) — biceps S4 L8; St7 P8 T2 C1. The bar is on a fixed track and hardest mid-rep, with the arm at the side.
+- **Spell caster** (0777, dumbbell) — obliques S3 L7; St6 P4 T1 C1. A weighted twist is hardest in the twisted position, where the obliques are short.
+- **Spider crawl push up** (0778, bodyweight) — chest S6 L7; St6 P3 T3 C3. Hardest at the bottom where the chest is stretched; triceps and front delts share the work.
+- **Spine twist** (2329, bodyweight) — obliques S3 L7; St8 P3 T1 C1. A seated twist is hardest in the twisted position, where the obliques are short.
+- **Standing calves** (1397, bodyweight) — calves S8 L7; St6 P3 T1 C1. Straight knees and a heel drop off a step stretch the gastrocnemius, but bodyweight is light.
+- **Standing single leg curl** (0795, bodyweight) — hamstrings S5 L6; St4 P2 T2 C2. Bodyweight leg curl on a ball is hardest near the top, and balance limits it.
+- **Superman push-up** (0803, bodyweight) — chest S6 L7; St5 P3 T3 C3. Hardest at the bottom where the chest is stretched; triceps and front delts share the work.
+- **Triceps dips floor** (0815, bodyweight) — triceps S4 L6; St6 P4 T2 C2. Hardest at the bottom with the shoulders pulled back; the shoulders and chest often quit first.
+- **Triceps press** (0816, bodyweight) — triceps S7 L8; St6 P3 T2 C2. Body leaning over the hands (or forearms) is hardest at the bottom, where the triceps are lengthened.
+- **Twist hip lift** (1466, bodyweight) — glutes S2 L8; St7 P3 T1 C1. Hardest at lockout where the glutes are short, and bodyweight is light.
+- **Twisted leg raise** (2802, bodyweight) — obliques S4 L4; St8 P3 T1 C2. The hip flexors and grip give out before the obliques do.
+- **Twisted leg raise (female)** (2801, bodyweight) — obliques S4 L4; St8 P3 T1 C2. The hip flexors and grip give out before the obliques do.
+- **Weighted cossack squats (male)** (3643, bodyweight) — quads S7 L5, glutes S8 L6; St3 P5 T4 C5. A static split stance puts both muscles at stretch at the bottom with less balance demand than a lunge.
+- **Weighted muscle up** (3286, bodyweight) — lats S7 L4; St6 P6 T7 C5. Hardest at the dead hang where the lats are lengthened; the arms and grip often give out first.
+- **Weighted muscle up (on bar)** (3312, bodyweight) — lats S7 L4; St6 P6 T7 C5. Hardest at the dead hang where the lats are lengthened; the arms and grip often give out first.
+- **Weighted one hand pull up** (3290, bodyweight) — lats S7 L6; St5 P3 T7 C4. Hardest at the dead hang where the lats are lengthened; the arms and grip often give out first.
+- **Weighted round arm** (0844, bodyweight) — rear_delts S3 L7; St5 P5 T1 C1. Hardest with the arms level at the top, where the rear delt is short; the upper back shares the work.
+- **Weighted seated bicep curl (on stability ball)** (0847, other) — biceps S4 L8; St5 P4 T2 C1. Hardest with the forearm horizontal mid-rep, with the arm at the side so the biceps is not stretched.
+- **Weighted seated twist (on stability ball)** (0849, bodyweight) — obliques S3 L7; St5 P5 T1 C1. A weighted twist is hardest in the twisted position, where the obliques are short.
+- **Weighted squat** (0852, bodyweight) — quads S7 L6, glutes S7 L5; St6 P5 T4 C5. Hardest at the bottom where the quads are stretched; grip limits the load.
+- **Weighted standing curl** (0853, bodyweight) — biceps S4 L8; St6 P6 T2 C1. Hardest with the forearm horizontal mid-rep, with the arm at the side so the biceps is not stretched.
+- **Weighted standing hand squeeze** (0854, bodyweight) — forearms S3 L9; St8 P4 T1 C1. A squeeze is hardest at the closed, short end of the range.

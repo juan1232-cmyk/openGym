@@ -1,0 +1,28 @@
+## ---------------- shoulders ----------------
+sd_lat_db        | side_delts:2:8 | - | 7 5 1 1 | - | high | Hardest with the arm level at the top, where the side delt is short; almost no load at the stretch. [anchor]
+sd_lat_cable     | side_delts:6:8 | - | 8 6 1 1 | - | high | The cable keeps load on the side delt near the stretch, but it still peaks around mid-height. [anchor]
+sd_lat_mach      | side_delts:5:9 | - | 10 8 1 1 | - | medium | A lateral raise machine with an unknown cam, so stretch is assumed moderate.
+sd_lat_landmine  | side_delts:4:8 | - | 6 7 1 1 | - | low | The barbell arcs up and across, adding load earlier in the rep than a dumbbell does.
+sd_lat_band      | side_delts:1:8 | - | 6 2 1 1 | - | medium | Band tension peaks as the band stretches, which is at the top where the side delt is short.
+ur_bb            | side_delts:3:6,traps:4:6 | biceps | 6 8 4 3 | - | high | Hardest near the top where the elbows are high and the delts are short; traps and biceps share the work.
+fd_raise_db      | front_delts:2:8 | - | 6 5 1 1 | - | high | Hardest with the arm level at the top, where the front delt is short; no load at the stretch.
+fd_raise_bar     | front_delts:2:8 | - | 6 7 1 2 | - | high | Hardest with the arm level at the top, where the front delt is short; no load at the stretch.
+fd_raise_cable   | front_delts:6:8 | - | 8 7 1 1 | - | medium | A low pulley behind the body pulls hardest early in the raise, near the stretch.
+fd_raise_band    | front_delts:1:8 | - | 6 2 1 1 | - | medium | Band tension peaks as the band stretches, which is at the top where the front delt is short.
+press_bb_stand   | front_delts:6:6,side_delts:5:5 | triceps | 6 9 9 5 | - | high | Hardest off the shoulders at the bottom where the delts are lengthened; triceps and the trunk often quit first.
+press_bb_seat    | front_delts:6:6,side_delts:5:5 | triceps | 7 9 8 4 | - | high | Hardest off the shoulders at the bottom where the delts are lengthened; triceps often quit first.
+press_db_seat    | front_delts:6:6,side_delts:5:5 | triceps | 7 6 7 4 | - | high | Hardest off the shoulders at the bottom where the delts are lengthened; triceps often quit first.
+press_db_stand   | front_delts:6:6,side_delts:5:5 | triceps | 5 6 6 5 | - | high | Hardest off the shoulders at the bottom where the delts are lengthened; triceps and the trunk often quit first.
+press_mach       | front_delts:5:7,side_delts:5:6 | triceps | 9 8 5 3 | - | medium | A shoulder press machine with an unknown cam, so stretch is assumed moderate.
+press_smith      | front_delts:6:6,side_delts:5:5 | triceps | 8 8 7 4 | - | high | Hardest off the shoulders at the bottom where the delts are lengthened; triceps often quit first.
+press_cable      | front_delts:6:6,side_delts:5:5 | triceps | 7 7 3 3 | - | medium | The cables pull hardest in the bottom half where the delts are lengthened; triceps often quit first.
+press_band       | front_delts:3:6,side_delts:3:5 | triceps | 6 2 2 2 | - | medium | Band tension peaks at lockout, so it is hardest where the delts are short.
+rd_raise_db      | rear_delts:3:7 | upper_back | 5 5 1 1 | - | high | Hardest with the arms level at the top, where the rear delt is short; the upper back shares the work.
+rd_raise_db_sup  | rear_delts:3:8 | upper_back | 7 5 1 1 | - | high | Hardest with the arms level at the top, where the rear delt is short; chest support lets the delt limit.
+rd_fly_cable     | rear_delts:5:7 | upper_back | 8 7 1 1 | - | high | Cable tension is highest as the arms come level, short of the full stretch; the upper back shares the work.
+rd_fly_mach      | rear_delts:5:8 | upper_back | 10 8 1 1 | - | medium | A reverse fly machine with an unknown cam, so stretch is assumed moderate.
+rd_row_cable     | rear_delts:5:7 | upper_back,biceps | 8 7 2 2 | - | medium | A flared-elbow cable row loads the rear delt hardest mid-range; the upper back and biceps share it.
+rd_row_bb        | rear_delts:5:6 | upper_back,biceps | 5 8 4 4 | - | medium | A flared-elbow bent-over row loads the rear delt mid-range; the lower back and upper back share it.
+rd_row_smith     | rear_delts:5:6 | upper_back,biceps | 7 8 4 3 | - | medium | A flared-elbow row on a fixed track loads the rear delt mid-range; the upper back shares it.
+rd_row_db        | rear_delts:5:7 | upper_back,biceps | 6 6 2 2 | - | medium | A flared-elbow bent-over row loads the rear delt mid-range; the upper back shares it.
+rd_band          | rear_delts:3:7 | upper_back | 6 2 1 1 | - | medium | Band tension peaks as the band stretches, which is when the arms are out wide and the rear delt is short.

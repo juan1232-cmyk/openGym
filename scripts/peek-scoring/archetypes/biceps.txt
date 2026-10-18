@@ -1,0 +1,30 @@
+## ---------------- biceps / forearms / pull-ups ----------------
+bic_preacher_mach  | biceps:7:9 | - | 9 7 2 1 | - | high | The pad holds the arm forward, so the biceps is lengthened at the bottom where the load is high. [anchor]
+bic_preacher_cable | biceps:7:9 | - | 9 8 2 1 | - | high | The pad holds the arm forward and the cable keeps load on at the lengthened bottom.
+bic_preacher_ez    | biceps:7:9 | - | 8 7 3 1 | - | high | The pad holds the arm forward, so the biceps is lengthened at the bottom where the bar is hardest.
+bic_preacher_db    | biceps:7:9 | - | 8 6 2 1 | - | high | The pad holds the arm forward, so the biceps is lengthened at the bottom where the dumbbell is hardest.
+bic_incline_db     | biceps:8:8 | - | 7 6 2 1 | - | high | The arm hangs behind the body, so the biceps is fully lengthened where the dumbbell is hardest. [anchor]
+bic_incline_cable  | biceps:8:8 | - | 8 7 2 1 | - | high | The arm sits behind the body on an incline, and the cable keeps the lengthened bottom loaded.
+bic_curl_db        | biceps:4:8 | - | 6 6 2 1 | - | high | Hardest with the forearm horizontal mid-rep, with the arm at the side so the biceps is not stretched.
+bic_curl_bar       | biceps:4:8 | - | 6 8 3 2 | - | high | Hardest with the forearm horizontal mid-rep, with the arm at the side so the biceps is not stretched.
+bic_curl_cable     | biceps:6:9 | - | 8 7 2 1 | - | high | The low pulley loads the hanging start of the curl, so tension is higher near the stretch than with free weights.
+bic_ohcurl_cable   | biceps:3:9 | - | 8 7 1 1 | - | medium | The pulley pulls hardest once the elbows are bent, and there is little load with the arm straight.
+bic_hammer_db      | biceps:4:7 | forearms | 6 6 2 1 | - | high | Hardest with the forearm horizontal mid-rep; the brachialis and forearm share the work so the biceps give out first less often.
+bic_hammer_cable   | biceps:5:7 | forearms | 8 7 2 1 | - | high | The low pulley loads the hanging start; the brachialis and forearm share the work so the biceps give out first less often.
+bic_conc_db        | biceps:5:9 | - | 7 6 1 1 | - | high | The elbow is braced on the thigh, which is hardest mid-curl with a small stretch at the bottom.
+bic_conc_bar       | biceps:5:9 | - | 6 8 2 1 | - | low | The elbows are braced on the thighs, which is hardest mid-curl with a small stretch at the bottom.
+bic_spider_db      | biceps:5:9 | - | 8 6 1 1 | - | high | Chest-supported with the arms hanging, it is hardest mid-curl with little load right at the stretch.
+bic_spider_bar     | biceps:5:9 | - | 8 8 2 1 | - | high | Chest-supported with the arms hanging, it is hardest mid-curl with little load right at the stretch.
+bic_rev_bar        | forearms:4:7 | biceps | 6 8 3 2 | - | medium | The overhand grip shifts the work to the forearm flexors and brachialis, which are hardest mid-curl.
+bic_rev_db         | forearms:4:7 | biceps | 6 6 2 1 | - | medium | The overhand grip shifts the work to the forearm flexors and brachialis, which are hardest mid-curl.
+bic_rev_cable      | forearms:5:7 | biceps | 8 7 2 1 | - | medium | The overhand grip shifts the work to the forearms, and the low pulley loads the hanging start.
+bic_rev_preacher_bar | forearms:6:7 | biceps | 8 7 3 1 | - | medium | The pad holds the arm forward so the forearm muscles are lengthened at the bottom; the overhand grip limits it.
+bic_mach           | biceps:5:9 | - | 10 8 2 1 | - | medium | A seated curl machine with an unknown cam, so stretch is assumed moderate.
+bic_smith          | biceps:4:8 | - | 7 8 2 1 | - | low | The bar is on a fixed track and hardest mid-rep, with the arm at the side.
+bic_band           | biceps:3:8 | - | 6 2 1 1 | - | medium | Band tension peaks at the top of the curl, where the biceps is short.
+bic_bw             | biceps:5:8 | - | 6 2 1 1 | - | low | A light bodyweight-assisted curl with little load to add; stretch is assumed moderate.
+fore_wrist         | forearms:8:9 | - | 8 5 1 1 | - | medium | Hardest with the wrist extended at the bottom, where the forearm flexors are stretched.
+fore_wrist_neutral | forearms:7:9 | - | 8 5 1 1 | - | medium | Neutral-grip wrist curl: hardest at the lengthened bottom, with a slightly smaller range than a palms-up curl.
+pu_chin            | lats:7:5,biceps:6:7 | - | 7 6 7 4 | - | medium | Hardest at the dead hang where lats and biceps are lengthened; the biceps and grip give out before the lats.
+pu_pull            | lats:7:6 | biceps,upper_back | 7 6 7 4 | - | medium | Hardest at the dead hang where the lats are lengthened; the arms and grip often give out first.
+lat_sap            | lats:6:8 | - | 8 7 1 1 | - | medium | A straight-arm pulldown is hardest in the mid-range, not at the lengthened top, and the lats isolate well.
