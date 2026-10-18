@@ -1,0 +1,89 @@
+# upper back (dataset target: upper back)
+3297 SKIP Static_gymnastics_skill_hold
+0988 row_band
+0990 row_band St-1 conf=low
+0027 row_bb_bent
+0049 row_chest_bb
+0064 row_bb_bent St-1 P-1 C-1 conf=medium
+3017 row_bb_bent
+0118 row_bb_bent L-1 conf=medium
+1317 row_chest_bb L-1 conf=medium
+3168 row_bw_towel
+3167 row_bw_towel
+3156 row_bw_towel
+3158 row_bw_towel
+3162 row_bw_towel
+3161 row_bw_towel
+3166 row_bw_towel
+3165 row_bw_towel
+0159 row_cable_seat conf=medium
+0160 row_cable_seat
+0167 row_cable_hi
+1318 row_chest_cable
+0180 row_cable_seat
+0189 row_cable_stand
+0193 row_cable_hi P-1
+1319 row_cable_seat conf=medium
+0208 row_cable_hi L-1 conf=medium
+1320 row_cable_seat
+1321 row_cable_hi conf=medium
+1322 row_chest_cable conf=medium
+1323 row_cable_seat
+0214 row_cable_seat P-1
+0861 row_cable_seat
+0218 row_cable_seat
+0234 row_cable_stand
+0236 row_cable_stand conf=low
+0239 row_cable_seat
+1324 row_cable_hi conf=medium
+0248 row_chest_bb
+0253 pu_chin
+0293 row_db_bent
+0327 row_chest_db
+3541 rd_raise_db_sup conf=low
+1328 rd_row_db St+2 conf=medium
+0292 row_db_1arm
+1329 row_db_bent conf=medium
+1330 row_chest_db L-1 P-1 conf=medium
+1331 row_chest_db L-1 conf=medium
+2327 row_db_bent L-1 conf=medium
+3664 rd_raise_db St-2 conf=low
+1772 row_inv conf=low
+3292 SKIP Static_gymnastics_skill
+1344 row_bb_bent L-1 conf=medium
+3295 SKIP Static_gymnastics_skill_hold
+0499 row_inv
+2300 row_inv
+2298 row_inv
+0497 row_inv
+0498 row_inv
+0521 row_db_1arm St-3 L-1 C+1 conf=low
+0522 row_db_1arm P-1
+0541 row_db_1arm P-1
+1345 row_db_bent P-2
+0571 row_mach
+0574 row_bb_bent St+1 C-1 conf=medium
+3200 row_mach
+0581 row_mach_hi
+0588 row_mach
+0589 row_db_1arm P+2 conf=medium
+1356 row_mach_hi P-1
+1348 row_mach L-1
+1349 row_tbar_chest L-1
+1350 row_mach
+0606 row_tbar_chest
+1351 row_tbar_chest L-1
+1313 row_mach
+0609 SKIP Gymnastics_skill
+1354 SKIP Plyometric_slam
+1773 row_bw_towel
+3144 row_band St+1
+0680 SKIP Sport_drill_(rope_climb)
+3304 SKIP Gymnastics_skill
+1359 row_smith
+0761 row_smith
+1360 row_smith P-1
+1361 row_smith L-1
+3669 SKIP Gymnastics_skill_with_unclear_loading
+0808 row_inv
+1365 SKIP Stretch

@@ -1,0 +1,148 @@
+# quads, hamstrings, calves, adductors, abductors (dataset targets with the same names)
+## quads
+1512 SKIP Stretch
+1713 SKIP Stretch
+1473 SKIP Plyometric_jump
+0020 SKIP Balance_drill
+0987 sq_split_bw conf=medium
+1001 sq_split_bw conf=medium
+0024 sq_front St-1 conf=medium
+0026 sq_bb_back conf=medium
+0028 SKIP Olympic-style_ballistic_lift
+0068 sq_pistol St-1 P+4 T+2 C+1 conf=low
+0069 sq_bb_back L-2 St-1 T-2 conf=medium
+0098 sq_split_bb conf=medium
+0097 sq_split_bb conf=medium
+0099 sq_split_bb
+2810 sq_split_bb
+0102 bridge_bb L-2 St-2 conf=low
+2798 SKIP Ballistic_jumping_lift
+0124 sq_bb_back
+1548 SKIP Stretch
+1760 sq_goblet
+0410 sq_split_db
+2796 sq_lunge_db conf=medium
+2812 sq_split_db conf=medium
+2803 sq_db St+1 conf=medium
+2133 SKIP Loaded_carry
+1472 SKIP Plyometric_jump
+1564 SKIP Stretch
+2287 sq_legpress conf=medium
+0585 leg_ext
+0613 SKIP Stretch
+3533 SKIP Unclear_bodyweight_drill_with_no_defined_movement
+3552 SKIP Agility_footwork_drill
+3007 leg_ext_band
+1489 sq_sissy
+0750 sq_smith conf=medium
+0768 sq_split_smith
+0776 SKIP Olympic-style_ballistic_pull
+2368 sq_split_bw
+0786 SKIP Olympic-style_ballistic_lift
+1705 sq_bw St-4 conf=medium
+1685 SKIP Mobility_drill
+1686 SKIP Mobility_drill
+0809 sq_split_bw St-2 conf=medium
+0851 sq_sissy P+3 conf=medium
+## hamstrings
+0016 SKIP Stretch
+0044 hinge_gm_bb
+0116 hinge_rdl_bb
+3235 nordic P+1 St+1 conf=low
+0339 curl_db
+1560 SKIP Stretch
+3193 ghr
+1511 SKIP Stretch
+0496 nordic
+2400 nordic
+0535 SKIP Olympic-style_ballistic_lift
+0555 SKIP Dynamic_mobility_drill
+1576 SKIP Stretch
+0582 curl_kneel
+0586 curl_lying
+3195 curl_lying conf=medium
+0599 curl_seated
+0648 SKIP Olympic_lift
+1582 SKIP Stretch
+1585 SKIP Stretch
+1587 SKIP Stretch
+0697 nordic T-1 conf=low
+1766 nordic T-1 conf=low
+0696 nordic T-1 conf=low
+0730 curl_ball conf=medium
+1599 SKIP Stretch
+0795 curl_ball P-1 conf=low
+1604 SKIP Stretch
+## calves
+1368 SKIP Mobility_drill
+1708 SKIP Stretch
+0999 calf_band P-1
+1000 SKIP Tibialis_exercise,_not_a_listed_muscle
+1369 calf_band
+1370 calf_floor
+0088 calf_seated_db St-2 P+2 conf=medium
+1371 calf_seated_db St-2 P+2 conf=medium
+1372 calf_stand_bb
+0108 calf_stand_bb St-1 P-2 conf=medium
+0111 calf_stand_bb conf=low
+1373 calf_stand_bw
+1374 SKIP Plyometric_drill
+1375 calf_cable
+1376 calf_cable P-1
+1407 SKIP Stretch
+1377 SKIP Stretch
+1378 SKIP Stretch
+0257 SKIP Stretch
+0284 calf_donkey_bw
+1379 calf_seated_db
+0400 calf_seated_db St-1 P-1
+1380 calf_seated_db St-1 P-1
+1381 calf_seated_db St-1 P-1
+0409 calf_stand_db
+0417 calf_stand_db
+1382 calf_stand_bw conf=low
+3241 calf_stand_bw conf=low
+3240 calf_stand_bw conf=low
+1383 calf_stand_mach conf=medium
+1384 calf_stand_mach P-1 conf=medium
+2289 calf_legpress
+1253 calf_donkey_mach
+2315 calf_stand_mach S-1 studied=none conf=low
+2335 calf_seated_mach conf=medium
+0594 calf_seated_mach
+0605 calf_stand_mach
+1385 calf_legpress conf=medium
+1386 calf_donkey_bw
+1387 calf_floor P-4 St-1 conf=medium
+1388 SKIP Stretch
+1389 SKIP Stretch
+1390 SKIP Stretch
+0727 calf_stand_db St-1 conf=low
+0738 calf_legpress
+1391 calf_legpress
+0742 calf_stand_mach conf=medium
+2334 calf_legpress
+1392 calf_legpress P-1
+1393 calf_floor St+1 P+1 conf=medium
+0763 SKIP Tibialis_exercise,_not_a_listed_muscle
+1394 SKIP Tibialis_exercise,_not_a_listed_muscle
+1395 calf_seated_smith P-1
+0773 calf_stand_smith
+1396 SKIP Tibialis_exercise,_not_a_listed_muscle
+1490 calf_stand_bw
+1397 calf_stand_bw conf=low
+1398 SKIP Stretch
+0833 calf_donkey_bw P+2 conf=medium
+## adductors
+1712 SKIP Stretch
+1494 SKIP Stretch
+0168 add_cable
+0598 add_mach
+3667 add_bw
+1775 add_bw St-2 conf=low
+## abductors
+0597 abd_mach
+3006 abd_band St+1
+1774 abd_bw St-1 conf=low
+0710 abd_bw
+1427 abd_bw

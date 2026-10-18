@@ -1,0 +1,82 @@
+# lats (dataset target: lats)
+0007 lat_pd
+3293 pu_pull P-2 St-1 conf=medium
+0015 pu_assist
+0017 pu_assist
+1431 pu_chin St+2 P+2 T-4 C-2 conf=medium
+1432 pu_assist conf=medium
+1405 SKIP Stretch
+0970 pu_pull S-2 St-1 P-2 T-4 C-2 conf=medium
+0974 lat_pd_band
+3117 lat_pd_band
+3116 lat_pd_band L-1
+0983 lat_pd_band
+1013 lat_pd_band L-1
+1316 pull_bb conf=low
+0034 pull_bb
+0037 pull_bb
+0073 pull_bb
+0022 pull_bb C+1 conf=low
+3019 pu_pull conf=low
+0150 lat_pd
+0153 lat_pd
+0172 lat_sap conf=medium
+2330 lat_pd
+0177 lat_pd
+2616 lat_pd
+3563 lat_pd P-1
+0198 lat_pd
+0197 lat_pd
+0199 lat_sap
+0205 lat_pd St-1 conf=medium
+0213 row_cable_hi
+1717 row_cable_stand St-2 C+1 conf=low
+0238 lat_sap
+0237 lat_sap
+2464 row_cable_hi conf=low
+0244 row_cable_stand conf=low
+0245 lat_pd_under
+1325 lat_pd St-2 conf=medium
+1326 pu_chin
+1327 pu_chin
+1332 SKIP Core_and_mobility_drill
+1339 SKIP Stretch
+1341 SKIP Stretch
+1342 SKIP Stretch
+3010 pull_bb
+0184 lat_pullover_cab
+0466 pu_chin conf=medium
+0558 SKIP Kipping_gymnastics_skill_using_momentum
+1346 SKIP Stretch
+3418 pu_pull L-1 C+1 conf=medium
+0572 pu_chin St+2 P+2 T-4 C-2 conf=medium
+0579 lat_pd_mach
+1347 lat_pd_mach P-1
+2285 lat_pullover_mach
+2736 lat_pd_mach L-1
+1353 SKIP Plyometric_throw
+0627 pu_chin
+0631 pu_pull L-2 St-1 C+1 T-1 conf=low
+1401 pu_pull L-2 St-1 C+1 T-1 conf=low
+1355 SKIP Stretch_and_mobility_drill
+0638 pu_chin P-4 St-2 conf=low
+0651 pu_pull
+0652 pu_pull
+0670 pu_pull St-1 conf=medium
+0673 lat_pd_mach L-1
+0674 pu_chin
+0678 pu_pull conf=medium
+2207 SKIP Stretch
+0690 SKIP Stretch
+1763 pu_pull
+1358 SKIP Stretch
+0720 pu_chin St-1 conf=medium
+0794 SKIP Stretch
+0818 lat_pd
+2987 pu_chin T+1
+3286 pu_pull L-2 St-1 C+1 conf=low
+3312 pu_pull L-2 St-1 C+1 conf=low
+3290 pu_pull P-3 St-2 conf=low
+0841 pu_pull T+1
+1429 pu_pull
+1367 pu_pull St-1 conf=medium

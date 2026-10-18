@@ -274,14 +274,19 @@ describe('quickConfig', () => {
 
 describe('fitScore', () => {
   it('badges a rated exercise with its score and what it is best at', () => {
-    expect(fitScore(EXIDX['0194'])).toEqual({ score: 73, reason: 'Hard at the stretch' })
+    expect(fitScore(EXIDX['0194'])).toEqual({ score: 67, reason: 'Hard at the stretch' })
   })
   it('shows nothing for an exercise nobody rated', () => {
-    expect(fitScore(EXIDX['0001'])).toBeNull()
+    expect(fitScore(EXIDX['1512'])).toBeNull()   // a stretch
     expect(fitScore(null)).toBeNull()
   })
   it('applies the person’s joint comfort and says so', () => {
-    expect(fitScore(EXIDX['0194'], { comfort: { '0194': 3 } })).toEqual({ score: 59, reason: 'Hurts your joints' })
-    expect(fitScore(EXIDX['0194'], { comfort: { '0194': 8 } }).score).toBe(73)
+    expect(fitScore(EXIDX['0194'], { comfort: { '0194': 3 } })).toEqual({ score: 53, reason: 'Hurts your joints' })
+    expect(fitScore(EXIDX['0194'], { comfort: { '0194': 8 } }).score).toBe(67)
+  })
+  it('scores a two-muscle lift for the muscle the list is about', () => {
+    const chin = EXIDX['1326']                   // chin-up: lats and biceps
+    expect(fitScore(chin, { muscle: 'biceps' }).score).not.toBe(fitScore(chin, { muscle: 'upper-back' }).score)
+    expect(fitScore(chin, { muscle: 'upper-back' }).score).toBe(fitScore(chin).score)
   })
 })

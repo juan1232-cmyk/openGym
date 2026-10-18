@@ -1,0 +1,75 @@
+## ---------------- legs / glutes / calves ----------------
+sq_bb_back       | quads:7:6,glutes:8:5 | adductors,lower_back | 5 8 10 9 | - | high | Hardest at the bottom where the quads are stretched, but breathing, the trunk and balance often give out first. [anchor]
+sq_front         | quads:7:7,glutes:7:4 | adductors,lower_back | 4 8 9 8 | - | high | The upright torso keeps the quads loaded at depth, but the upper back and wrists give out sooner than the legs.
+sq_smith         | quads:7:7,glutes:7:5 | adductors | 8 8 8 7 | - | high | Hardest at the bottom where the quads are stretched; the fixed track removes balance as a limiter.
+sq_goblet        | quads:7:6,glutes:7:5 | adductors | 7 4 3 4 | - | high | Hardest at the bottom where the quads are stretched; the arms and upper back run out before heavy loads can be used.
+sq_db            | quads:7:6,glutes:7:5 | adductors | 6 5 4 5 | - | high | Hardest at the bottom where the quads are stretched; grip limits the load.
+sq_bw            | quads:6:6,glutes:6:5 | adductors | 8 3 1 3 | - | high | Hardest at the bottom where the quads are stretched, but bodyweight is light so sets turn into endurance work.
+sq_hack          | quads:8:8 | glutes,adductors | 9 8 6 6 | - | high | The back is supported and the knees travel far forward, so the quads are stretched where the load is highest. [anchor]
+sq_hack_bb       | quads:7:6 | glutes,adductors | 5 8 6 6 | - | medium | A barbell held behind the legs; hardest at the bottom, but balance and grip limit it sooner than a machine.
+sq_hack_smith    | quads:7:7 | glutes,adductors | 8 8 6 5 | - | high | Back-supported on a fixed track; hardest at the bottom where the quads are stretched.
+sq_legpress      | quads:7:7 | glutes,adductors,hamstrings | 9 8 6 5 | - | high | Hardest at the bottom where the quads are stretched; the back is supported but high-rep breathing can limit it.
+sq_lunge_db      | quads:7:5,glutes:8:5 | adductors,hamstrings | 4 5 4 5 | - | high | A long step puts both muscles at stretch at the bottom, but balance gives out before the legs do.
+sq_lunge_bb      | quads:7:5,glutes:8:5 | adductors,hamstrings,lower_back | 3 7 5 6 | - | high | A long step puts both muscles at stretch at the bottom, but balance and the loaded back give out before the legs do.
+sq_lunge_bw      | quads:6:5,glutes:7:5 | adductors,hamstrings | 5 3 2 4 | - | high | A long step puts both muscles at stretch at the bottom, but balance and the light load limit it.
+sq_split_db      | quads:7:6,glutes:8:6 | adductors,hamstrings | 5 5 4 5 | - | high | A static split stance puts both muscles at stretch at the bottom with less balance demand than a lunge.
+sq_split_bb      | quads:7:6,glutes:8:6 | adductors,hamstrings,lower_back | 4 7 5 6 | - | high | A static split stance puts both muscles at stretch at the bottom; the loaded bar adds balance demand.
+sq_split_bw      | quads:6:6,glutes:7:6 | adductors,hamstrings | 6 3 2 4 | - | high | A static split stance puts both muscles at stretch at the bottom, but bodyweight is light.
+sq_split_smith   | quads:7:7,glutes:8:6 | adductors,hamstrings | 7 7 5 5 | - | high | A static split stance on a fixed track puts both muscles at stretch at the bottom with little balance demand.
+sq_stepup        | quads:5:5,glutes:6:5 | hamstrings,adductors | 4 5 3 4 | - | medium | Hardest at the bottom, but the step height limits the stretch and balance limits the sets.
+sq_pistol        | quads:8:5,glutes:8:5 | adductors | 3 2 3 4 | - | medium | A deep single-leg squat is very hard at the bottom, but balance and mobility limit it.
+sq_sissy         | quads:9:8 | - | 5 2 1 3 | - | medium | The knees travel far forward with the hips extended, which stretches the rectus femoris where the load is highest.
+leg_ext          | quads:7:10 | - | 10 8 2 2 | leg_ext_reclined | high | Leaning back keeps the hips extended so the rectus femoris is stretched, and only the quads can fail. [anchor]
+leg_ext_band     | quads:3:9 | - | 6 2 1 1 | - | medium | Band tension peaks at lockout, where the quads are short.
+hinge_rdl_bb     | hamstrings:8:6,glutes:7:5 | lower_back | 5 7 7 8 | - | high | Hips bent with straight knees stretches the hamstrings where the bar is hardest, but grip and the lower back give out first. [anchor]
+hinge_rdl_db     | hamstrings:8:6,glutes:7:5 | lower_back | 5 6 5 6 | - | high | Hips bent with straight knees stretches the hamstrings where the dumbbells are hardest, but grip and the lower back give out first.
+hinge_rdl_1leg   | hamstrings:8:5,glutes:7:5 | lower_back | 3 5 3 4 | - | high | Hips bent with straight knees stretches the hamstrings at the bottom, but balance limits it first.
+hinge_gm_bb      | hamstrings:8:5,glutes:7:5 | lower_back | 3 7 6 9 | - | high | A deep hip hinge stretches the hamstrings where the bar is hardest, but the lower back and bracing give out first.
+hinge_gm_seated  | hamstrings:7:5,glutes:7:5 | lower_back | 4 7 5 7 | - | medium | A seated good morning keeps the hip hinge but removes leg drive; the lower back gives out first.
+hinge_gm_mach    | hamstrings:8:6,glutes:7:5 | lower_back | 8 7 5 5 | - | medium | A machine hip hinge stretches the hamstrings where load is highest, but the lower back still tires first.
+hinge_pull_cable | hamstrings:7:7,glutes:7:7 | lower_back | 7 7 2 3 | - | medium | The cable pulls hardest with the hips back and bent, which stretches the hamstrings and glutes.
+hinge_band       | hamstrings:3:7,glutes:3:6 | lower_back | 6 2 2 2 | - | medium | Band tension peaks at lockout, so it is hardest where the hamstrings and glutes are short.
+dead_conv        | glutes:7:4,hamstrings:7:4 | lower_back,quads,traps | 5 8 10 10 | - | high | Hardest off the floor with the hips low, but grip and the lower back give out before the glutes and hamstrings do.
+dead_trap        | quads:6:5,glutes:7:5 | hamstrings,lower_back,traps | 5 8 9 8 | - | high | The higher handles shorten the pull and shift work to the quads; grip and the back still limit it.
+dead_sumo        | glutes:7:4,hamstrings:6:4 | adductors,quads,lower_back | 5 8 10 10 | - | high | A wide stance shortens the pull; grip and the back give out before the glutes and hamstrings do.
+dead_rack        | glutes:4:4,hamstrings:4:4 | lower_back,traps | 5 8 9 8 | - | medium | Starting above the knee skips the stretched part of the pull, and grip and the back limit it.
+dead_db          | glutes:7:4,hamstrings:7:5 | lower_back,quads | 6 6 6 7 | - | high | Hardest off the floor with the hips low; grip limits the load before the glutes and hamstrings do.
+dead_mach        | glutes:7:5,hamstrings:7:5 | lower_back,quads | 8 7 8 7 | - | medium | A machine deadlift is hardest off the floor, with steadier mechanics than a bar.
+bridge_bb        | glutes:3:9 | hamstrings,quads | 8 8 6 3 | - | high | A hip thrust is hardest at lockout where the glutes are short, and the bench support lets them be the limiter.
+bridge_floor_bb  | glutes:2:9 | hamstrings,quads | 8 8 5 3 | - | high | A floor bridge has even less range at the stretch than a hip thrust, so it is hardest at lockout.
+bridge_smith     | glutes:3:9 | hamstrings,quads | 9 8 5 3 | - | high | A Smith hip thrust is hardest at lockout where the glutes are short, on a stable track.
+bridge_bw        | glutes:2:8 | hamstrings | 8 3 1 1 | - | high | Hardest at lockout where the glutes are short, and bodyweight is light.
+bridge_1leg      | glutes:2:8 | hamstrings | 6 2 1 1 | - | high | Hardest at lockout where the glutes are short; single-leg is harder to balance and load.
+bridge_band      | glutes:2:8 | hamstrings,quads | 7 2 1 1 | - | medium | Band tension peaks at lockout where the glutes are short.
+glute_kick_cable | glutes:3:8 | hamstrings | 7 6 1 1 | - | medium | A kickback is hardest near lockout where the glutes are short.
+glute_kick_mach  | glutes:4:8 | hamstrings | 10 8 1 1 | - | medium | A kickback machine with an unknown cam, so stretch is assumed moderate.
+hyper_45         | lower_back:3:7,glutes:4:6 | hamstrings | 8 4 3 3 | - | medium | A back extension is hardest near the top where the spine is extended and the muscles are short.
+hyper_mach       | lower_back:4:7,glutes:4:6 | hamstrings | 10 8 3 3 | - | medium | A back extension machine with an unknown cam; moderate stretch is assumed.
+hyper_rev_mach   | glutes:5:7,hamstrings:5:6 | lower_back | 8 7 3 3 | - | medium | The legs swing from a flexed position behind the body; moderate stretch is assumed.
+ghr              | hamstrings:7:6,glutes:5:6 | lower_back | 6 4 4 4 | - | medium | Hardest with the body near horizontal, where the hamstrings are lengthened, but the lower back and hips share the work.
+nordic           | hamstrings:8:7 | glutes,calves | 5 2 3 3 | - | medium | The body is hardest to hold near horizontal where the hamstrings are lengthened, but there is no way to add load easily.
+curl_seated      | hamstrings:9:9 | - | 10 8 2 2 | seated_leg_curl | high | Sitting with the hips bent stretches the hamstrings at the start where the pad is hardest to resist. [anchor]
+curl_lying       | hamstrings:6:9 | - | 9 8 2 2 | lying_leg_curl | high | The hips are open, so the hamstrings are less stretched than seated, with peak load mid-range. [anchor]
+curl_kneel       | hamstrings:6:9 | - | 9 8 2 2 | lying_leg_curl | medium | Kneeling keeps the hips open like a lying curl; the cam is unknown so stretch is assumed moderate.
+curl_db          | hamstrings:5:7 | - | 5 4 1 1 | lying_leg_curl | low | A dumbbell held between the feet is hardest mid-range with the hips open, and awkward to load.
+curl_ball        | hamstrings:5:6 | glutes | 4 3 2 2 | - | medium | Bodyweight leg curl on a ball is hardest near the top, and balance limits it.
+calf_stand_mach  | calves:9:8 | - | 8 8 1 2 | standing_calf_raise | high | Straight knees and a deep heel drop stretch the gastrocnemius where the load is highest. [anchor]
+calf_seated_mach | calves:3:8 | - | 9 8 1 1 | seated_calf_raise | high | Bent knees slack the gastrocnemius so the stretch is small. [anchor]
+calf_stand_bb    | calves:9:8 | - | 6 7 1 2 | standing_calf_raise | high | Straight knees and a deep heel drop stretch the gastrocnemius where the load is highest.
+calf_stand_smith | calves:9:8 | - | 8 8 1 2 | standing_calf_raise | high | Straight knees and a deep heel drop stretch the gastrocnemius where the load is highest.
+calf_stand_db    | calves:9:8 | - | 6 5 1 1 | standing_calf_raise | high | Straight knees and a deep heel drop stretch the gastrocnemius where the load is highest.
+calf_stand_bw    | calves:8:7 | - | 6 3 1 1 | standing_calf_raise | high | Straight knees and a heel drop off a step stretch the gastrocnemius, but bodyweight is light.
+calf_donkey_bw   | calves:9:8 | - | 6 3 1 2 | standing_calf_raise | medium | Bent hips with straight knees stretch the gastrocnemius where the load is highest.
+calf_donkey_mach | calves:9:8 | - | 9 8 1 2 | standing_calf_raise | high | Bent hips with straight knees stretch the gastrocnemius where the load is highest.
+calf_legpress    | calves:8:8 | - | 9 8 1 2 | standing_calf_raise | high | Straight knees and a deep heel drop stretch the gastrocnemius where the sled is hardest.
+calf_cable       | calves:9:8 | - | 7 7 1 1 | standing_calf_raise | medium | Straight knees and a deep heel drop stretch the gastrocnemius where the cable pulls hardest.
+calf_seated_db   | calves:3:8 | - | 8 6 1 1 | seated_calf_raise | high | Bent knees slack the gastrocnemius so the stretch is small.
+calf_seated_smith| calves:3:8 | - | 8 7 1 1 | seated_calf_raise | high | Bent knees slack the gastrocnemius so the stretch is small.
+calf_band        | calves:3:8 | - | 6 2 1 1 | - | medium | Band tension peaks at the top of the raise, where the calf is short.
+calf_floor       | calves:5:8 | - | 6 7 1 2 | - | medium | A raise from flat ground has no heel drop, so the stretched range is cut out.
+add_mach         | adductors:7:9 | - | 10 8 1 1 | - | medium | A seated adduction machine starts with the legs wide; the cam is unknown so stretch is kept moderate-high.
+add_cable        | adductors:6:8 | - | 7 7 1 1 | - | medium | The cable pulls hardest across the middle of the range.
+add_bw           | adductors:5:8 | - | 7 3 1 1 | - | medium | Bodyweight is light, so the squeeze is hardest at the short end.
+abd_mach         | abductors:3:9 | glutes | 10 8 1 1 | - | medium | A seated abduction machine starts with the knees together, where the abductors are short.
+abd_bw           | abductors:3:8 | glutes | 7 3 1 1 | - | medium | Bodyweight is light and hardest where the leg is raised and the muscle is short.
+abd_band         | abductors:2:8 | glutes | 6 2 1 1 | - | medium | Band tension peaks as the leg opens, where the abductors are short.

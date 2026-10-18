@@ -1,0 +1,152 @@
+# biceps (dataset target: biceps)
+0968 bic_band
+0976 bic_band
+0986 bic_band conf=low
+0023 bic_curl_bar conf=low
+2407 bic_curl_bar
+0031 bic_curl_bar
+0038 bic_curl_bar S+1 conf=medium note=Drag_curl_pulls_the_elbows_back,_which_stretches_the_long_head_a_little_more_than_a_standard_curl.
+0059 bic_preacher_ez conf=low
+0070 bic_preacher_ez
+0072 bic_spider_bar
+0080 bic_rev_bar
+0081 bic_rev_preacher_bar
+0089 bic_conc_bar
+2414 bic_conc_bar St-1
+0106 bic_curl_bar
+0110 bic_rev_bar
+1629 bic_curl_bar
+0113 bic_curl_bar
+1770 bic_conc_db
+0139 pu_chin
+0140 pu_pull
+1769 bic_bw
+1630 bic_curl_cable
+1631 bic_curl_cable P-1 conf=medium
+0868 bic_curl_cable
+1632 bic_curl_cable
+0165 bic_hammer_cable
+1634 bic_curl_cable conf=medium
+0182 bic_curl_cable conf=medium
+0190 bic_curl_cable P-1
+1633 bic_preacher_cable P-1
+1635 bic_rev_cable S+1 P-1
+1636 bic_ohcurl_cable
+1637 bic_ohcurl_cable St-2 conf=low
+0195 bic_preacher_cable
+1638 bic_ohcurl_cable
+0206 bic_rev_cable
+1413 bic_rev_cable P-1
+0209 bic_rev_cable S+1
+1639 bic_hammer_cable S+2 St+1 conf=medium
+1640 bic_hammer_cable S+2 St+1 P-1 conf=medium
+1641 bic_curl_cable
+1642 bic_curl_cable P-1 conf=medium
+1643 bic_ohcurl_cable
+1644 bic_curl_cable St-3 L-2 C+1 conf=low
+0229 bic_curl_cable
+0232 lat_sap conf=low
+1645 bic_incline_cable
+0285 bic_curl_db
+2403 bic_curl_db
+1646 bic_preacher_db L-2 sec=+forearms
+1647 bic_preacher_db
+1648 bic_hammer_db St+1
+1649 bic_curl_db St-3 L-1 conf=low
+1650 bic_curl_db St-2 conf=medium
+1651 bic_curl_db St-3 L-3 C+2 conf=low
+1652 bic_curl_db St-3 L-1 conf=low
+1653 bic_curl_db St-2 L-1 conf=low
+0294 bic_curl_db
+2401 bic_curl_db
+1654 bic_rev_db
+1655 bic_curl_db St-2 L-3 C+2 conf=low
+1656 bic_curl_db St-3 L-2 C+1 conf=low
+0297 bic_conc_db
+0298 bic_hammer_db
+1657 bic_hammer_db
+0313 bic_hammer_db
+1659 bic_hammer_db St-2 conf=medium
+0312 bic_hammer_db
+2402 bic_hammer_db
+1664 bic_curl_db S-1 conf=medium
+0315 bic_incline_db
+0318 bic_incline_db
+0317 bic_incline_db
+0320 bic_incline_db L-1 sec=+forearms
+0322 bic_incline_db
+1660 bic_curl_db St-2 conf=low
+1658 bic_curl_db St-2 L-4 C+2 conf=low
+1661 bic_incline_db S-1 conf=low
+0350 bic_incline_db S-1 conf=low
+1662 bic_curl_db conf=low
+0353 bic_conc_db St-2 conf=medium
+1663 bic_preacher_db L-2 P-1 sec=+forearms
+1665 bic_spider_db P-1 conf=medium
+1666 bic_spider_db P-1 L-1 sec=+forearms
+1414 bic_rev_db S+2 St+2 P-1 conf=medium
+1667 bic_rev_db S+1 St+2 P-1
+1668 bic_curl_db St-3 P-1 conf=medium
+1669 bic_hammer_db P-1
+1670 bic_curl_db St-1 P-1
+1671 bic_hammer_db St-1 P-1
+1672 bic_preacher_db L-1 P-1
+0365 fore_wrist_neutral
+0366 fore_wrist_neutral P-1
+0370 bic_preacher_db L-2 sec=+forearms
+0372 bic_preacher_db
+1673 bic_preacher_db St-3 conf=low
+0374 bic_spider_db
+1674 bic_spider_db L-1 sec=+forearms
+0382 bic_rev_db
+0384 bic_rev_db S+2 St+2 conf=medium
+1675 bic_rev_db S+1 St+2
+1676 bic_hammer_db St-2
+1677 bic_curl_db St+1
+0390 bic_curl_db St-1
+3547 bic_curl_db L-1 C+1 sec=+front_delts conf=low
+0391 bic_curl_db St+1
+1678 bic_hammer_db St+1
+0393 bic_curl_db St+1
+0397 fore_wrist_neutral
+1679 bic_curl_db St-3 P-1 conf=low
+0402 bic_preacher_db
+0403 bic_rev_db S+1 St+1 conf=medium
+3560 bic_hammer_db L-2 C+1 sec=+front_delts conf=low
+0416 bic_curl_db
+0418 bic_conc_db St-1
+2321 bic_curl_db
+0421 bic_conc_db St-1
+0422 bic_spider_db P-1 conf=medium
+1680 bic_spider_db P-1 conf=medium
+0425 bic_rev_db St-1 P-1
+0428 bic_preacher_db St-1 conf=medium
+0429 bic_rev_db
+2293 bic_preacher_db L-1 St-1
+1684 bic_curl_db St-3 L-4 C+3 conf=low
+5201 bic_curl_db conf=low
+0439 bic_curl_db L-1 sec=+forearms
+2294 bic_preacher_db L-1
+1682 bic_conc_bar
+1627 bic_preacher_ez
+0446 bic_curl_bar
+0447 bic_curl_bar
+0451 bic_rev_bar
+0452 bic_rev_preacher_bar
+1458 bic_curl_bar St+1
+0454 bic_spider_bar
+1628 bic_spider_bar
+2404 bic_curl_bar
+2741 bic_curl_bar
+0525 SKIP Ballistic_power_lift_for_conditioning_rather_than_growth
+0526 SKIP Ballistic_power_lift_for_conditioning_rather_than_growth
+0575 bic_mach
+1615 bic_preacher_mach L-2 sec=+forearms conf=medium
+0592 bic_preacher_mach
+1614 bic_preacher_mach
+1616 bic_rev_preacher_bar St+1 T-1
+0636 bic_curl_bar L-1 sec=+forearms conf=medium
+3123 bic_band St+1
+1683 bic_smith
+0847 bic_curl_db St-1 P-2 conf=low
+0853 bic_curl_db conf=low

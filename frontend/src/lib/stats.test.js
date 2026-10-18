@@ -1,3 +1,4 @@
+import { setRatings, loadRatings } from './ratings.js'
 import { describe, it, expect } from 'vitest'
 import {
   rangeBounds, prevBounds, inRange, adherence, buckets, bucketBy, weeksTrained, bestRun,
@@ -245,11 +246,18 @@ describe('mainLiftsWeek', () => {
     expect(mainLiftsWeek(ws, TODAY)).toEqual([])
   })
 
-  it('goes by the strength-transfer rating where a lift has one, the name where it has none', () => {
+  it('goes by the strength-transfer rating where a lift has one, the name where it has none', async () => {
     expect(isMainLift('0085')).toBe(true)    // romanian deadlift, T 7
     expect(isMainLift('0743')).toBe(false)   // sled hack squat: a compound by name, but T 6
     expect(isMainLift('0577')).toBe(false)   // lever chest press, T 5
-    expect(isMainLift('0027')).toBe(true)    // barbell bent over row: unrated, a compound
+    expect(isMainLift('0027')).toBe(true)    // barbell bent over row, T 7
+    expect(isMainLift('0585')).toBe(false)   // leg extension: isolation, T 2
+    // ratings table not loaded yet (or a lift it doesn't hold): the name decides
+    setRatings(null)
+    try {
+      expect(isMainLift('0743')).toBe(true)  // a compound by name
+      expect(isMainLift('0585')).toBe(false)
+    } finally { await loadRatings() }
   })
 
   it('ignores sets not ticked off', () => {
