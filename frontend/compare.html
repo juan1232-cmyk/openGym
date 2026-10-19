@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>openGym compare preview</title>
+<meta name="description" content="The exercise compare sheet on its own, with demo pairs">
+<link rel="icon" type="image/png" href="icon-180.png">
+<script>
+// The preview runs the app's real store, which saves to localStorage. On the same origin as the
+// app that would overwrite a real profile, so everything this page saves stays in memory.
+;(() => {
+  const m = new Map()
+  const mem = {
+    getItem: k => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)) },
+    removeItem: k => { m.delete(k) }, clear: () => m.clear(), key: i => [...m.keys()][i] ?? null,
+    get length() { return m.size }
+  }
+  Object.defineProperty(window, 'localStorage', { value: mem, configurable: true })
+})()
+</script>
+</head>
+<body>
+<div id="root"></div>
+<script type="module" src="/src/compare-preview/main.jsx"></script>
+</body>
+</html>

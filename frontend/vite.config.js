@@ -29,7 +29,8 @@ export default defineConfig({
   test: { setupFiles: ['./src/test-setup.js'] },
   build: {
     chunkSizeWarningLimit: 1500,
-    // the app, and the device page that shows it inside an iPhone (device.html)
-    rollupOptions: { input: { main: 'index.html', device: 'device.html' } }
+    // the app, the device page that shows it inside an iPhone (device.html), and the compare
+    // sheet on its own with demo pairs (compare.html)
+    rollupOptions: { input: { main: 'index.html', device: 'device.html', compare: 'compare.html' } }
   }
 })

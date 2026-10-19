@@ -39,7 +39,9 @@ an iframe inside a CSS-drawn iPhone 15 Pro, plus buttons that load demo profiles
 localStorage. Locally: `npm run dev`, then `localhost:5173/device.html`. Hosted: Vercel is
 connected to the GitHub repo, so every push to a branch that touches `frontend/` gets its own
 preview URL, and the Vercel bot links it on the PR. Add `/device.html`
-to that URL for the phone view. The hosted demo has no `/api` and no dataset media, so it runs
+to that URL for the phone view, or `/compare.html` for the compare sheet on its own (a third
+entry, `src/compare-preview/`: demo pairs held to their verdicts by `pairs.test.js`, and an
+in-memory localStorage so it never touches a real profile). The hosted demo has no `/api` and no dataset media, so it runs
 in guest mode with placeholder thumbnails — though the details sheet's poses ship with the
 build, so those show there too. It's built into the self-hosted image too, which
 does no harm. The Vercel project's Root Directory is `frontend`, so its config lives in

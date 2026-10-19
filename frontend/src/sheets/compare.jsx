@@ -147,7 +147,7 @@ function doSwap(aId, bId) {
 
 // The head-to-head (design E on the compare canvas): the verdict first, the two shapes on one
 // hexagon as the picture, the scoreboard as the numbers, then one decision in the dock.
-function Compare({ aId, muscle, initial, close }) {
+export function Compare({ aId, muscle, initial, close }) {
   useRatings()
   const st = useStore(s => s.S)
   const comfort = st.comfort || {}
