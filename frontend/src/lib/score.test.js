@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { existsSync, readFileSync } from 'node:fs'
-import { scoresOf, scoreOf, compare, reasonOf, ratedAlternatives, roundScore } from './score.js'
+import { scoresOf, scoreOf, compare, reasonOf, ratedAlternatives, roundScore, scoreboard, shortNames } from './score.js'
 import { ratingOf, targetsOf, targetFor, ratedFor, ratingsReady, setRatings, loadRatings, TARGETS } from './ratings.js'
 import PACKED from './ratings-data.json'
 import { EXIDX } from './exercises.js'
@@ -256,5 +256,47 @@ describe('reasonOf', () => {
   it('otherwise names the best muscle-building quality', () => {
     expect(reasonOf(ratingOf('0194'))).toBe('Hard at the stretch')
     expect(reasonOf(ratingOf('0585'))).toBe('The target muscle gives out first')
+  })
+})
+
+describe('scoreboard', () => {
+  it('puts the rating that decides it near the top and marks the small wins as small', () => {
+    // overhead extension beats the pushdown on stretch; the pushdown takes two rows by a point
+    const rows = scoreboard(compare('0194', '0201'))
+    const row = k => rows.find(r => r.k === k)
+    expect(row('S')).toMatchObject({ a: 9, b: 4, win: 'a', gap: 5, decisive: true, small: false })
+    expect(row('St')).toMatchObject({ win: 'b', small: true })
+    expect(row('C')).toMatchObject({ win: 'b', small: true })
+    // the decisive row is worth more than both small ones together
+    expect(row('S').impact).toBeGreaterThan(row('St').impact + row('C').impact)
+  })
+
+  it('shows cost as "easy on body", so the bigger number always wins', () => {
+    const row = scoreboard(compare('0194', '0201')).find(r => r.k === 'C')
+    expect([row.a, row.b]).toEqual([8, 9])     // C 2 vs C 1
+    expect(row.win).toBe('b')
+  })
+
+  it('orders rows by how many points one rating point moves — the limiter gates, so it leads', () => {
+    const rows = scoreboard(compare('0194', '0201'))
+    expect(rows[0].k).toBe('L')
+    expect(rows.map(r => r.weight)).toEqual([...rows.map(r => r.weight)].sort((a, b) => b - a))
+    expect(rows).toHaveLength(6)
+  })
+
+  it('has no decisive row when the scores are about the same', () => {
+    expect(scoreboard(compare('0025', '0577')).some(r => r.decisive)).toBe(false)
+  })
+})
+
+describe('shortNames', () => {
+  it('keeps the words that tell two exercises apart, kit words last', () => {
+    expect(shortNames('cable overhead triceps extension (rope attachment)', 'cable pushdown')).toEqual(['overhead triceps', 'pushdown'])
+    expect(shortNames('barbell bench press', 'cable standing fly')).toEqual(['bench press', 'standing fly'])
+    expect(shortNames('barbell bench press', 'lever chest press')).toEqual(['bench', 'chest'])
+  })
+  it('falls back to kit words, then the whole name', () => {
+    expect(shortNames('barbell curl', 'dumbbell curl')).toEqual(['barbell', 'dumbbell'])
+    expect(shortNames('cable pushdown', 'cable one arm pushdown')).toEqual(['cable pushdown', 'one arm'])
   })
 })

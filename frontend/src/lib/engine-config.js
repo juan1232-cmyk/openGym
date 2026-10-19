@@ -36,6 +36,9 @@ export const STUDIED_PAIRS = [
   ['standing_calf_raise', 'seated_calf_raise'],
   ['leg_ext_reclined', 'leg_ext_upright']
 ]
+// On the compare sheet's scoreboard, a rating whose difference is worth fewer score points than
+// this is marked "small": winning two small rows must not read as beating one decisive one.
+export const SMALL_IMPACT = 3
 // An exercise that hurts you is a bad exercise for you, whatever the studies say.
 export const COMFORT_MIN = 5
 export const COMFORT_FACTOR = 0.8

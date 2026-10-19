@@ -14,7 +14,7 @@
 // only ever speaks for exercises that were actually rated — the rest get null rather than a
 // number made up from their name.
 import { ratingOf, ratedFor, targetsOf } from './ratings.js'
-import { RATINGS, H_WEIGHTS, STR_WEIGHTS, COST_PENALTY, GOAL_SPLIT, COMFORT_MIN, COMFORT_FACTOR, SAME_WITHIN, STUDIED_PAIRS } from './engine-config.js'
+import { RATINGS, H_WEIGHTS, STR_WEIGHTS, COST_PENALTY, GOAL_SPLIT, COMFORT_MIN, COMFORT_FACTOR, SAME_WITHIN, STUDIED_PAIRS, SMALL_IMPACT } from './engine-config.js'
 
 // English names; these strings are the i18n keys.
 export const RATING_NAME = {
@@ -137,4 +137,52 @@ export function compare(aId, bId, comfort = {}, muscle) {
   const win = study || (Math.abs(ra - rb) < SAME_WITHIN ? null : ra > rb ? 'a' : 'b')
   const why = win && (win === 'a' ? whyWins(a, b, comfort[aId]) : whyWins(b, a, comfort[bId]))
   return { muscle: m, a, b, rows, win, studied: !!study, why: why ? { ...why, win } : null }
+}
+
+/**
+ * The compare sheet's scoreboard for a compare() result: one row per rating, shown so a bigger
+ * number always wins (cost becomes "easy on body", 10 − C) and ordered by how many score points
+ * a single point of that rating moves for this pair — so the rows that decide it come first.
+ * Counting won rows would mislead: two tiny wins don't beat one big one, so each row also
+ * carries `impact` (score points its gap is worth to the winner, or to a on a tie), `decisive`
+ * (it is the rating compare() names as the reason) and `small` (a win worth under SMALL_IMPACT).
+ */
+export function scoreboard(c) {
+  const [w, l] = c.win === 'b' ? [c.b, c.a] : [c.a, c.b]
+  const base = scoresOf(w).score
+  const points = (r, k, v) => Math.abs(base - scoresOf({ ...r, [k]: v }).score)
+  const perPoint = k => points(w, k, k === 'C' ? w[k] - 1 : w[k] + 1)
+  const show = (k, v) => (k === 'C' ? 10 - v : v)
+  return c.rows
+    .map(r => {
+      const impact = points(w, r.k, l[r.k])
+      const decisive = !!c.why && c.why.k === r.k
+      return {
+        ...r, a: show(r.k, r.a), b: show(r.k, r.b), gap: Math.abs(r.a - r.b),
+        weight: perPoint(r.k), impact, decisive, small: !!r.win && !decisive && impact < SMALL_IMPACT
+      }
+    })
+    .sort((x, y) => y.weight - x.weight || RATINGS.indexOf(x.k) - RATINGS.indexOf(y.k))
+}
+
+// Kit words say how an exercise is loaded, not what it is: "barbell" against "cable" names
+// neither lift, so they're only used when a name has nothing else of its own.
+const KIT_WORDS = new Set(['barbell', 'dumbbell', 'cable', 'lever', 'leverage', 'machine', 'smith', 'band',
+  'resistance', 'kettlebell', 'ez', 'sled', 'weighted', 'assisted', 'rope', 'trap', 'bar'])
+
+/**
+ * Short names for two exercises side by side, from up to two words one has and the other
+ * doesn't: "cable overhead triceps extension (rope attachment)" against "cable pushdown" reads
+ * "overhead triceps" and "pushdown". Falls back to the whole name (bracket stripped) when one
+ * name has nothing of its own.
+ */
+export function shortNames(a, b) {
+  const words = n => String(n || '').replace(/\(.*?\)/g, ' ').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)
+  const wa = words(a), wb = words(b)
+  const own = (x, y) => {
+    const mine = x.filter(w => !y.includes(w))
+    const named = mine.filter(w => !KIT_WORDS.has(w))
+    return (named.length ? named : mine).slice(0, 2).join(' ') || x.join(' ')
+  }
+  return [own(wa, wb), own(wb, wa)]
 }
