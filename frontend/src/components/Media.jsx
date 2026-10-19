@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useStore } from '../store/useStore.js'
-import { imgSrc, gifSrc, poseSrc } from '../lib/exercises.js'
+import { imgSrc, gifSrc, poseSrc, thumbSrc } from '../lib/exercises.js'
 import Icon from './Icon.jsx'
 
 // How long each pose shows before the other one takes its place, per the Settings choice
@@ -50,8 +50,13 @@ export default function Media({ ex, id }) {
   )
 }
 
+// The row picture: the shipped thumbnail, then the dataset's own frame where the media service
+// runs, then the dumbbell. `lost` remembers which exercise's thumbnail failed (and how far down
+// the chain it got), not just that one did, since a swap reuses the slot for another lift.
 export function Thumb({ ex }) {
-  const [failed, setFailed] = useState(null)
-  if (!ex.img || failed === ex.img) return <div className="thumb thumb-x"><Icon name="dumbbell" /></div>
-  return <img className="thumb" loading="lazy" decoding="async" src={imgSrc(ex)} alt="" onError={() => setFailed(ex.img)} />
+  const [lost, setLost] = useState({ gif: null, step: 0 })
+  const step = lost.gif === ex.gif ? lost.step : 0
+  if (!ex.gif || step > 1) return <div className="thumb thumb-x"><Icon name="dumbbell" /></div>
+  return <img className="thumb" loading="lazy" decoding="async" src={step ? imgSrc(ex) : thumbSrc(ex)} alt=""
+    onError={() => setLost({ gif: ex.gif, step: step + 1 })} />
 }

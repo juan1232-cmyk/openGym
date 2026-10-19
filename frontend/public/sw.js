@@ -31,7 +31,7 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET' || url.origin !== location.origin) return
   if (url.pathname.startsWith('/api/')) return    // never cache auth/data
 
-  const isMedia = url.pathname.includes('/img/') || url.pathname.includes('/gif/') || url.pathname.includes('/pose/')
+  const isMedia = url.pathname.includes('/img/') || url.pathname.includes('/gif/') || url.pathname.includes('/pose/') || url.pathname.includes('/thumb/')
   if (isMedia) {
     e.respondWith(caches.open(CACHE).then(c => c.match(e.request).then(hit =>
       hit || fetch(e.request).then(res => { if (res.ok) c.put(e.request, res.clone()); return res })

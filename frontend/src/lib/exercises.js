@@ -32,11 +32,15 @@ export const allExercises = st => [...(st.customEx || []), ...EXDB]
 const IMG_BASE = import.meta.env.VITE_IMG_BASE || 'img/'
 const GIF_BASE = import.meta.env.VITE_GIF_BASE || 'gif/'
 const POSE_BASE = import.meta.env.VITE_POSE_BASE || 'pose/'
+const THUMB_BASE = import.meta.env.VITE_THUMB_BASE || 'thumb/'
 export const imgSrc = ex => IMG_BASE + ex.img
 export const gifSrc = ex => GIF_BASE + ex.gif
 // the GIF's two held positions, upscaled (scripts/upscale-poses.sh) and shipped with the app in
 // frontend/public/pose, so every deployment has them with nothing to download: n = 1 or 2
 export const poseSrc = (ex, n) => POSE_BASE + ex.gif.replace(/\.gif$/, `-${n}.webp`)
+// the row picture, cut from pose 1 (scripts/make-thumbs.sh) and shipped the same way — img/ only
+// exists where the media service runs
+export const thumbSrc = ex => THUMB_BASE + ex.gif.replace(/\.gif$/, '.webp')
 
 // Cardio exercises log time + speed instead of weight × reps.
 export const isCardio = idOrEx => (typeof idOrEx === 'string' ? EXIDX[idOrEx] : idOrEx)?.bp === 'cardio'
