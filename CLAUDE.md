@@ -66,7 +66,10 @@ positions — true of every GIF checked) redrawn at 720px by Real-ESRGAN, made b
 `scripts/upscale-poses.sh`. They're committed (~49 MB, WebP at quality 82) so every build —
 Vercel, Docker, `npm run dev` — has them with no extra step; rerun the script (GPU, on a
 desktop, resumable) only if the dataset gains exercises. Any exercise without poses plays its
-GIF. They're derived from the dataset, whose licence is reportedly non-commercial, in a
+GIF. The little row picture (`Thumb`) is `frontend/public/thumb/X.webp`, a 160px cut of pose 1
+from `scripts/make-thumbs.sh` (~6 MB, committed; rerun it after upscale-poses.sh). It replaced
+`img/`, which only exists where the media service runs and left the Vercel preview with
+grey placeholders; `img/` stays as the fallback if a thumb is missing. They're derived from the dataset, whose licence is reportedly non-commercial, in a
 public repo — fine for a personal, free deployment; not for charging anyone. Tried and dropped, so it isn't re-tried: smoothing the
 GIFs with ffmpeg's frame interpolation (soft, smeary at 180px), AI-upscaling every frame
 (sharp, but ~45h and still the jumpy 12-frame motion), and ExerciseDB's paid HD files (same
