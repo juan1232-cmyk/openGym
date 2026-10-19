@@ -1,31 +1,34 @@
 #!/usr/bin/env bash
 # Makes the two sharp stills the exercise details sheet switches between:
-#   media/gif/X.gif → media/pose/X-1.jpg (frame 1) and media/pose/X-2.jpg (frame 7)
+#   media/gif/X.gif → frontend/public/pose/X-1.webp (frame 1) and X-2.webp (frame 7)
 # Those are the GIF's two held positions — every dataset GIF holds frame 1 and frame 7 for a
 # full second, with the movement between them — redrawn at 720px by Real-ESRGAN (x4plus).
 # The GIFs are 180px, so stretched to fill the sheet they're soft; the in-between frames also
 # carry motion trails. Two clean, sharp poses read better than the full blurry rep.
 #
-# Real-ESRGAN runs on the GPU (Vulkan), so this runs on a desktop rather than in Docker:
-# afterwards, copy media/pose/ next to media/gif/ on the server. It isn't bundled — download
-# realesrgan-ncnn-vulkan from github.com/xinntao/Real-ESRGAN/releases and point REALESRGAN at
-# the executable (its models/ folder must sit beside it).
+# The stills are committed in frontend/public/pose and ship with every build, so this only needs
+# running again if the dataset gains exercises. Real-ESRGAN runs on the GPU (Vulkan), so it runs
+# on a desktop, not in Docker. It isn't bundled — download realesrgan-ncnn-vulkan from
+# github.com/xinntao/Real-ESRGAN/releases and point REALESRGAN at the executable (its models/
+# folder must sit beside it).
 #
-#   REALESRGAN=/path/to/realesrgan-ncnn-vulkan scripts/upscale-poses.sh [media-dir]
+#   REALESRGAN=/path/to/realesrgan-ncnn-vulkan scripts/upscale-poses.sh [media-dir] [out-dir]
 #
 # About 4s a still on integrated graphics: ~3 hours for all 1,324 exercises. Resumable: an
 # exercise with both stills is skipped, and each still is written under a temp name first.
-# Exits 0 only once every exercise has both stills; 2 if some frames came back blank (run it
-# again to redo those); 1 if a whole batch did (the GPU isn't reachable).
+# WebP at quality 82: ~18 KB a still, indistinguishable from a near-lossless JPEG at twice the
+# size. Exits 0 only once every exercise has both stills; 2 if some frames came back blank
+# (run it again to redo those); 1 if a whole batch did (the GPU isn't reachable).
 set -euo pipefail
 
 dir=${1:-"$(dirname "$0")/../media"}
+out_dir=${2:-"$(dirname "$0")/../frontend/public/pose"}
 exe=${REALESRGAN:?set REALESRGAN to the realesrgan-ncnn-vulkan executable}
 models="$(dirname "$exe")/models"
 # Exercises per upscaler run. Loading the model costs a few seconds, and on integrated graphics
 # a run can go bad partway (see the blank-frame check), so runs stay short.
 batch=25
-mkdir -p "$dir/pose"
+mkdir -p "$out_dir"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
@@ -35,7 +38,7 @@ gifs=("$dir"/gif/*.gif)
 todo=()
 for g in "${gifs[@]}"; do
   b=${g##*/}; b=${b%.gif}
-  [ -s "$dir/pose/$b-1.jpg" ] && [ -s "$dir/pose/$b-2.jpg" ] || todo+=("$g")
+  [ -s "$out_dir/$b-1.webp" ] && [ -s "$out_dir/$b-2.webp" ] || todo+=("$g")
 done
 total=${#gifs[@]}
 echo "↻ Upscaling the two poses of ${#todo[@]} of $total exercises (the rest are done)…"
@@ -62,9 +65,9 @@ for ((i = 0; i < ${#todo[@]}; i += batch)); do
     [ -e "$p" ] || continue
     ymax=$(ffmpeg -nostdin -v error -i "$p" -vf "scale=64:-1,signalstats,metadata=print:key=lavfi.signalstats.YMAX:file=-" -f null - | grep -o 'YMAX=[0-9]*' | cut -d= -f2)
     if [ "${ymax:-0}" -lt 64 ]; then blank=$((blank + 1)); continue; fi
-    b=${p##*/}; out="$dir/pose/${b%.png}"
-    ffmpeg -nostdin -v error -y -i "$p" -vf "scale=720:-2:flags=lanczos" -q:v 2 "$out.part.jpg"
-    mv "$out.part.jpg" "$out.jpg"
+    b=${p##*/}; out="$out_dir/${b%.png}"
+    ffmpeg -nostdin -v error -y -i "$p" -vf "scale=720:-2:flags=lanczos" -c:v libwebp -quality 82 "$out.part.webp"
+    mv "$out.part.webp" "$out.webp"
     kept=$((kept + 1))
   done
   if [ $kept -eq 0 ]; then
@@ -75,5 +78,5 @@ for ((i = 0; i < ${#todo[@]}; i += batch)); do
   done_n=$(( i + batch < ${#todo[@]} ? i + batch : ${#todo[@]} ))
   echo "  $done_n / ${#todo[@]}$([ $blank -gt 0 ] && echo " ($blank blank frames dropped, redone next run)")"
 done
-echo "✓ $(ls "$dir/pose" | grep -c -- '-2\.jpg$') of $total exercises have both poses."
+echo "✓ $(ls "$out_dir" | grep -c -- '-2\.webp$') of $total exercises have both poses."
 [ $skipped -eq 0 ] || exit 2

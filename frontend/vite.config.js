@@ -23,8 +23,7 @@ export default defineConfig({
     proxy: {
       '/api': { target: backend, changeOrigin: true },
       '/img': { target: media, changeOrigin: true },
-      '/gif': { target: media, changeOrigin: true },
-      '/pose': { target: media, changeOrigin: true }
+      '/gif': { target: media, changeOrigin: true }
     }
   },
   test: { setupFiles: ['./src/test-setup.js'] },

@@ -34,8 +34,9 @@ const GIF_BASE = import.meta.env.VITE_GIF_BASE || 'gif/'
 const POSE_BASE = import.meta.env.VITE_POSE_BASE || 'pose/'
 export const imgSrc = ex => IMG_BASE + ex.img
 export const gifSrc = ex => GIF_BASE + ex.gif
-// the GIF's two held positions, upscaled (scripts/upscale-poses.sh): n = 1 or 2
-export const poseSrc = (ex, n) => POSE_BASE + ex.gif.replace(/\.gif$/, `-${n}.jpg`)
+// the GIF's two held positions, upscaled (scripts/upscale-poses.sh) and shipped with the app in
+// frontend/public/pose, so every deployment has them with nothing to download: n = 1 or 2
+export const poseSrc = (ex, n) => POSE_BASE + ex.gif.replace(/\.gif$/, `-${n}.webp`)
 
 // Cardio exercises log time + speed instead of weight × reps.
 export const isCardio = idOrEx => (typeof idOrEx === 'string' ? EXIDX[idOrEx] : idOrEx)?.bp === 'cardio'
