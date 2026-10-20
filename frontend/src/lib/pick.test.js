@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { EXDB, EXIDX } from './exercises.js'
 import {
   searchExercises, primaryOf, muscleChips, matchesMuscle, recentIds, usageOf, gymFilter,
-  overlapFor, suggestionFor, similarTo, OVERLAP_AT, regionOf, browseOrder, STAPLES, ALIAS_ES, quickConfig, fitScore,
+  overlapFor, suggestionFor, similarTo, OVERLAP_AT, regionOf, browseOrder, STAPLES, ALIAS_ES, quickConfig,
 } from './pick.js'
 
 // Real exercises out of the shipped catalogue, looked up by name so the tests read like the UI.
@@ -269,24 +269,5 @@ describe('quickConfig', () => {
     expect(quickConfig(push, st())).toMatchObject({ bodyweight: true, weight: 0 })
     const plank = byName('weighted front plank')
     expect(quickConfig(plank, st())).toMatchObject({ mode: 'time', sec: 45 })
-  })
-})
-
-describe('fitScore', () => {
-  it('badges a rated exercise with its score and what it is best at', () => {
-    expect(fitScore(EXIDX['0194'])).toEqual({ score: 67, reason: 'Hard at the stretch' })
-  })
-  it('shows nothing for an exercise nobody rated', () => {
-    expect(fitScore(EXIDX['1512'])).toBeNull()   // a stretch
-    expect(fitScore(null)).toBeNull()
-  })
-  it('applies the person’s joint comfort and says so', () => {
-    expect(fitScore(EXIDX['0194'], { comfort: { '0194': 3 } })).toEqual({ score: 53, reason: 'Hurts your joints' })
-    expect(fitScore(EXIDX['0194'], { comfort: { '0194': 8 } }).score).toBe(67)
-  })
-  it('scores a two-muscle lift for the muscle the list is about', () => {
-    const chin = EXIDX['1326']                   // chin-up: lats and biceps
-    expect(fitScore(chin, { muscle: 'biceps' }).score).not.toBe(fitScore(chin, { muscle: 'upper-back' }).score)
-    expect(fitScore(chin, { muscle: 'upper-back' }).score).toBe(fitScore(chin).score)
   })
 })

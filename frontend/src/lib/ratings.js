@@ -1,4 +1,4 @@
-// Ratings for the exercise score (layer 1 of the training engine): 1,082 exercises rated for
+// Ratings for the exercise score (layer 1 of the training engine, internal; see score.js): 1,082 exercises rated for
 // the muscles they actually load, following the Peek exercise scoring spec (v2). Data only —
 // the formulas are in score.js, the weights in engine-config.js.
 //
@@ -10,18 +10,8 @@
 // The table is ratings-data.json, made from scripts/peek-scoring/exercise-ratings.json by
 // scripts/peek-scoring/pack.mjs, and loaded on demand: it is ~90 KB that the home screen never
 // reads. Until it arrives every lookup answers "not rated" — the same thing the app already
-// does for an exercise nobody rated, so nothing needs a loading state. Screens that show a
-// score call useRatings() (store/useRatings.js) to redraw when it lands.
-
-// How far to trust each kind of rating, shown next to the number. Only the stretch ratings for
-// triceps, hamstrings, calves and the reclined leg extension follow direct studies; the rest
-// is reasoning. `EVIDENCE` is by kind of rating, not by exercise.
-export const EVIDENCE = { S: 'B', L: 'C', St: 'B', P: 'C', T: 'A', C: 'C' }
-export const EVIDENCE_NAME = {
-  A: 'Strong studies',
-  B: 'Some direct studies',
-  C: 'Reasoning, no direct study yet'
-}
+// does for an exercise nobody rated, so nothing needs a loading state. Screens that need
+// them call useRatings() (store/useRatings.js) to redraw when it lands.
 
 // The spec's muscle names are finer than the body map's (muscles.js): it tells the upper chest
 // from the chest, the three delt heads apart, and the lats from the upper back. `slug` is the

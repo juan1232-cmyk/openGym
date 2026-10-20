@@ -1,6 +1,8 @@
 // Exercise score: layer 1 of the training engine. One 0–100 number per exercise and target
-// muscle, built from six ratings (ratings.js) with the weights in engine-config.js, so two
-// exercises for the same muscle can be put side by side and the reason one wins is visible.
+// muscle, built from six ratings (ratings.js) with the weights in engine-config.js.
+//
+// Internal: nothing on screen shows this number, and nothing ranks or compares exercises with it.
+// It is there for Peek, the coach, to reason from (reasonOf is the one-line why).
 //
 //   H     = L × (0.55 S + 0.25 St + 0.20 P)      muscle score — the limiter gates the rest
 //   H_eff = H × (1 − 0.04 C)                      after whole-body tiredness
@@ -13,8 +15,8 @@
 // This layer rests on the weakest evidence of the three: most ratings are judgement. So it
 // only ever speaks for exercises that were actually rated — the rest get null rather than a
 // number made up from their name.
-import { ratingOf, ratedFor, targetsOf } from './ratings.js'
-import { RATINGS, H_WEIGHTS, STR_WEIGHTS, COST_PENALTY, GOAL_SPLIT, COMFORT_MIN, COMFORT_FACTOR, SAME_WITHIN, STUDIED_PAIRS } from './engine-config.js'
+import { ratingOf } from './ratings.js'
+import { H_WEIGHTS, STR_WEIGHTS, COST_PENALTY, GOAL_SPLIT, COMFORT_MIN, COMFORT_FACTOR } from './engine-config.js'
 
 // English names; these strings are the i18n keys.
 export const RATING_NAME = {
@@ -76,65 +78,4 @@ export function reasonOf(r) {
     St: 'Stable — safe to push close to failure',
     P: 'Easy to progress week to week'
   }[best]
-}
-
-/**
- * The other exercises rated for the same target muscle, best first — what a comparison is
- * against. Each is scored for that muscle, so a pull-up shows up under lats with its lat
- * numbers and under biceps with its biceps numbers.
- */
-export function ratedAlternatives(exId, comfort = {}, muscle) {
-  const m = muscle || targetsOf(exId)[0]
-  if (!m) return []
-  return ratedFor(m).filter(id => id !== exId)
-    .map(id => scoreOf(id, comfort[id], m)).sort((a, b) => b.score - a.score)
-}
-
-// Which side a study picks, 'a' | 'b' | null. Only when both ends carry a studied tag that
-// forms a pair.
-function studiedWinner(a, b) {
-  for (const [better, worse] of STUDIED_PAIRS) {
-    if (a.studied === better && b.studied === worse) return 'a'
-    if (b.studied === better && a.studied === worse) return 'b'
-  }
-  return null
-}
-
-// The rating that explains a win: give the winner the loser's number for one rating at a time
-// and see which swap costs it the most points. That is the rating the win leans on — better
-// than "the biggest gap", which can't tell a gap that matters from one the formula barely
-// weighs (a 6-point gap in stretch is worth more than a 6-point gap in progression). Null when
-// no swap lowers it, i.e. the win doesn't come from any one rating.
-function whyWins(w, l, comfort) {
-  let best = null
-  for (const k of RATINGS) {
-    const drop = w.score - scoresOf({ ...w, [k]: l[k] }, comfort).score
-    if (drop > (best ? best.drop : 0)) best = { k, from: w[k], to: l[k], drop }
-  }
-  return best
-}
-
-/**
- * Two exercises rated for the same muscle, side by side. Rules, in order:
- *  1. A studied pair (engine-config STUDIED_PAIRS) goes to the side the study favours — unless
- *     either exercise hurts the person's joints: a study doesn't outrank a sore joint.
- *  2. Scores less than SAME_WITHIN apart (as shown, rounded) are "about the same": no winner.
- *  3. Otherwise the higher score wins, and `why` is the one rating whose swap lowers the winner
- *     most.
- * `muscle` is the target both are scored for (default: a's main target); null if either isn't
- * rated for it. `rows` is per rating, ties win nothing, and for cost the lower number wins.
- */
-export function compare(aId, bId, comfort = {}, muscle) {
-  const m = muscle || targetsOf(aId)[0]
-  const a = scoreOf(aId, comfort[aId], m), b = scoreOf(bId, comfort[bId], m)
-  if (!a || !b) return null
-  const rows = RATINGS.map(k => {
-    const d = k === 'C' ? b[k] - a[k] : a[k] - b[k]
-    return { k, a: a[k], b: b[k], win: d > 0 ? 'a' : d < 0 ? 'b' : null }
-  })
-  const study = a.sore || b.sore ? null : studiedWinner(a, b)
-  const [ra, rb] = [roundScore(a.score), roundScore(b.score)]
-  const win = study || (Math.abs(ra - rb) < SAME_WITHIN ? null : ra > rb ? 'a' : 'b')
-  const why = win && (win === 'a' ? whyWins(a, b, comfort[aId]) : whyWins(b, a, comfort[bId]))
-  return { muscle: m, a, b, rows, win, studied: !!study, why: why ? { ...why, win } : null }
 }
