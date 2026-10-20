@@ -2,7 +2,7 @@ import { setRatings, loadRatings } from './ratings.js'
 import { describe, it, expect } from 'vitest'
 import {
   rangeBounds, prevBounds, inRange, adherence, buckets, bucketBy, weeksTrained, bestRun,
-  personalBests, mainLift, AREAS, areaSets, liftsToWatch, weeklySets, setZone, mainLiftsWeek, isMainLift, bwPace, weekdayPattern
+  personalBests, mainLift, AREAS, areaSets, liftsToWatch, weeklySets, setZone, weekGoals, mainLiftsWeek, isMainLift, bwPace, weekdayPattern
 } from './stats.js'
 import { SCENARIOS } from '../device/scenarios.js'
 import { MUSCLES } from './muscles.js'
@@ -315,5 +315,50 @@ describe('weekdayPattern', () => {
   it('names nothing when no weekday is skipped as a habit', () => {
     const all = { ...S, week: { 1: 'r', 3: 'r' } }
     expect(weekdayPattern(all, rangeBounds(7, TODAY), TODAY).worst).toBeNull()
+  })
+})
+
+describe('weekGoals', () => {
+  const BENCH = '0025', SQUAT = '0043'
+  const sets = (n, id = BENCH) => ({ id, sets: Array.from({ length: n }, () => ({ w: 60, r: 8, done: true })) })
+  const row = (g, m) => g.rows.find(r => r.m === m)
+
+  it('counts the week’s effective sets against the goal, furthest-behind first', () => {
+    const g = weekGoals([wo('2026-09-21', [sets(4), sets(3, SQUAT)])], TODAY)
+    expect(row(g, 'chest')).toMatchObject({ done: 4, goal: 10, short: 6 })
+    expect(g.behind[0].m).toBe('gluteal')            // 3 sets against chest's 4: furthest behind
+    expect(g.behind.every((r, i) => !i || g.behind[i - 1].short >= r.short)).toBe(true)
+    expect(g.met).toBe(false)
+  })
+
+  it('has no shortfall once the goal is reached', () => {
+    const g = weekGoals([wo('2026-09-21', [sets(10)])], TODAY)
+    expect(row(g, 'chest')).toMatchObject({ done: 10, short: 0 })
+    expect(g.behind.map(r => r.m)).not.toContain('chest')
+  })
+
+  it('holds you to muscles trained in the last three weeks, not older ones or never', () => {
+    const g = weekGoals([wo('2026-09-21', [sets(4)]), wo('2026-09-01', [sets(3, SQUAT)]), wo('2026-08-10', [sets(3, SQUAT)])], TODAY)
+    expect(row(g, 'gluteal')).toMatchObject({ done: 0, short: 10 })       // squatted 3 weeks ago, not since
+    const old = weekGoals([wo('2026-08-10', [sets(3, SQUAT)])], TODAY)
+    expect(old.rows).toEqual([])                                          // five weeks ago: nothing to hold you to
+    expect(old.met).toBe(false)
+  })
+
+  it('counts the days left after today, Sunday being none', () => {
+    expect(weekGoals([], TODAY).daysLeft).toBe(4)                         // Wednesday
+    expect(weekGoals([], new Date('2026-09-27T09:00:00')).daysLeft).toBe(0)   // Sunday
+    expect(weekGoals([], new Date('2026-09-21T09:00:00')).daysLeft).toBe(6)   // Monday
+  })
+
+  it('holds you to the muscles you train directly, not the ones that only help', () => {
+    const g = weekGoals([wo('2026-09-21', [sets(4)])], TODAY)
+    expect(g.rows.map(r => r.m)).toEqual(['chest'])         // bench also works triceps and shoulders, as support
+    expect(g.behind.length).toBe(1)
+  })
+
+  it('leaves out last week’s sets', () => {
+    const g = weekGoals([wo('2026-09-20', [sets(8)])], TODAY)             // Sunday, before this Monday
+    expect(row(g, 'chest')).toMatchObject({ done: 0 })
   })
 })

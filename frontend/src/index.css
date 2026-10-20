@@ -1787,3 +1787,7 @@ button.mchip{font:inherit;font-size:12px}
 .capnote span{flex:1;color:var(--label)}
 .capnote span b{font-weight:600}
 .capnote .x{flex:none;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:var(--label-3)}
+
+/* Home: this week's sets against the goal (reuses the Stats page's .sa-m bar) */
+.pk-sets-list{display:grid;gap:12px;margin-top:12px}
+.pk-sets .sa-note{margin-top:12px}

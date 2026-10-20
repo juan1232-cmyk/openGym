@@ -38,6 +38,12 @@ export const HIGH_REP_CREDIT = 0.5
 // Effective sets per muscle per week: below the first line is too little to grow on, then OK,
 // then the productive band, and past the last line extra sets mostly add tiredness.
 export const WEEKLY_ZONES = [6, 10, 20]
+// The goal Peek holds you to: effective sets per big muscle, Monday to Sunday. It is the bottom of
+// the productive zone, so it is what's worth aiming for rather than a ceiling.
+export const WEEK_GOAL = WEEKLY_ZONES[1]
+// Until this few days of the week are left (Sunday = 0, Monday = 6), a muscle that is behind is
+// just one you haven't trained yet, and Peek stays quiet. After that it says where the week stands.
+export const NUDGE_DAYS_LEFT = 3
 // Effective sets for one muscle in one session before more stop paying off — past this the
 // workout suggests moving the rest to another day.
 export const SESSION_CAP = 11

@@ -90,13 +90,14 @@ export function musclesOf(ex) {
  * `items` is [{ id, sets }] — sets being a count (or, for logged work, effective sets: see
  * `credit` below), so a 4×8 bench press weighs four times a single set. Volume in kg is deliberately not used: 100 kg of leg press
  * against 12 kg of lateral raise says nothing about which muscle worked harder.
+ * `floor` drops the muscles an exercise only half-trains: 1 keeps just the primary one.
  */
-export function loadOf(items) {
+export function loadOf(items, floor = 0) {
   const load = {}
   items.forEach(({ id, sets }) => {
     if (!sets) return
     const m = musclesOf(EXIDX[id])
-    for (const slug in m) load[slug] = (load[slug] || 0) + m[slug] * sets
+    for (const slug in m) if (m[slug] >= floor) load[slug] = (load[slug] || 0) + m[slug] * sets
   })
   return load
 }
@@ -112,9 +113,9 @@ const credit = (sets, pick) =>
  * question from where the sets went: a muscle can lead on volume and still never be trained
  * near failure.
  */
-export const loadOfWorkouts = (workouts, pick) =>
+export const loadOfWorkouts = (workouts, pick, floor) =>
   loadOf((workouts || []).flatMap(w =>
-    (w.entries || []).map(e => ({ id: e.id, sets: credit(e.sets, pick) }))))
+    (w.entries || []).map(e => ({ id: e.id, sets: credit(e.sets, pick) }))), floor)
 
 /** Load a routine *would* produce, from its planned set counts — a plan has no effort yet. */
 export const loadOfRoutine = routine =>

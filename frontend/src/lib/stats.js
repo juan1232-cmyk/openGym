@@ -10,7 +10,8 @@ import { deloadTo, defaultIncrement, DELOAD_FACTOR } from './progression.js'
 import { similarTo, usageOf } from './pick.js'
 import { EXIDX, allExercises } from './exercises.js'
 import { isCompound } from './scheme.js'
-import { WEEKLY_ZONES, HEAVY_REPS, MAIN_LIFT_FREQ, MAIN_LIFT_T } from './engine-config.js'
+import { WEEKLY_ZONES, WEEK_GOAL, HEAVY_REPS, MAIN_LIFT_FREQ, MAIN_LIFT_T } from './engine-config.js'
+import { loadOfWorkouts } from './muscles.js'
 import { ratingOf } from './ratings.js'
 
 const DAY = 864e5
@@ -216,6 +217,26 @@ export function setZone(perWeek) {
   const [low, ok, high] = WEEKLY_ZONES
   const v = perWeek || 0
   return v < low ? 'under' : v < ok ? 'ok' : v <= high ? 'productive' : 'over'
+}
+
+// This week's effective sets against the goal (engine-config WEEK_GOAL), for the big muscles you
+// actually train: any exercised directly (as an exercise's main muscle) this week or in the three
+// weeks before. A shoulder that only ever helped on bench isn't a shoulder day, and a muscle you
+// dropped a month ago doesn't nag every Monday; the Stats page's zones still show what you never
+// hit. The sets that count toward the goal are all of them, incidental credit included.
+// `behind` is the muscles short of the goal, furthest first. `daysLeft` counts the days after
+// today, so Sunday is 0.
+export function weekGoals(workouts, now = new Date()) {
+  const week = rangeBounds(7, now)
+  const lately = { from: addDays(week.from, -21), to: week.to }
+  const thisWeek = loadOfWorkouts(inRange(workouts, week))
+  const direct = loadOfWorkouts(inRange(workouts, lately), undefined, 1)
+  const rows = MAJOR.filter(m => direct[m] > 0).map(m => {
+    const done = thisWeek[m] || 0
+    return { m, done, goal: WEEK_GOAL, short: Math.max(0, WEEK_GOAL - done) }
+  })
+  const behind = rows.filter(r => r.short > 0).sort((a, b) => b.short - a.short)
+  return { rows, behind, met: rows.length > 0 && !behind.length, daysLeft: 6 - ((now.getDay() + 6) % 7) }
 }
 
 // The strength side of the week: for each main lift trained lately, how many sessions this
