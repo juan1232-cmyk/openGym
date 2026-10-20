@@ -928,14 +928,26 @@ h4.sec{
 .dt-rec small{font-size:12px;color:var(--label-3)}
 .dt-rec b{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--acc);flex:none}
 .dt-1rm{padding:16px}
-/* a session: a card, then one row per set — its number, what it was, a PR badge if it was one.
-   Every other row is shaded, as in Hevy's tables. */
-.dt-sess{background:var(--surface);border-radius:var(--r-card);padding:14px 14px 8px;margin-bottom:10px}
-.dt-sess-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px}
-.dt-sess-h b{font-size:16px;font-weight:600;letter-spacing:-.02em;color:var(--label)}
-.dt-sess-h span{font-size:12px;color:var(--label-3);flex:none}
-.dt-set{display:flex;align-items:center;gap:10px;padding:9px 8px;margin:0 -6px;border-radius:10px;font-size:15px;color:var(--label)}
-.dt-set:nth-child(even){background:color-mix(in srgb,var(--label) 5%,transparent)}
+/* the last sessions as a timeline: a dot per session (the newest in the accent) on a thin rail,
+   a tappable line beside it, and under an open one its sets on a surface card */
+.dt-tl{margin-bottom:10px}
+.dt-tl-item{position:relative;padding-left:24px}
+.dt-tl-item::before{content:"";position:absolute;left:1px;top:21px;width:10px;height:10px;border-radius:99px;background:var(--surface-3)}
+.dt-tl-item.now::before{background:var(--acc)}
+.dt-tl-item::after{content:"";position:absolute;left:5px;top:35px;bottom:-21px;width:2px;background:var(--surface-2)}
+.dt-tl-item.last::after{display:none}
+.dt-tl-h{width:100%;min-height:56px;display:flex;align-items:center;gap:10px;padding:10px 0;text-align:left;color:inherit}
+.dt-tl-h:active{opacity:.6}
+.dt-tl-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dt-tl-t small{font-size:13px;color:var(--label-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dt-tl-v{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dt-tl-v b{font-size:20px;font-weight:600;letter-spacing:-.03em;color:var(--label);font-variant-numeric:tabular-nums}
+.dt-chg{font-size:12px;font-weight:600;padding:2px 7px;border-radius:99px;color:var(--label-2);background:var(--surface)}
+.dt-chg.up{color:var(--acc);background:var(--acc-soft)}
+.dt-tl-chev{flex:none;font-size:16px;color:var(--label-3);transition:transform var(--fast) var(--ease)}
+.dt-tl-chev.on{transform:rotate(180deg)}
+.dt-tl-sets{background:var(--surface);border-radius:14px;padding:4px 14px;margin-bottom:8px}
+.dt-set{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:15px;color:var(--label)}
 .dt-set i{font-style:normal;width:18px;flex:none;font-weight:600;color:var(--label-3)}
 .dt-set .lbl{flex:1;font-variant-numeric:tabular-nums;white-space:nowrap}
 .dt-pr{flex:none;display:inline-flex;align-items:center;gap:3px;height:22px;padding:0 8px;border-radius:99px;

@@ -100,3 +100,23 @@ export function prSets(sessions, size) {
   }
   return marks
 }
+
+// Each session's headline for the History list: its top set (by `size`, as prSets) and how that
+// compares with the session before. The change is in the top set's own unit — weight when it was
+// loaded, else reps, seconds or minutes — so `field` says which, and `delta` is null for the
+// oldest session, which has nothing before it. Same order as `sessions` (newest first).
+export function sessionTops(sessions, size) {
+  const fieldOf = s => (s.w > 0 ? 'w' : s.sec > 0 ? 'sec' : s.min > 0 ? 'min' : 'r')
+  const tops = sessions.map(sess => {
+    let i = 0
+    sess.sets.forEach((s, k) => { if ((size(s) || 0) > (size(sess.sets[i]) || 0)) i = k })
+    const set = sess.sets[i]
+    const field = fieldOf(set)
+    return { i, set, field, value: set ? set[field] || 0 : 0 }
+  })
+  return tops.map((t, k) => {
+    const prev = tops[k + 1]
+    const delta = prev && prev.field === t.field ? Math.round((t.value - prev.value) * 100) / 100 : null
+    return { ...t, delta }
+  })
+}

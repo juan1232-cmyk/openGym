@@ -10,7 +10,7 @@ import { EXIDX, isCardio } from '../lib/exercises.js'
 import { primaryOf, secondaryOf } from '../lib/pick.js'
 import { MUSCLE_NAME } from '../lib/muscles.js'
 import { fmtDate, fmtNum, todayISO } from '../lib/format.js'
-import { exerciseSessions, exerciseRecords, exerciseMetrics, prSets } from '../lib/exercise-records.js'
+import { exerciseSessions, exerciseRecords, exerciseMetrics, prSets, sessionTops } from '../lib/exercise-records.js'
 import { setLabel, fmtSec } from '../lib/history.js'
 import { estimate1RM, best1RM, e1rmSeries, REP_CAP } from '../lib/onerm.js'
 import { progressSeries, trendPer14 } from '../lib/progress.js'
@@ -261,25 +261,51 @@ function OneRM({ ex }) {
 // else the reps, hold or minutes.
 const setSize = s => (s.w > 0 ? estimate1RM(s.w, s.r) || s.w : s.r || s.sec || s.min || 0)
 
-// Every session, newest first, as in Hevy: the workout and the day, then its sets as plain rows.
-// A set that was a PR when you did it — bigger than every set before it — gets the badge.
+// How a session's top set moved from the one before, in its own unit: "+2.5 kg", "Same", "−2 reps".
+const DELTA_UNIT = { w: u => ' ' + u, r: () => ' reps', sec: () => ' s', min: () => ' min' }
+const fmtDelta = (top, unit) => top.delta == null ? null : top.delta === 0 ? t('Same')
+  : (top.delta > 0 ? '+' : '−') + fmtNum(Math.abs(top.delta)) + DELTA_UNIT[top.field](unit)
+
+// The last sessions as a timeline (design D): each one a line — the day and workout, its top set,
+// how that moved from the session before, a PR badge if one fell — that opens to show every set.
+// It is a glance, not a log, so only the newest starts open.
 const SESSIONS_AT_A_TIME = 10
 function Sessions({ ex }) {
   const st = useStore(s => s.S)
   const [shown, setShown] = useState(SESSIONS_AT_A_TIME)
+  const [open, setOpen] = useState(0)   // index of the open session, -1 for none
   const sessions = exerciseSessions(st, ex.id)
   if (!sessions.length) return <div className="dt-empty"><Icon name="clock" />{t('No sessions yet — once you log this exercise, they show up here.')}</div>
   const prs = prSets(sessions, setSize)
+  const tops = sessionTops(sessions, setSize)
+  const list = sessions.slice(0, shown)
   return <>
-    <h4 className="sec">{t('Sessions')}</h4>
-    {sessions.slice(0, shown).map((s, k) => <div key={s.id} className="dt-sess">
-      <div className="dt-sess-h"><b>{s.name || t('Workout')}</b><span>{fmtDate(s.d, true)}</span></div>
-      {s.sets.map((x, i) => <div key={i} className="dt-set">
-        <i>{i + 1}</i>
-        <span className="lbl">{setLabel(ex.id, x, s.target)}</span>
-        {prs[k][i] && <span className="dt-pr on"><Icon name="trophy" />PR</span>}
-      </div>)}
-    </div>)}
+    <h4 className="sec">{t('Last sessions')}</h4>
+    <div className="dt-tl">
+      {list.map((s, k) => {
+        const top = tops[k], d = fmtDelta(top, st.unit), isOpen = open === k
+        return <div key={s.id} className={'dt-tl-item' + (k === 0 ? ' now' : '') + (k === list.length - 1 ? ' last' : '')}>
+          <button className="dt-tl-h" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? -1 : k)}>
+            <span className="dt-tl-t">
+              <small>{fmtDate(s.d, true)} · {s.name || t('Workout')}</small>
+              <span className="dt-tl-v">
+                <b>{top.field === 'w' ? fmtNum(top.value) + ' ' + st.unit : setLabel(ex.id, top.set, s.target)}</b>
+                {d && <span className={'dt-chg' + (top.delta > 0 ? ' up' : '')}>{d}</span>}
+                {prs[k].some(Boolean) && <span className="dt-pr"><Icon name="trophy" />PR</span>}
+              </span>
+            </span>
+            <Icon name="chevronDown" className={'dt-tl-chev' + (isOpen ? ' on' : '')} />
+          </button>
+          {isOpen && <div className="dt-tl-sets">
+            {s.sets.map((x, i) => <div key={i} className="dt-set">
+              <i>{i + 1}</i>
+              <span className="lbl">{setLabel(ex.id, x, s.target)}</span>
+              {prs[k][i] && <span className="dt-pr"><Icon name="trophy" />PR</span>}
+            </div>)}
+          </div>}
+        </div>
+      })}
+    </div>
     {sessions.length > shown && <Button variant="soft" onClick={() => setShown(n => n + SESSIONS_AT_A_TIME)}>{t('Show more')}</Button>}
   </>
 }

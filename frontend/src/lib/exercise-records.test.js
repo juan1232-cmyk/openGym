@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { exerciseSessions, exerciseRecords, exerciseMetrics, prSets } from './exercise-records.js'
+import { exerciseSessions, exerciseRecords, exerciseMetrics, prSets, sessionTops } from './exercise-records.js'
 
 const w = (id, d, sets, extra = {}) => ({ id, d, name: extra.name, entries: [{ id: 'x', sets: sets.map(s => ({ done: true, ...s })), target: extra.target }] })
 
@@ -119,5 +119,30 @@ describe('prSets', () => {
   it('never marks a drop, and is empty for no sessions', () => {
     expect(prSets([sess(15), sess(20)], size)).toEqual([[false], [false]])
     expect(prSets([], size)).toEqual([])
+  })
+})
+
+describe('sessionTops', () => {
+  const size = s => s.w || s.r || s.sec || 0
+
+  it('picks each session top set and the change in kg from the session before', () => {
+    const sessions = [
+      { sets: [{ w: 77.5, r: 5 }, { w: 80, r: 3 }] },
+      { sets: [{ w: 77.5, r: 5 }] },
+      { sets: [{ w: 80, r: 5 }] }
+    ]
+    const t = sessionTops(sessions, size)
+    expect(t.map(x => x.i)).toEqual([1, 0, 0])
+    expect(t.map(x => x.delta)).toEqual([2.5, -2.5, null])
+    expect(t[0].field).toBe('w')
+  })
+
+  it('reads an unloaded set in reps or seconds, and gives no change across units', () => {
+    expect(sessionTops([{ sets: [{ r: 12 }] }, { sets: [{ r: 10 }] }], size).map(x => [x.field, x.delta])).toEqual([['r', 2], ['r', null]])
+    expect(sessionTops([{ sets: [{ sec: 60 }] }, { sets: [{ w: 10, r: 5 }] }], size)[0].delta).toBeNull()
+  })
+
+  it('reports no change as zero', () => {
+    expect(sessionTops([{ sets: [{ w: 60, r: 5 }] }, { sets: [{ w: 60, r: 5 }] }], size)[0].delta).toBe(0)
   })
 })
