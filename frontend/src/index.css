@@ -1751,10 +1751,24 @@ button.sa-tile:active{transform:scale(.985)}
 .sa-pb .ic.down{background:color-mix(in srgb,var(--red) 12%,transparent);color:var(--red)}
 .sa-pb .chev{color:var(--label-3);font-size:14px;flex:none}
 .sa-pb .ic.flat{background:color-mix(in srgb,var(--yellow) 16%,transparent);color:var(--orange)}
-.sa-pb.fx .ic, .sa-pb.fx .chev{align-self:flex-start}
-.sa-pb .l .sa-fix{display:flex;flex-direction:column;gap:4px;margin-top:3px}
-.sa-pb .l .sa-fix span{display:flex;gap:7px;align-items:baseline;font-size:12.5px;line-height:1.35}
-.sa-pb .sa-fix i{flex:none;width:15px;height:15px;border-radius:50%;background:var(--sep);color:var(--label-2);font-style:normal;font-size:10px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;transform:translateY(-1px)}
+/* Lifts to watch: Peek's take on a flat lift, under its row — a small orb and a bubble of
+   lines to tap, each opening a yes / not now in place */
+.sa-watch + .sa-watch{border-top:1px solid var(--sep)}
+.sa-peek{display:flex;gap:8px;align-items:flex-start;margin:-4px 0 14px}
+.sa-peek .orb-wrap{flex:none;margin-top:2px;width:40px;display:flex;justify-content:center}
+.sa-peek .orb{box-shadow:0 0 0 1px var(--sep)}   /* a black orb on the dark card needs an edge */
+.sa-say{flex:1;min-width:0;position:relative;display:flex;flex-direction:column;padding:4px;border-radius:var(--r-lg);border-top-left-radius:6px;background:var(--surface-2)}
+.sa-sug{display:flex;align-items:center;gap:8px;width:100%;padding:9px 10px;border-radius:var(--r);text-align:left;font-size:13.5px;line-height:1.35;color:var(--label)}
+.sa-sug > span{flex:1;min-width:0;text-wrap:pretty}
+button.sa-sug:active{background:var(--surface-3)}
+.sa-sug .icn{flex:none;color:var(--label-3);font-size:12px}
+.sa-sug.off{color:var(--label-2)}
+.sa-sug.ask{flex-direction:column;align-items:stretch;gap:6px;background:var(--surface);box-shadow:0 0 0 1px var(--sep)}
+.sa-sug.ask .q{font-weight:600}
+.sa-sug.ask .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.sa-sug.done{color:var(--label-2)}
+.sa-sug.done .icn{color:var(--acc);font-size:14px}
+.sa-sug .undo{flex:none;padding:2px 4px;color:var(--acc);font-size:13px;font-weight:500}
 .sa-m i{position:relative}
 /* the four weekly zones drawn on the track: OK faint, productive stronger, the ends bare */
 .sa-m i::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,

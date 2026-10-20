@@ -29,6 +29,9 @@ export const DEF = {
   // never asked — see needsGoals. trainDays are the weekdays picked (0 = Sunday), progDefault
   // the progression a new routine starts on, name what Peek calls you without an account.
   goal: null, days: null, name: null, level: null, kit: null, trainDays: null, progDefault: null,
+  // the Lifts to watch fixes accepted from Stats, per exercise and kind, so Peek doesn't suggest
+  // them again (lib/liftfix.js)
+  liftFixes: {},
   // false from the onboarding until the tour is done or skipped. true by default, so a
   // profile that predates the tour never gets it.
   toured: true
