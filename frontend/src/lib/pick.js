@@ -5,8 +5,6 @@ import { MUSCLES, musclesOf, loadOf } from './muscles.js'
 import { EXIDX, EXDB } from './exercises.js'
 import { defaultConfig, lastEntryFor } from './history.js'
 import { applySuggestion, defaultModeFor } from './scheme.js'
-import { scoreOf, reasonOf, roundScore } from './score.js'
-import { targetFor } from './ratings.js'
 
 /* ---------------- what you use ---------------- */
 
@@ -456,16 +454,4 @@ export function quickConfig(ex, st, routineId) {
   const last = (st.workouts || []).length ? lastEntryFor(st, ex.id) : null
   if (last && last.target) return strip(last.target)
   return applySuggestion(defaultConfig(ex.id, defaultModeFor(ex)), ex, st.goal)
-}
-
-/* ---------------- fit score ---------------- */
-
-// The badge + one-line reason on a picker row (sheets/exercise.jsx, PickRow): the exercise's
-// training-engine score (lib/score.js) with the person's joint comfort applied, or null for
-// the exercises nobody has rated — no badge beats a number guessed from a name.
-// `ctx.comfort` is S.comfort, { exId: 0–10 }. `ctx.muscle` is the picker's muscle chip (a body-map
-// slug): an exercise rated for several muscles shows the score for the one the list is about.
-export function fitScore(ex, ctx = {}) {
-  const s = ex && scoreOf(ex.id, (ctx.comfort || {})[ex.id], ctx.muscle ? targetFor(ex.id, ctx.muscle) : undefined)
-  return s ? { score: roundScore(s.score), reason: s.sore ? 'Hurts your joints' : reasonOf(s) } : null
 }

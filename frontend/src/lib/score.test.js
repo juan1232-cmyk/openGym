@@ -1,11 +1,10 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { existsSync, readFileSync } from 'node:fs'
-import { scoresOf, scoreOf, compare, reasonOf, ratedAlternatives, roundScore } from './score.js'
+import { scoresOf, scoreOf, reasonOf, roundScore } from './score.js'
 import { ratingOf, targetsOf, targetFor, ratedFor, ratingsReady, setRatings, loadRatings, TARGETS } from './ratings.js'
 import PACKED from './ratings-data.json'
 import { EXIDX } from './exercises.js'
 import { musclesOf } from './muscles.js'
-import { STUDIED_PAIRS } from './engine-config.js'
 
 // The spec's own check: S9 L9 St8 P8 T2 C2 (the overhead cable triceps extension) → H 77,
 // H_eff 71, Str 54, score 67.
@@ -106,11 +105,6 @@ describe('ratings data', () => {
     const off = ids.filter(id => !musclesOf(EXIDX[id])[TARGETS[PACKED[id].t[0][0]].slug])
     expect(off.length).toBeLessThan(ids.length * 0.05)
   })
-
-  it('uses only studied tags that STUDIED_PAIRS knows', () => {
-    const known = new Set(STUDIED_PAIRS.flat())
-    ids.forEach(id => { if (PACKED[id].y) expect(known.has(PACKED[id].y), id + ' ' + PACKED[id].y).toBe(true) })
-  })
 })
 
 describe('the table loads on demand', () => {
@@ -121,7 +115,6 @@ describe('the table loads on demand', () => {
     expect(ratingsReady()).toBe(false)
     expect(scoreOf('0194')).toBeNull()
     expect(ratedFor('triceps')).toEqual([])
-    expect(compare('0194', '0201')).toBeNull()
     await loadRatings()
     expect(ratingsReady()).toBe(true)
     expect(Math.round(scoreOf('0194').score)).toBe(67)
@@ -161,91 +154,6 @@ describe('target muscles', () => {
     expect(targetFor('1326', 'upper-back')).toBe('lats')
     expect(targetFor('1326', 'quadriceps')).toBe('lats')     // none does: the main target
     expect(targetFor('1512', 'chest')).toBeNull()
-  })
-})
-
-describe('ratedAlternatives', () => {
-  it('lists the other exercises for the same muscle, best score first', () => {
-    const alts = ratedAlternatives('0194')
-    expect(alts.length).toBeGreaterThan(20)
-    expect(alts.every(a => a.muscle === 'triceps' && a.id !== '0194')).toBe(true)
-    expect(alts.map(a => a.score)).toEqual([...alts.map(a => a.score)].sort((a, b) => b - a))
-  })
-  it('follows the muscle asked for, not just the main one', () => {
-    const alts = ratedAlternatives('1326', {}, 'biceps')
-    expect(alts.every(a => a.muscle === 'biceps')).toBe(true)
-    expect(alts.some(a => a.id === '0139')).toBe(true)
-  })
-  it('is empty for an unrated exercise', () => {
-    expect(ratedAlternatives('1512')).toEqual([])
-  })
-})
-
-describe('compare', () => {
-  it('gives a studied pair to the side the study favours, and explains it by stretch, 9 vs 4', () => {
-    const c = compare('0194', '0201')
-    expect(c).toMatchObject({ win: 'a', studied: true, muscle: 'triceps' })
-    expect(c.why).toMatchObject({ k: 'S', from: 9, to: 4, win: 'a' })
-    const row = k => c.rows.find(r => r.k === k)
-    expect(row('L').win).toBeNull()            // same limiter
-    expect(row('St').win).toBe('b')
-    expect(row('C').win).toBe('b')             // lower cost wins
-  })
-
-  it('works whichever side the studied winner is on', () => {
-    expect(compare('0201', '0194')).toMatchObject({ win: 'b', studied: true })
-  })
-
-  it('covers the other studied pairs', () => {
-    expect(compare('0599', '0586')).toMatchObject({ win: 'a', studied: true })   // seated over lying leg curl
-    expect(compare('0605', '0594')).toMatchObject({ win: 'a', studied: true })   // standing over seated calf raise
-  })
-
-  it('lets the study win even where the formula would not', () => {
-    const weak = Object.keys(PACKED).find(id => PACKED[id].y === 'overhead_triceps_ext' &&
-      scoreOf(id).score <= scoreOf('0201').score)
-    expect(weak, 'an overhead variant that scores at or under the pushdown').toBeTruthy()
-    expect(compare(weak, '0201')).toMatchObject({ win: 'a', studied: true })
-  })
-
-  it('calls scores under 8 apart about the same — and 8 apart a result', () => {
-    // barbell bench 48, lever chest press 53, cable fly 56 (rounded, as shown)
-    const same = compare('0025', '0577')
-    expect(same.win).toBeNull()
-    expect(same.why).toBeNull()
-    expect(same.studied).toBe(false)
-    const fly = compare('0025', '0227')
-    expect(roundScore(fly.b.score) - roundScore(fly.a.score)).toBe(8)
-    expect(fly.win).toBe('b')
-  })
-
-  it('names the one rating whose swap lowers the winner most', () => {
-    const c = compare('0025', '0227')           // fly beats bench
-    // giving the fly the bench's number for one rating: which swap costs it the most points?
-    const cost = k => scoresOf(c.b).score - scoresOf({ ...c.b, [k]: c.a[k] }).score
-    const best = ['S', 'L', 'St', 'P', 'T', 'C'].reduce((x, k) => (cost(k) > cost(x) ? k : x))
-    expect(c.why.k).toBe(best)
-    expect(c.why).toMatchObject({ win: 'b', from: c.b[best], to: c.a[best] })
-    expect(c.why.drop).toBeGreaterThan(0)
-  })
-
-  it('applies each side its own comfort, and a sore joint overrules the study', () => {
-    const c = compare('0194', '0201', { '0194': 2 })
-    expect(c.a.sore).toBe(true)
-    expect(c.b.sore).toBe(false)
-    expect(c.studied).toBe(false)              // 66.6 × 0.8 = 53.3 vs 53: a study doesn't outrank pain
-    expect(c.win).toBeNull()
-    expect(compare('0194', '0201', { '0201': 2 })).toMatchObject({ win: 'a', studied: false })
-  })
-
-  it('compares for the muscle asked, and refuses where one side isn’t rated for it', () => {
-    expect(compare('1326', '0139', {}, 'biceps').muscle).toBe('biceps')
-    expect(compare('1326', '0139').muscle).toBe('lats')
-    expect(compare('0194', '0201', {}, 'biceps')).toBeNull()
-  })
-
-  it('has nothing to say about an unrated exercise', () => {
-    expect(compare('0194', '1512')).toBeNull()
   })
 })
 

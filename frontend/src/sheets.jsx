@@ -7,7 +7,6 @@ export {
   exerciseDetailSheet, addToRoutineSheet, customExSheet, deleteCustomEx,
   exercisePicker, exConfigSheet, swapSheet, muscleLine, chipLabel, gymEquipmentSheet, gymEqLabel
 } from './sheets/exercise.jsx'
-export { compareSheet } from './sheets/compare.jsx'
 export {
   loadStarterPlan, glyphPicker, planToolsSheet, planImportSheet,
   dayOverrideSheet, dayAssignSheet
