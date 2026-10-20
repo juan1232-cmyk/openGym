@@ -13,9 +13,10 @@
 // Without it only the SVGs are written.
 //
 // Coordinates are in the 360-unit space the artwork was traced in (circle and eyes fitted
-// to the reference PNG, mountain edges and snow line measured from it). The mountain's
-// right edge runs off the canvas and its base sits behind Peek, so the polygon is
-// extended past both.
+// to the reference PNG, mountain edges and snow line measured from it). The mountain is a
+// symmetric triangle (edges at about +-0.70 x per y) whose right edge runs off the canvas
+// and whose base sits behind Peek, so the polygon is extended past both. The snow cap's
+// three-tooth edge is regular: teeth ~17 units apart, ~19 deep.
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { createRequire } from 'node:module'
@@ -36,8 +37,8 @@ const PALETTES = {
 // so Android's circular maskable crop keeps it too.
 const svg = c => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360" width="1024" height="1024">
   <rect width="360" height="360" fill="${c.bg}"/>
-  <path d="M249 76 L522 400 H129 Z" fill="${c.peak}"/>
-  <path d="M249 76 L305.9 143.5 L289.5 132.5 L270 149.5 L252 133 L237 148.5 L224 143.5 Z" fill="${c.peek}"/>
+  <path d="M244.7 71.8 L479.1 400 H20.2 Z" fill="${c.peak}"/>
+  <path d="M244.7 71.8 L295.5 143.8 L280 159.2 L262 139.7 L245 158.5 L228 139.7 L211 158.3 L195.3 144.5 Z" fill="${c.peek}"/>
   <circle cx="85.8" cy="373.8" r="194" fill="${c.peek}"/>
   <rect x="-21.5" y="-48" width="43" height="96" rx="21.5" transform="translate(104 264.7) rotate(-28)" fill="${c.eye}"/>
   <rect x="-17.5" y="-49.5" width="35" height="99" rx="17.5" transform="translate(171.3 252.9) rotate(-30.4)" fill="${c.eye}"/>
