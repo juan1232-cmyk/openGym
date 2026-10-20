@@ -49,6 +49,13 @@ does no harm. The Vercel project's Root Directory is `frontend`, so its config l
 nothing under `frontend/` changed, and maps every other outcome, including a shallow clone
 with no `HEAD^`, to exit 1. The `:/` pathspec keeps it independent of the directory it runs in.
 
+**The app icon is generated, not hand-edited.** `scripts/make-icons.mjs` draws Peek-looking-up-
+at-a-peak as SVG (dark / light / gray palettes → `assets/icons/`) and renders the dark one to
+`frontend/public/icon-180.png` + `icon-512.png`. Edit the script and rerun it; it needs `sharp`
+from a scratch folder (`SHARP_DIR=...`, see the file header) since the repo doesn't depend on it.
+It's a PWA, so iOS gets one icon: light and gray exist as assets, not as switchable variants.
+`website/` copies the PNGs from `frontend/public/` at deploy time.
+
 Full stack (needs Docker — not installed as of 2026-08-24):
 ```bash
 cp .env.example .env
