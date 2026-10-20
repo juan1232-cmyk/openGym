@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { exerciseSessions, exerciseRecords, exerciseMetrics } from './exercise-records.js'
+import { exerciseSessions, exerciseRecords, exerciseMetrics, prSets } from './exercise-records.js'
 
 const w = (id, d, sets, extra = {}) => ({ id, d, name: extra.name, entries: [{ id: 'x', sets: sets.map(s => ({ done: true, ...s })), target: extra.target }] })
 
@@ -100,5 +100,24 @@ describe('exerciseMetrics', () => {
     expect(m.speed.map(p => p.y)).toEqual([9])
     expect(m.min.map(p => p.y)).toEqual([20])
     expect(m.weight).toBeUndefined()
+  })
+})
+
+describe('prSets', () => {
+  const size = s => s.w
+  const sess = (...ws) => ({ sets: ws.map(w => ({ w, r: 5 })) })
+
+  it('marks a set only when it beats everything before it', () => {
+    // newest first: 25 kg, then 20 kg, then the first 20 kg
+    expect(prSets([sess(25), sess(20), sess(20)], size)).toEqual([[true], [false], [false]])
+  })
+
+  it('counts earlier sets of the same session, so a repeat of a new best is not a second PR', () => {
+    expect(prSets([sess(22.5, 22.5, 25), sess(20)], size)).toEqual([[true, false, true], [false]])
+  })
+
+  it('never marks a drop, and is empty for no sessions', () => {
+    expect(prSets([sess(15), sess(20)], size)).toEqual([[false], [false]])
+    expect(prSets([], size)).toEqual([])
   })
 })

@@ -941,8 +941,14 @@ h4.sec{
 .dt-set .lbl{flex:none;min-width:96px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .dt-set .bar{flex:1;height:8px;border-radius:99px;background:color-mix(in srgb,var(--label) 10%,transparent);overflow:hidden}
 .dt-set .bar em{display:block;height:100%;border-radius:99px;background:var(--label-3);transition:width var(--med) var(--ease)}
-.dt-set.top .bar em{background:var(--acc)}
-.dt-pr{flex:none;width:16px;font-size:15px;color:var(--yellow)}
+.dt-set.is-pr .bar em{background:var(--acc)}
+/* the PR badge: a fixed slot, so the bars line up whether a row has one or not */
+.dt-pr{flex:none;width:46px;display:inline-flex;align-items:center;justify-content:center}
+.dt-pr.on{gap:3px;height:22px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:.02em;
+  color:var(--yellow);background:color-mix(in srgb,var(--yellow) 16%,transparent)}
+.dt-pr.on .icn{font-size:12px;--icon-stroke:2.2}
+.dt-legend{margin:-2px 4px 10px;font-size:12px;line-height:1.6;color:var(--label-3)}
+.dt-legend .dt-pr{display:inline-flex;vertical-align:middle;margin:0 2px}
 /* the steps: bold numerals in their own column, like Hevy's How to */
 .dt-steps{list-style:none;padding:0;display:flex;flex-direction:column;gap:14px;font-size:15px;line-height:1.45;color:var(--label)}
 .dt-steps li{display:flex;gap:12px}

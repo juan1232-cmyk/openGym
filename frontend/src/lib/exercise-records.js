@@ -81,3 +81,22 @@ export function exerciseMetrics(S, exId) {
   }
   return out
 }
+
+// Which sets were a PR when they were done: bigger than every set before them, this session's
+// earlier sets included, by `size` (the caller's measure — the estimated 1RM for a lift). So
+// 20 kg, then 20 kg again, then 25 kg marks the 25 only. The very first set has nothing to beat
+// and is not a PR, the same rule the finish-workout summary uses. `sessions` is newest first, as
+// exerciseSessions returns them; the answer is one array of booleans per session, same order.
+export function prSets(sessions, size) {
+  let best = null
+  const marks = []
+  for (let i = sessions.length - 1; i >= 0; i--) {
+    marks[i] = sessions[i].sets.map(s => {
+      const v = size(s) || 0
+      const pr = best != null && v > best
+      if (best == null || v > best) best = v
+      return pr
+    })
+  }
+  return marks
+}

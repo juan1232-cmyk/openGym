@@ -10,7 +10,7 @@ import { EXIDX, isCardio } from '../lib/exercises.js'
 import { primaryOf, secondaryOf } from '../lib/pick.js'
 import { MUSCLE_NAME } from '../lib/muscles.js'
 import { fmtDate, fmtNum, todayISO } from '../lib/format.js'
-import { exerciseSessions, exerciseRecords, exerciseMetrics } from '../lib/exercise-records.js'
+import { exerciseSessions, exerciseRecords, exerciseMetrics, prSets } from '../lib/exercise-records.js'
 import { setLabel, fmtSec } from '../lib/history.js'
 import { estimate1RM, best1RM, e1rmSeries, REP_CAP } from '../lib/onerm.js'
 import { progressSeries, trendPer14 } from '../lib/progress.js'
@@ -262,14 +262,16 @@ function OneRM({ ex }) {
 const setSize = s => (s.w > 0 ? estimate1RM(s.w, s.r) || s.w : s.r || s.sec || s.min || 0)
 
 // Every session, newest first, as in Hevy: the workout and the day, then its sets — each with a
-// bar for its size against your best set ever (and your weakest), the session's top set in the accent colour and a
-// trophy on any set that matched the all-time best.
+// bar for its size against your best set ever (and your weakest). A set that was a PR when you
+// did it — bigger than every set before it — gets the badge and the green bar; nothing else is
+// green, so the colour means one thing.
 const SESSIONS_AT_A_TIME = 10
 function Sessions({ ex }) {
   const st = useStore(s => s.S)
   const [shown, setShown] = useState(SESSIONS_AT_A_TIME)
   const sessions = exerciseSessions(st, ex.id)
   if (!sessions.length) return <div className="dt-empty"><Icon name="clock" />{t('No sessions yet — once you log this exercise, they show up here.')}</div>
+  const prs = prSets(sessions, setSize)
   const all = sessions.flatMap(s => s.sets.map(setSize))
   const peak = Math.max(...all), low = Math.min(...all)
   // Measured from just under the weakest set rather than from zero: 70 against 77.5 would
@@ -278,16 +280,16 @@ function Sessions({ ex }) {
   const barOf = v => (peak > floor ? Math.max(6, (v - floor) / (peak - floor) * 100) : 100)
   return <>
     <h4 className="sec">{t('Sessions')}</h4>
-    {sessions.slice(0, shown).map(s => {
+    <div className="dt-legend">{t('The bar is how big each set was.')} <span className="dt-pr on"><Icon name="trophy" />PR</span> {t('= a new best when you did it.')}</div>
+    {sessions.slice(0, shown).map((s, k) => {
       const sizes = s.sets.map(setSize)
-      const topI = sizes.indexOf(Math.max(...sizes))
       return <div key={s.id} className="dt-sess">
         <div className="dt-sess-h"><b>{s.name || t('Workout')}</b><span>{fmtDate(s.d, true)}</span></div>
-        {s.sets.map((x, i) => <div key={i} className={'dt-set' + (i === topI ? ' top' : '')}>
+        {s.sets.map((x, i) => <div key={i} className={'dt-set' + (prs[k][i] ? ' is-pr' : '')}>
           <i>{i + 1}</i>
           <span className="lbl">{setLabel(ex.id, x, s.target)}</span>
           <span className="bar"><em style={{ width: barOf(sizes[i]) + '%' }} /></span>
-          {sizes[i] === peak && peak > 0 ? <Icon name="trophy" className="dt-pr" /> : <span className="dt-pr" />}
+          <span className={'dt-pr' + (prs[k][i] ? ' on' : '')}>{prs[k][i] && <><Icon name="trophy" />PR</>}</span>
         </div>)}
       </div>
     })}
