@@ -872,6 +872,76 @@ h4.sec{
 }
 .steps-list::marker{color:var(--label-3)}
 
+/* --- one exercise's screen: Summary / History / How to, laid out like Hevy (views/Exercise.jsx) --- */
+/* full width: it cancels #app's padding and pads itself, so the picture and the tab bar can run
+   edge to edge. In the full-screen sheet (opened over another sheet) there is nothing to cancel. */
+.exs{margin:calc(-1 * (var(--sat) + 8px)) calc(-1 * var(--pad)) 0}
+.fullsheet.exsheet{padding:0}
+.exsheet .exs{margin:0}
+.exs-top{position:sticky;top:0;z-index:6;background:var(--bg);padding-top:var(--sat)}
+.exs-bar{display:flex;align-items:center;gap:6px;min-height:52px;padding:0 var(--pad)}
+.exs-bar .pk-back{margin-left:-10px}
+.exs-bar h1{flex:1;min-width:0;font-size:17px;font-weight:600;letter-spacing:-.02em;color:var(--label);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.exs-add{flex:none;display:flex;align-items:center;gap:5px;height:34px;padding:0 14px 0 10px;border-radius:99px;
+  background:var(--acc);color:var(--on-acc);font-size:14px;font-weight:600}
+.exs-add .icn{font-size:16px;--icon-stroke:2.4}
+.exs-add:active{opacity:.7}
+.exs-icon{flex:none;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--label-2)}
+.exs-body{padding:0 var(--pad) calc(40px + var(--sab))}
+.exs-body .exmedia{margin:0 calc(-1 * var(--pad)) 14px;border-radius:0}
+.exs .card{border-radius:var(--r-card);margin-bottom:10px}
+/* underlined tabs, equal thirds, a hairline under the lot */
+.dt-tabs{display:flex;border-bottom:1px solid var(--sep)}
+.dt-tabs button{flex:1;padding:11px 0 10px;font-size:15px;font-weight:500;color:var(--label-3);
+  border-bottom:2px solid transparent;margin-bottom:-1px;transition:color var(--fast),border-color var(--fast)}
+.dt-tabs button.on{color:var(--acc);border-bottom-color:var(--acc)}
+.dt-name{margin:4px 0 6px;font-size:22px;font-weight:600;letter-spacing:-.025em}
+.dt-targets{display:flex;flex-direction:column;gap:2px;margin-bottom:14px;font-size:14px;color:var(--label-3)}
+.dt-targets span{color:var(--label-2);text-transform:capitalize}
+/* the headline over the chart: the latest value big, its date small, the range on the right */
+.dt-head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin:18px 0 6px}
+.dt-head b{font-size:22px;font-weight:600;letter-spacing:-.02em;margin-right:8px}
+.dt-head span{font-size:14px;color:var(--acc)}
+.dt-range{appearance:none;-webkit-appearance:none;border:0;background:transparent;color:var(--acc);
+  font:inherit;font-size:14px;padding:4px 18px 4px 4px;cursor:pointer;text-align:right;
+  background-image:linear-gradient(45deg,transparent 50%,var(--acc) 50%),linear-gradient(135deg,var(--acc) 50%,transparent 50%);
+  background-position:calc(100% - 9px) 55%,calc(100% - 4px) 55%;background-size:5px 5px;background-repeat:no-repeat}
+.dt-range option{color:#000}
+.dt-chart{margin:0 -4px 4px}
+.dt-chips{margin:10px calc(-1 * var(--pad)) 0;padding:2px var(--pad)}
+/* the records: an icon tile, what it is and when, the number */
+.dt-recs{background:var(--surface);border-radius:var(--r-card);padding:2px 14px}
+.dt-rec{display:flex;align-items:center;gap:12px;padding:12px 0;font-size:15px}
+.dt-rec+.dt-rec{border-top:1px solid var(--sep)}
+.dt-rec-i{flex:none;width:34px;height:34px;border-radius:10px;background:var(--acc-soft);color:var(--acc);
+  display:flex;align-items:center;justify-content:center;font-size:17px}
+.dt-rec-l{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;color:var(--label)}
+.dt-rec small{font-size:12px;color:var(--label-3)}
+.dt-rec b{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--acc);flex:none}
+.dt-1rm{padding:16px}
+/* a session: a card, then one row per set — its number, what it was, a bar for its size against
+   the best set ever (the session's top set in the accent), a trophy where it matched that best.
+   Every other row is shaded, as in Hevy's tables. */
+.dt-sess{background:var(--surface);border-radius:var(--r-card);padding:14px 14px 8px;margin-bottom:10px}
+.dt-sess-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px}
+.dt-sess-h b{font-size:16px;font-weight:600;letter-spacing:-.02em;color:var(--label)}
+.dt-sess-h span{font-size:12px;color:var(--label-3);flex:none}
+.dt-set{display:flex;align-items:center;gap:10px;padding:9px 8px;margin:0 -6px;border-radius:10px;font-size:15px;color:var(--label)}
+.dt-set:nth-child(even){background:color-mix(in srgb,var(--label) 5%,transparent)}
+.dt-set i{font-style:normal;width:18px;flex:none;font-weight:600;color:var(--label-3)}
+.dt-set .lbl{flex:none;min-width:96px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dt-set .bar{flex:1;height:8px;border-radius:99px;background:color-mix(in srgb,var(--label) 10%,transparent);overflow:hidden}
+.dt-set .bar em{display:block;height:100%;border-radius:99px;background:var(--label-3);transition:width var(--med) var(--ease)}
+.dt-set.top .bar em{background:var(--acc)}
+.dt-pr{flex:none;width:16px;font-size:15px;color:var(--yellow)}
+/* the steps: bold numerals in their own column, like Hevy's How to */
+.dt-steps{list-style:none;padding:0;display:flex;flex-direction:column;gap:14px;font-size:15px;line-height:1.45;color:var(--label)}
+.dt-steps li{display:flex;gap:12px}
+.dt-steps b{flex:none;width:22px;font-weight:600;color:var(--label)}
+.dt-empty{display:flex;flex-direction:column;align-items:center;gap:10px;padding:36px 20px;text-align:center;color:var(--label-3);font-size:14px;line-height:1.4}
+.dt-empty .icn{font-size:26px}
+
 /* --- month calendar --- */
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:10px}
 .cal-h{text-align:center;font-size:11px;color:var(--label-3);font-weight:500;text-transform:uppercase;padding:2px 0}

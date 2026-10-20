@@ -18,7 +18,7 @@ import Toast from './components/Toast.jsx'
 import RestTimer from './components/RestTimer.jsx'
 import Onboarding from './views/Onboarding.jsx'
 import Tour from './components/Tour.jsx'
-import ExerciseProgress from './views/ExerciseProgress.jsx'
+import ExerciseRoute from './views/Exercise.jsx'
 import Home from './views/Home.jsx'
 import Plan from './views/Plan.jsx'
 import RoutineEdit from './views/RoutineEdit.jsx'
@@ -69,7 +69,7 @@ function Shell() {
   const skin = skinFor()
   // A running session is a focus screen, the way the design draws it: no tab bar, a ‹ back to
   // Home in its place (the session keeps running; Home and the Start tab both say Resume).
-  // An exercise's progress page is a drill-down with its own ‹, drawn without one too.
+  // An exercise's screen is a drill-down with its own ‹, drawn without one too.
   const hideTabs = onboarding || (cur === 'workout' && !!S.active) || cur === 'exercise'
   useEffect(() => {
     const apply = () => applyPrefs(S.appearance, S.accent, skin, hideTabs)
@@ -116,7 +116,7 @@ function Shell() {
               <Route path="/stats" element={<Stats />} />
               <Route path="/history" element={<History />} />
               <Route path="/library" element={<Library />} />
-              <Route path="/exercise/:id" element={<ExerciseProgress />} />
+              <Route path="/exercise/:id" element={<ExerciseRoute />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/admin" element={user?.admin ? <Admin /> : <Navigate to="/home" replace />} />
               <Route path="*" element={<Navigate to="/home" replace />} />
