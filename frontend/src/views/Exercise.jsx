@@ -126,8 +126,10 @@ function Summary({ ex }) {
     <h2 className="capitalize dt-name">{ex.n}</h2>
     <Targets ex={ex} />
     {ex.desc && <div className="exnote">{ex.desc}</div>}
+    <Coach ex={ex} />
     <Trend ex={ex} />
     <Records ex={ex} />
+    {!isCardio(ex) && <OneRM ex={ex} />}
   </>
 }
 
@@ -175,12 +177,12 @@ function Spark({ points, at, onScrub }) {
 }
 
 // The headline number (estimated 1RM where the log supports one), how far it moved over the
-// last ten sessions, the line, and the orb's read of the lift with what to try next time.
+// last ten sessions, and the line.
 function ProgressCard({ ex }) {
   const S = useStore(s => s.S)
   const [at, setAt] = useState(null)   // the session under the finger, else the latest
-  const id = ex.id, unit = S.unit
-  const { kind, points, top, rows } = progressSeries(S, id)
+  const unit = S.unit
+  const { kind, points } = progressSeries(S, ex.id)
   const shown = points.slice(-SHOWN)
   const latest = shown[shown.length - 1]
   if (!latest) return null
@@ -188,9 +190,26 @@ function ProgressCard({ ex }) {
   const first = shown[0]
   const fmtY = y => kind === 'sec' ? fmtSec(y) : kind === 'reps' ? t('{0} reps', fmtNum(y)) : kind === 'speed' ? fmtNum(y) + ' km/h' : fmtNum(y) + ' ' + unit
   const delta = shown.length > 1 ? Math.round((cur.y - first.y) * 10) / 10 : null
+  return <div className="card pk-pcard">
+    <span className="lbl">{t(LABEL[kind])}{cur !== latest && <> · <b className="pk-at">{fmtDate(cur.d, true)}</b></>}</span>
+    <div className="big">
+      <b>{fmtY(cur.y)}</b>
+      {delta != null && delta !== 0 && <span className={'pill' + (delta > 0 ? ' up' : '')}>{delta > 0 ? '+' : '−'}{fmtY(Math.abs(delta))}</span>}
+    </div>
+    <Spark points={shown} at={at} onScrub={setAt} />
+    <div className="axis"><span>{fmtDate(first.d)}</span><span>{latest.d === todayISO() ? t('Today') : fmtDate(latest.d)}</span></div>
+    {shown.length > 1 && <div className="dt-hint">{t('Drag across the line to see each session')}</div>}
+  </div>
+}
 
-  // The coach line: the trend in weight actually on the bar, then what the progression engine
-  // will prescribe next time — the same call the next session will make, so the two agree.
+// Peek's read of the lift, at the top of Summary: the trend in weight actually on the bar, then
+// what the progression engine will prescribe next time — the same call the next session will
+// make, so the two agree. Nothing until there are sessions to read.
+function Coach({ ex }) {
+  const S = useStore(s => s.S)
+  const id = ex.id, unit = S.unit
+  const { top, rows } = progressSeries(S, id)
+  if (!rows.length) return null
   const routine = S.routines.find(r => r.ex.some(e => e.id === id))
   const lastRow = rows[rows.length - 1]
   const next = nextPrescription(S, routine ? routine.ex.find(e => e.id === id) : { ...(lastRow.target || {}), id }, routine)
@@ -210,20 +229,8 @@ function ProgressCard({ ex }) {
       : next.weight > 0 && next.kind !== 'deload' ? t('Try {0} next time.', fmtNum(next.weight) + ' ' + unit)
         : next.why ? t(...next.why) : null
   ].filter(Boolean).join(' ')
-
-  return <>
-    <div className="card pk-pcard">
-      <span className="lbl">{t(LABEL[kind])}{cur !== latest && <> · <b className="pk-at">{fmtDate(cur.d, true)}</b></>}</span>
-      <div className="big">
-        <b>{fmtY(cur.y)}</b>
-        {delta != null && delta !== 0 && <span className={'pill' + (delta > 0 ? ' up' : '')}>{delta > 0 ? '+' : '−'}{fmtY(Math.abs(delta))}</span>}
-      </div>
-      <Spark points={shown} at={at} onScrub={setAt} />
-      <div className="axis"><span>{fmtDate(first.d)}</span><span>{latest.d === todayISO() ? t('Today') : fmtDate(latest.d)}</span></div>
-      {shown.length > 1 && <div className="dt-hint">{t('Drag across the line to see each session')}</div>}
-    </div>
-    {tip && <div className="pk-coach"><Orb size={44} inverted mood={PROGRESS_MOOD[verdict]} verdict={verdict} poke="joyful-wide" /><p>{tip}</p></div>}
-  </>
+  if (!tip) return null
+  return <div className="pk-coach dt-coach"><Orb size={44} inverted mood={PROGRESS_MOOD[verdict]} verdict={verdict} poke="joyful-wide" /><p>{tip}</p></div>
 }
 
 // Estimated 1RM (issue #18): what the log already implies, plus a calculator for a set you
@@ -313,7 +320,6 @@ function Sessions({ ex }) {
 function HistoryTab({ ex }) {
   return <>
     <ProgressCard ex={ex} />
-    {!isCardio(ex) && <OneRM ex={ex} />}
     <Sessions ex={ex} />
   </>
 }
