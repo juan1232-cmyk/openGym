@@ -928,8 +928,7 @@ h4.sec{
 .dt-rec small{font-size:12px;color:var(--label-3)}
 .dt-rec b{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--acc);flex:none}
 .dt-1rm{padding:16px}
-/* a session: a card, then one row per set — its number, what it was, a bar for its size against
-   the best set ever (the session's top set in the accent), a trophy where it matched that best.
+/* a session: a card, then one row per set — its number, what it was, a PR badge if it was one.
    Every other row is shaded, as in Hevy's tables. */
 .dt-sess{background:var(--surface);border-radius:var(--r-card);padding:14px 14px 8px;margin-bottom:10px}
 .dt-sess-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px}
@@ -938,17 +937,10 @@ h4.sec{
 .dt-set{display:flex;align-items:center;gap:10px;padding:9px 8px;margin:0 -6px;border-radius:10px;font-size:15px;color:var(--label)}
 .dt-set:nth-child(even){background:color-mix(in srgb,var(--label) 5%,transparent)}
 .dt-set i{font-style:normal;width:18px;flex:none;font-weight:600;color:var(--label-3)}
-.dt-set .lbl{flex:none;min-width:96px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.dt-set .bar{flex:1;height:8px;border-radius:99px;background:color-mix(in srgb,var(--label) 10%,transparent);overflow:hidden}
-.dt-set .bar em{display:block;height:100%;border-radius:99px;background:var(--label-3);transition:width var(--med) var(--ease)}
-.dt-set.is-pr .bar em{background:var(--acc)}
-/* the PR badge: a fixed slot, so the bars line up whether a row has one or not */
-.dt-pr{flex:none;width:46px;display:inline-flex;align-items:center;justify-content:center}
-.dt-pr.on{gap:3px;height:22px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:.02em;
-  color:var(--yellow);background:color-mix(in srgb,var(--yellow) 16%,transparent)}
-.dt-pr.on .icn{font-size:12px;--icon-stroke:2.2}
-.dt-legend{margin:-2px 4px 10px;font-size:12px;line-height:1.6;color:var(--label-3)}
-.dt-legend .dt-pr{display:inline-flex;vertical-align:middle;margin:0 2px}
+.dt-set .lbl{flex:1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dt-pr{flex:none;display:inline-flex;align-items:center;gap:3px;height:22px;padding:0 8px;border-radius:99px;
+  font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--yellow);background:color-mix(in srgb,var(--yellow) 16%,transparent)}
+.dt-pr .icn{font-size:12px;--icon-stroke:2.2}
 /* the steps: bold numerals in their own column, like Hevy's How to */
 .dt-steps{list-style:none;padding:0;display:flex;flex-direction:column;gap:14px;font-size:15px;line-height:1.45;color:var(--label)}
 .dt-steps li{display:flex;gap:12px}

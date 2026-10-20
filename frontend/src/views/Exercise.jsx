@@ -257,14 +257,12 @@ function OneRM({ ex }) {
   </div>
 }
 
-// How big a set was, on one scale per exercise, so every set can be drawn as a bar against the
-// biggest one ever logged: the 1RM it implies for a lift, else the reps, hold or minutes.
+// How big a set was, on one scale per exercise, to tell a PR: the 1RM it implies for a lift,
+// else the reps, hold or minutes.
 const setSize = s => (s.w > 0 ? estimate1RM(s.w, s.r) || s.w : s.r || s.sec || s.min || 0)
 
-// Every session, newest first, as in Hevy: the workout and the day, then its sets — each with a
-// bar for its size against your best set ever (and your weakest). A set that was a PR when you
-// did it — bigger than every set before it — gets the badge and the green bar; nothing else is
-// green, so the colour means one thing.
+// Every session, newest first, as in Hevy: the workout and the day, then its sets as plain rows.
+// A set that was a PR when you did it — bigger than every set before it — gets the badge.
 const SESSIONS_AT_A_TIME = 10
 function Sessions({ ex }) {
   const st = useStore(s => s.S)
@@ -272,27 +270,16 @@ function Sessions({ ex }) {
   const sessions = exerciseSessions(st, ex.id)
   if (!sessions.length) return <div className="dt-empty"><Icon name="clock" />{t('No sessions yet — once you log this exercise, they show up here.')}</div>
   const prs = prSets(sessions, setSize)
-  const all = sessions.flatMap(s => s.sets.map(setSize))
-  const peak = Math.max(...all), low = Math.min(...all)
-  // Measured from just under the weakest set rather than from zero: 70 against 77.5 would
-  // otherwise draw as two nearly full bars, and the progress the bars are for would not show.
-  const floor = low < peak ? low - (peak - low) * 0.25 : 0
-  const barOf = v => (peak > floor ? Math.max(6, (v - floor) / (peak - floor) * 100) : 100)
   return <>
     <h4 className="sec">{t('Sessions')}</h4>
-    <div className="dt-legend">{t('The bar is how big each set was.')} <span className="dt-pr on"><Icon name="trophy" />PR</span> {t('= a new best when you did it.')}</div>
-    {sessions.slice(0, shown).map((s, k) => {
-      const sizes = s.sets.map(setSize)
-      return <div key={s.id} className="dt-sess">
-        <div className="dt-sess-h"><b>{s.name || t('Workout')}</b><span>{fmtDate(s.d, true)}</span></div>
-        {s.sets.map((x, i) => <div key={i} className={'dt-set' + (prs[k][i] ? ' is-pr' : '')}>
-          <i>{i + 1}</i>
-          <span className="lbl">{setLabel(ex.id, x, s.target)}</span>
-          <span className="bar"><em style={{ width: barOf(sizes[i]) + '%' }} /></span>
-          <span className={'dt-pr' + (prs[k][i] ? ' on' : '')}>{prs[k][i] && <><Icon name="trophy" />PR</>}</span>
-        </div>)}
-      </div>
-    })}
+    {sessions.slice(0, shown).map((s, k) => <div key={s.id} className="dt-sess">
+      <div className="dt-sess-h"><b>{s.name || t('Workout')}</b><span>{fmtDate(s.d, true)}</span></div>
+      {s.sets.map((x, i) => <div key={i} className="dt-set">
+        <i>{i + 1}</i>
+        <span className="lbl">{setLabel(ex.id, x, s.target)}</span>
+        {prs[k][i] && <span className="dt-pr on"><Icon name="trophy" />PR</span>}
+      </div>)}
+    </div>)}
     {sessions.length > shown && <Button variant="soft" onClick={() => setShown(n => n + SESSIONS_AT_A_TIME)}>{t('Show more')}</Button>}
   </>
 }
