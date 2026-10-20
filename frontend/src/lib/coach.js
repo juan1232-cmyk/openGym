@@ -13,6 +13,9 @@
 import { isoOf } from './format.js'
 import { effectiveRoutineId } from './history.js'
 import { progressVerdict } from './verdict.js'
+import { weekGoals } from './stats.js'
+import { MUSCLE_NAME } from './muscles.js'
+import { NUDGE_DAYS_LEFT } from './engine-config.js'
 import { t } from './i18n.js'
 
 const DAY = 864e5
@@ -46,6 +49,11 @@ export function coachSignals(state, now = new Date(), nameOf = id => id) {
 
   const verdict = progressVerdict(S, now, nameOf)
 
+  // Sets per week is what moves you, so the coach knows where the week stands against the goal
+  // and speaks up once there's little of it left (NUDGE_DAYS_LEFT).
+  const wg = weekGoals(ws, now)
+  const sets = { behind: wg.behind, met: wg.met, daysLeft: wg.daysLeft, nudge: wg.daysLeft <= NUDGE_DAYS_LEFT && (wg.behind.length > 0 || wg.met) }
+
   const todayId = effectiveRoutineId(S, isoOf(now))
   const todayRoutine = todayId ? S.routines.find(r => r.id === todayId) : null
 
@@ -57,6 +65,7 @@ export function coachSignals(state, now = new Date(), nameOf = id => id) {
     prs: prWs.reduce((n, w) => n + w.prs.length, 0),
     freshPR: fresh ? nameOf(fresh.prs[fresh.prs.length - 1]) : null,
     verdict,
+    sets,
     today: todayRoutine ? todayRoutine.name : null,
     hour: now.getHours()
   }
@@ -147,6 +156,19 @@ const LINES = {
   ],
   awayAny: () => [["I'm not mad. I'm disappointed. Also mad."], ['No excuses today.']]
 }
+// Where the week stands on sets, or null when it's too early in the week to say (or no sets
+// to speak of). Never for 'new' or 'away': those have their own, louder, things to say.
+const setsLine = s => {
+  const g = s.sets
+  if (!g || !g.nudge || s.verdict.state === 'new' || s.verdict.state === 'away') return null
+  if (g.met) return ['Every muscle you train hit its sets this week. Now rest.']
+  const { m, done, goal } = g.behind[0]
+  const got = Math.round(done * 10) / 10
+  return g.daysLeft
+    ? ['{0} is at {1} of {2} sets this week. Fit some in before Sunday.', t(MUSCLE_NAME[m]), got, goal]
+    : ['Last day of the week. {0} is at {1} of {2} sets.', t(MUSCLE_NAME[m]), got, goal]
+}
+const SETS_ODDS = 0.6   // of the times it picks a line, so the lift it names still gets its turn
 const say = ([tpl, ...args]) => { const v = t(tpl, ...args); return v.charAt(0).toUpperCase() + v.slice(1) }
 const one = (rng, arr) => arr[Math.floor(rng() * arr.length)]
 
@@ -156,6 +178,8 @@ export function coachLine(mood, s, rng) {
   if (mood === 'drowsy' && rng() < 0.6) return say(one(rng, LINES.late()))
   const v = s.verdict.state
   if (v === 'new') return say(one(rng, LINES.new(s)))
+  const sl = setsLine(s)
+  if (sl && rng() < SETS_ODDS) return say(sl)
   if (v === 'holding' && rng() < 0.2) return null
   // the line naming the lift is the point; the stock ones are only for when there's none
   const specific = LINES[v](s)
@@ -170,7 +194,8 @@ export function coachLine(mood, s, rng) {
 export function coachAside(s, rng, not) {
   if (s.freshPR) return say(one(rng, LINES.pr(s)))
   const v = s.verdict.state
-  const all = (v === 'new' ? LINES.new(s) : [...LINES[v](s), ...LINES[v + 'Any']()]).map(say).filter(l => l !== not)
+  const sl = setsLine(s)
+  const all = (v === 'new' ? LINES.new(s) : [...LINES[v](s), ...LINES[v + 'Any'](), ...(sl ? [sl] : [])]).map(say).filter(l => l !== not)
   return all.length ? one(rng, all) : null
 }
 

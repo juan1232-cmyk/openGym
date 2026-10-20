@@ -145,3 +145,47 @@ describe('pokeReaction', () => {
     expect(pokeReaction(6, rng).line).toBeTruthy()
   })
 })
+
+describe('sets per week', () => {
+  const FRI = new Date('2026-09-25T10:00:00')                         // two days of the week left
+  const bench = n => ({ id: '0025', sets: Array.from({ length: n }, () => ({ w: 60, r: 8, done: true })) })
+  const day = (n, now, entries) => { const d = new Date(now); d.setDate(d.getDate() - n); return { d: isoOf(d), vol: 5000, entries } }
+  const week = now => state([day(0, now, [bench(4)]), day(8, now, [bench(10)])])
+  const base = { total: 20, daysOff: 1, trainedToday: false, planned: 3, missed: 0, prs: 0, freshPR: null, today: null, hour: 10 }
+  const ok = (state2, sets) => ({ ...base, verdict: { state: state2, up: [], flat: [], down: [], stalled: [], prs: 0 }, sets })
+  const behind = { nudge: true, daysLeft: 2, met: false, behind: [{ m: 'chest', done: 4, goal: 10, short: 6 }] }
+  const lines = (s, n = 120) => Array.from({ length: n }, (_, i) => coachLine('neutral', s, seeded('k' + i)))
+
+  it('knows where the week stands, and only speaks up late in it', () => {
+    const late = coachSignals(week(FRI), FRI).sets
+    expect(late.nudge).toBe(true)
+    expect(late.behind[0]).toMatchObject({ m: 'chest', done: 4, short: 6 })
+    expect(coachSignals(week(TODAY), TODAY).sets.nudge).toBe(false)   // Wednesday: four days left, too early
+  })
+
+  it('names the muscle furthest behind and how far, in a share of its lines', () => {
+    const said = lines(ok('holding', behind)).filter(l => l && /chest/i.test(l))
+    expect(said.length).toBeGreaterThan(30)
+    expect(said.every(l => /4 of 10 sets/.test(l))).toBe(true)
+  })
+
+  it('says it is the last day on Sunday', () => {
+    const sun = { ...behind, daysLeft: 0 }
+    expect(lines(ok('progressing', sun)).some(l => l && /^Last day of the week/.test(l))).toBe(true)
+  })
+
+  it('congratulates when every muscle hit its sets', () => {
+    const met = { nudge: true, daysLeft: 1, met: true, behind: [] }
+    expect(lines(ok('holding', met)).some(l => l && /hit its sets/.test(l))).toBe(true)
+  })
+
+  it('says nothing about sets to a new or absent profile, or before the nudge window', () => {
+    for (const v of ['new', 'away']) expect(lines(ok(v, behind)).some(l => l && /sets this week|sets./.test(l))).toBe(false)
+    expect(lines(ok('holding', { ...behind, nudge: false })).some(l => l && /of 10 sets/.test(l))).toBe(false)
+  })
+
+  it('works its reminder into the asides too, never into another verdict’s line', () => {
+    const asides = Array.from({ length: 200 }, (_, i) => coachAside(ok('slipping', behind), seeded('a' + i)))
+    expect(asides.some(l => l && /4 of 10 sets/.test(l))).toBe(true)
+  })
+})

@@ -6,6 +6,8 @@ import { fmtNum, fmtDate, todayISO, isoOf, durPart } from '../lib/format.js'
 import { t, dateLocale } from '../lib/i18n.js'
 import { weeklyVolumes, volumeBars, partOfDay } from '../lib/dashboard.js'
 import { coach, coachAside, pokeReaction } from '../lib/coach.js'
+import { weekGoals } from '../lib/stats.js'
+import { MUSCLE_NAME } from '../lib/muscles.js'
 import { EXIDX } from '../lib/exercises.js'
 import { bwSheet, goalSheet, dayOverrideSheet, calendarSheet, startFlow, loadStarterPlan, bwDeltaColor, workoutDetailSheet } from '../sheets.jsx'
 import LineChart from '../components/LineChart.jsx'
@@ -23,6 +25,26 @@ const VERDICT_LABEL = {
 }
 
 const CHATTER_MS = 24000
+
+// This week's sets against the goal, the muscles furthest behind first. A bar is orange while it's
+// under half, fainter while it's close, solid once the goal is hit. It stays hidden until there's
+// training to measure (a new profile has no muscles to hold to a goal yet).
+function SetsWeek({ S }) {
+  const g = useMemo(() => weekGoals(S.workouts), [S.workouts])
+  if (!g.rows.length) return null
+  const shown = (g.behind.length ? g.behind : g.rows).slice(0, 4)
+  return <div className="card pk-sets">
+    <div className="pk-card-h"><b>{t('Sets this week')}</b><span>{g.met ? t('Goal hit') : t('Goal {0} per muscle', g.rows[0].goal)}</span></div>
+    <div className="pk-sets-list">{shown.map(r => {
+      const p = Math.min(1, r.done / r.goal)
+      return <div key={r.m} className={'sa-m ' + (r.short === 0 ? 'productive' : p < 0.5 ? 'under' : 'ok')}>
+        <div className="row between"><span>{t(MUSCLE_NAME[r.m])}</span><span className="mono">{fmtNum(Math.round(r.done * 10) / 10)}/{r.goal}</span></div>
+        <i><b style={{ width: p * 100 + '%' }} /></i>
+      </div>
+    })}</div>
+    <div className="sa-note">{g.met ? t('Every muscle you train hit its sets. Rest up.') : t('Effective sets: a set near failure counts as one, an easy one less.')}</div>
+  </div>
+}
 
 // The orb as coach, at the top of Home: the verdict from lib/verdict.js in what it says and in
 // how its whole body moves (and the glow behind it), a line naming what's behind it said into a
@@ -186,6 +208,8 @@ export default function Home() {
       <button className="pk-tile" onClick={() => calendarSheet()}><span>{t('Streak')}</span><b>{streak}<small> {t(streak === 1 ? 'week' : 'weeks')}</small></b></button>
       <div className="pk-tile"><span>{t('Sessions')}</span><b>{S.workouts.length}</b></div>
     </div>
+
+    <SetsWeek S={S} />
 
     {!S.routines.length && !A && (
       <div className="card">
