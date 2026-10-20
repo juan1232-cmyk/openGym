@@ -910,6 +910,14 @@ h4.sec{
 .dt-range option{color:#000}
 .dt-chart{margin:0 -4px 4px}
 .dt-chips{margin:10px calc(-1 * var(--pad)) 0;padding:2px var(--pad)}
+/* both charts follow a finger dragged along them; pan-y leaves vertical swipes to the page */
+.dt-chart .chart-i,.pk-spark-i{touch-action:pan-y;cursor:crosshair;-webkit-user-select:none;user-select:none}
+.dt-hint{margin-top:6px;font-size:12px;color:var(--label-3);text-align:center}
+.pk-at{font-weight:600;color:var(--label)}
+/* a phone-width column on a wide screen, not lines of steps 1000px long */
+@media (min-width:1000px){
+  .exs{max-width:640px;margin:-32px auto 0}
+}
 /* the records: an icon tile, what it is and when, the number */
 .dt-recs{background:var(--surface);border-radius:var(--r-card);padding:2px 14px}
 .dt-rec{display:flex;align-items:center;gap:12px;padding:12px 0;font-size:15px}

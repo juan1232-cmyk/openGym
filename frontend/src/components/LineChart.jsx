@@ -9,10 +9,12 @@ const W = 340   // viewBox width; the svg stretches to its container, height com
 //        more of it). Used for effort on the weight curve, where the two belong on one line:
 //        the same weight with less left in the tank is not the same session.
 //   note extra text for that point's tooltip.
-// opts: { h, unit, color, axes, goal, invert }
+// opts: { h, unit, color, axes, goal, invert, onScrub }
 //   invert flips the y axis, for a scale that counts down as it gets harder (RIR). Without it
 //   a curve of reps-in-reserve reads upside down, with the hardest sets at the floor.
-export default function LineChart({ points, h = 150, unit = '', color = 'var(--acc)', axes = true, goal = null, invert = false }) {
+//   onScrub(point | null) hands the point under the finger (or mouse) to the caller to print in
+//   its own headline, Hevy-style, instead of the small tooltip; null when it lets go.
+export default function LineChart({ points, h = 150, unit = '', color = 'var(--acc)', axes = true, goal = null, invert = false, onScrub = null }) {
   const svgRef = useRef(null)
   const wrapRef = useRef(null)
   const tipRef = useRef(null)
@@ -102,14 +104,18 @@ export default function LineChart({ points, h = 150, unit = '', color = 'var(--a
     const vx = (c.clientX - r.left) / w * W
     let best = hoverPts[0]
     hoverPts.forEach(p => { if (Math.abs(p.x - vx) < Math.abs(best.x - vx)) best = p })
+    if (onScrub && best !== hover) onScrub(points[hoverPts.indexOf(best)])
     setHover(best)
   }
+  // With onScrub the reading belongs to the caller's headline, so letting go snaps back to it;
+  // without, the tooltip stays up after a tap, as it always has.
+  const onEnd = () => { if (onScrub) { setHover(null); onScrub(null) } }
 
   return (
     <div className="chart-i" ref={wrapRef}
       onMouseMove={onMove} onMouseDown={onMove}
-      onMouseLeave={() => setHover(null)}
-      onTouchStart={onMove} onTouchMove={onMove}>
+      onMouseLeave={() => { setHover(null); onScrub && onScrub(null) }}
+      onTouchStart={onMove} onTouchMove={onMove} onTouchEnd={onEnd} onTouchCancel={onEnd}>
       <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ aspectRatio: `${W}/${H}` }}>
         <defs><linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor={color} stopOpacity=".28" />
@@ -131,7 +137,7 @@ export default function LineChart({ points, h = 150, unit = '', color = 'var(--a
           <circle cx={hover.x} cy={hover.y} r="5" fill={color} stroke="var(--bg)" strokeWidth="2" />
         </g>}
       </svg>
-      {hover && <div className="ctip" ref={tipRef}>
+      {hover && !onScrub && <div className="ctip" ref={tipRef}>
         {fmtDate(hover.iso, true)} · {fmtNum(hover.v)}{unit ? ' ' + unit : ''}{hover.note ? ' · ' + hover.note : ''}
       </div>}
     </div>

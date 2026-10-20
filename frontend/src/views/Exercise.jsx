@@ -67,6 +67,7 @@ function Trend({ ex }) {
   const st = useStore(s => s.S)
   const [key, setKey] = useState('')
   const [days, setDays] = useState(90)
+  const [scrub, setScrub] = useState(null)   // the session under the finger, else the latest
   const series = exerciseMetrics(st, ex.id)
   const e1 = e1rmSeries(st, ex.id)
   if (e1.length) series.onerm = e1.map(p => ({ t: p.t, d: p.d, y: p.y }))
@@ -75,17 +76,20 @@ function Trend({ ex }) {
   const m = chips.find(c => c.key === key) || chips[0]
   const since = days ? Date.now() - days * 864e5 : 0
   const pts = series[m.key].filter(p => p.t >= since)
-  const last = pts[pts.length - 1]
+  // matched by time: the series is rebuilt every render, so the scrubbed object is a stale copy
+  const held = scrub && pts.find(p => p.t === scrub.t)
+  const last = held || pts[pts.length - 1]
   return <>
     <div className="dt-head">
-      <div>{last ? <><b>{m.fmt(last.y, st.unit)}</b><span>{fmtDate(last.d)}</span></> : <span>{t('Nothing in this range')}</span>}</div>
-      <select className="dt-range" value={days} onChange={e => setDays(+e.target.value)} aria-label={t('Range')}>
+      <div>{last ? <><b>{m.fmt(last.y, st.unit)}</b><span>{fmtDate(last.d, !!held)}</span></> : <span>{t('Nothing in this range')}</span>}</div>
+      <select className="dt-range" value={days} onChange={e => { setDays(+e.target.value); setScrub(null) }} aria-label={t('Range')}>
         {RANGES.map(r => <option key={r.value} value={r.value}>{t(r.label)}</option>)}
       </select>
     </div>
-    {pts.length > 0 && <div className="dt-chart"><LineChart points={pts} h={160} unit={m.key === 'hold' ? 's' : ''} /></div>}
+    {pts.length > 0 && <div className="dt-chart"><LineChart points={pts} h={180} onScrub={setScrub} /></div>}
+    {pts.length > 1 && <div className="dt-hint">{t('Drag across the chart to see each session')}</div>}
     <div className="chips dt-chips">
-      {chips.map(c => <button key={c.key} className={'chip nocap' + (c.key === m.key ? ' on' : '')} onClick={() => setKey(c.key)}>{t(c.label)}</button>)}
+      {chips.map(c => <button key={c.key} className={'chip nocap' + (c.key === m.key ? ' on' : '')} onClick={() => { setKey(c.key); setScrub(null) }}>{t(c.label)}</button>)}
     </div>
   </>
 }
@@ -133,32 +137,54 @@ const PROGRESS_MOOD = { progressing: 'proud', holding: 'idle', slipping: 'disapp
 const LABEL = { e1rm: 'Estimated 1 rep max', weight: 'Heaviest set', reps: 'Most reps', sec: 'Longest hold', speed: 'Top speed' }
 const SHOWN = 10   // sessions on the chart — enough for a trend, few enough to read each step
 
-// The Peek design's chart: a bare line with the latest session as a green dot — no axes, no
-// gridlines, dates only at the two ends. The numbers live in the headline.
-function Spark({ points }) {
-  const W = 342, H = 110, P = 6
+// The Peek design's chart: a bare line with the session in the headline as a green dot — no
+// axes, no gridlines, dates only at the two ends. The numbers live in the headline, so on a
+// phone you drag a finger along the line and the headline follows it (onScrub gets the
+// session's index, null on letting go). touch-action pan-y keeps a vertical swipe scrolling.
+function Spark({ points, at, onScrub }) {
+  const W = 342, H = 120, P = 8
+  const ref = useRef(null)
   const ts = points.map(p => p.t), ys = points.map(p => p.y)
   const t0 = Math.min(...ts), t1 = Math.max(...ts), y0 = Math.min(...ys), y1 = Math.max(...ys)
   const xy = p => [
     t1 > t0 ? P + (p.t - t0) / (t1 - t0) * (W - 2 * P) : W / 2,
     y1 > y0 ? H - P - (p.y - y0) / (y1 - y0) * (H - 2 * P) : H / 2
   ]
-  const [lx, ly] = xy(points[points.length - 1])
-  return <svg viewBox={`0 0 ${W} ${H}`} className="pk-spark" aria-hidden="true">
-    {points.length > 1 && <polyline points={points.map(p => xy(p).join(',')).join(' ')} fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
-    <circle cx={lx} cy={ly} r="6" fill="var(--acc)" stroke="var(--surface)" strokeWidth="2" />
-  </svg>
+  const xs = points.map(p => xy(p)[0])
+  const move = e => {
+    const c = e.touches ? e.touches[0] : e
+    if (!c || c.clientX === undefined) return
+    const r = ref.current.getBoundingClientRect()
+    const vx = (c.clientX - r.left) / (r.width || W) * W
+    let i = 0
+    xs.forEach((x, k) => { if (Math.abs(x - vx) < Math.abs(xs[i] - vx)) i = k })
+    if (i !== at) onScrub(i)
+  }
+  const end = () => onScrub(null)
+  const cur = at == null ? points.length - 1 : at
+  const [lx, ly] = xy(points[cur])
+  return <div className="pk-spark-i" onMouseMove={move} onMouseDown={move} onMouseLeave={end}
+    onTouchStart={move} onTouchMove={move} onTouchEnd={end} onTouchCancel={end}>
+    <svg ref={ref} viewBox={`0 0 ${W} ${H}`} className="pk-spark" aria-hidden="true">
+      {at != null && <line x1={lx} x2={lx} y1="0" y2={H} stroke="var(--label-3)" strokeWidth="1" strokeDasharray="3 3" />}
+      {points.length > 1 && <polyline points={points.map(p => xy(p).join(',')).join(' ')} fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
+      {points.map((p, k) => k === cur ? null : <circle key={k} cx={xs[k]} cy={xy(p)[1]} r="2.6" fill="var(--ink)" />)}
+      <circle cx={lx} cy={ly} r="7" fill="var(--acc)" stroke="var(--surface)" strokeWidth="2" />
+    </svg>
+  </div>
 }
 
 // The headline number (estimated 1RM where the log supports one), how far it moved over the
 // last ten sessions, the line, and the orb's read of the lift with what to try next time.
 function ProgressCard({ ex }) {
   const S = useStore(s => s.S)
+  const [at, setAt] = useState(null)   // the session under the finger, else the latest
   const id = ex.id, unit = S.unit
   const { kind, points, top, rows } = progressSeries(S, id)
   const shown = points.slice(-SHOWN)
-  const cur = shown[shown.length - 1]
-  if (!cur) return null
+  const latest = shown[shown.length - 1]
+  if (!latest) return null
+  const cur = at != null && shown[at] ? shown[at] : latest
   const first = shown[0]
   const fmtY = y => kind === 'sec' ? fmtSec(y) : kind === 'reps' ? t('{0} reps', fmtNum(y)) : kind === 'speed' ? fmtNum(y) + ' km/h' : fmtNum(y) + ' ' + unit
   const delta = shown.length > 1 ? Math.round((cur.y - first.y) * 10) / 10 : null
@@ -187,13 +213,14 @@ function ProgressCard({ ex }) {
 
   return <>
     <div className="card pk-pcard">
-      <span className="lbl">{t(LABEL[kind])}</span>
+      <span className="lbl">{t(LABEL[kind])}{cur !== latest && <> · <b className="pk-at">{fmtDate(cur.d, true)}</b></>}</span>
       <div className="big">
         <b>{fmtY(cur.y)}</b>
         {delta != null && delta !== 0 && <span className={'pill' + (delta > 0 ? ' up' : '')}>{delta > 0 ? '+' : '−'}{fmtY(Math.abs(delta))}</span>}
       </div>
-      <Spark points={shown} />
-      <div className="axis"><span>{fmtDate(first.d)}</span><span>{cur.d === todayISO() ? t('Today') : fmtDate(cur.d)}</span></div>
+      <Spark points={shown} at={at} onScrub={setAt} />
+      <div className="axis"><span>{fmtDate(first.d)}</span><span>{latest.d === todayISO() ? t('Today') : fmtDate(latest.d)}</span></div>
+      {shown.length > 1 && <div className="dt-hint">{t('Drag across the line to see each session')}</div>}
     </div>
     {tip && <div className="pk-coach"><Orb size={44} inverted mood={PROGRESS_MOOD[verdict]} verdict={verdict} poke="joyful-wide" /><p>{tip}</p></div>}
   </>
