@@ -1751,8 +1751,8 @@ button.sa-tile:active{transform:scale(.985)}
 .sa-pb .ic.down{background:color-mix(in srgb,var(--red) 12%,transparent);color:var(--red)}
 .sa-pb .chev{color:var(--label-3);font-size:14px;flex:none}
 .sa-pb .ic.flat{background:color-mix(in srgb,var(--yellow) 16%,transparent);color:var(--orange)}
-/* Lifts to watch: Peek's take on a flat lift, under its row — a small orb and a bubble of
-   lines to tap, each opening a yes / not now in place */
+/* Lifts to watch: Peek's take on a lift, under its row — a small orb and a bubble of lines,
+   each with the button that does it */
 .sa-watch + .sa-watch{border-top:1px solid var(--sep)}
 .sa-peek{display:flex;gap:8px;align-items:flex-start;margin:-4px 0 14px}
 .sa-peek .orb-wrap{flex:none;margin-top:2px;width:40px;display:flex;justify-content:center}
@@ -1763,9 +1763,7 @@ button.sa-tile:active{transform:scale(.985)}
 button.sa-sug:active{background:var(--surface-3)}
 .sa-sug .icn{flex:none;color:var(--label-3);font-size:12px}
 .sa-sug.off{color:var(--label-2)}
-.sa-sug.ask{flex-direction:column;align-items:stretch;gap:6px;background:var(--surface);box-shadow:0 0 0 1px var(--sep)}
-.sa-sug.ask .q{font-weight:600}
-.sa-sug.ask .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.sa-sug .btn.sm{flex:none;padding:6px 12px;font-size:13.5px}
 .sa-sug.done{color:var(--label-2)}
 .sa-sug.done .icn{color:var(--acc);font-size:14px}
 .sa-sug .undo{flex:none;padding:2px 4px;color:var(--acc);font-size:13px;font-weight:500}

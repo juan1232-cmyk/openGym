@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { fixAction, applyFix, undoFix, fixDone, MAX_SETS } from './liftfix.js'
+import { fixAction, applyFix, undoFix, fixDone, swapPending, sessionPlan, spendSwaps, MAX_SETS } from './liftfix.js'
 import { liftsToWatch } from './stats.js'
 import { nextPrescription } from './progression.js'
 import { SCENARIOS } from '../device/scenarios.js'
@@ -66,15 +66,41 @@ describe('applyFix / undoFix', () => {
     expect(cfgOf(S).sets).toBe(6)
   })
 
-  it('swaps the exercise in place, keeping its sets and reps, and swaps it back on undo', () => {
+  it('swaps for the next session only: the routine keeps the lift, that session does the alternative', () => {
     const S = stalled()
     const alt = fix(S, 'swap').alt
     const at = S.routines[0].ex.findIndex(c => c.id === ROW)
     applyFix(S, ROW, fix(S, 'swap'), NOW)
-    expect(S.routines[0].ex[at]).toEqual({ id: alt, sets: 3, reps: 5 })
+    expect(S.routines[0].ex[at]).toEqual({ id: ROW, sets: 3, reps: 5, swap: { to: alt } })
+    expect(sessionPlan(S.routines[0])[at]).toEqual({ id: alt, sets: 3, reps: 5 })
+    expect(swapPending(S, ROW)).toBe(true)
+    // that session done: the marker is spent, the one after has the lift back
+    spendSwaps(S, { routineId: 'demo', entries: [{ id: alt, sets: [{ w: 50, r: 8, done: true }] }] })
+    expect(swapPending(S, ROW)).toBe(false)
+    expect(sessionPlan(S.routines[0])[at]).toEqual({ id: ROW, sets: 3, reps: 5 })
     expect(fixDone(S, ROW, 'swap')).toBeTruthy()
+  })
+
+  it("keeps a swap waiting when its session didn't do the alternative", () => {
+    const S = stalled()
+    applyFix(S, ROW, fix(S, 'swap'), NOW)
+    spendSwaps(S, { routineId: 'demo', entries: [{ id: fix(S, 'swap').alt, sets: [{ w: 50, r: 8, done: false }] }] })
+    expect(swapPending(S, ROW)).toBe(true)
+  })
+
+  it('takes a waiting swap back on undo', () => {
+    const S = stalled()
+    applyFix(S, ROW, fix(S, 'swap'), NOW)
     undoFix(S, ROW, 'swap')
-    expect(S.routines[0].ex[at]).toEqual({ id: ROW, sets: 3, reps: 5 })
+    expect(cfgOf(S)).toEqual({ id: ROW, sets: 3, reps: 5 })
+    expect(fixDone(S, ROW, 'swap')).toBeNull()
+  })
+
+  it("doesn't carry a deload week over to the stand-in", () => {
+    const S = stalled()
+    applyFix(S, ROW, fix(S, 'deload'), NOW)
+    applyFix(S, ROW, fix(S, 'swap'), NOW)
+    expect(sessionPlan(S.routines[0]).find(c => c.id === fix(S, 'swap').alt).deload).toBeUndefined()
   })
 
   it('prescribes the deload weight for a week, then lets the policy take over again', () => {

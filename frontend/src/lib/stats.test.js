@@ -187,10 +187,17 @@ describe('liftsToWatch', () => {
     expect(x.fixes[2].weight).toBeLessThan(100)
   })
 
-  it('shows a lift that is both stuck and flat once, as stuck, with the fixes', () => {
+  it('shows a lift that is both stuck and flat once, as stuck — deload first, no extra sets', () => {
     const w = liftsToWatch(sessions([100, 100, 100, 100], { id: LIFT, sets: 3, reps: 8 }), NOW)
     expect(w.map(x => x.kind)).toEqual(['stuck'])
-    expect(w[0].fixes.map(f => f.kind)).toEqual(['sets', 'swap', 'deload'])
+    expect(w[0].flat).toBe(3)
+    expect(w[0].fixes.map(f => f.kind)).toEqual(['deload', 'swap'])
+  })
+
+  it('leads with a deload for every lift that is stuck or sliding, more sets only for flat ones', () => {
+    const order = S => liftsToWatch(S, NOW).map(x => [x.kind, x.fixes.map(f => f.kind).join(' ')])
+    expect(order(SCENARIOS.stalled.state(NOW))).toEqual([['stuck', 'deload swap'], ['stuck', 'deload swap'], ['flat', 'sets swap deload']])
+    expect(order(SCENARIOS.slipping.state(NOW))).toEqual([['down', 'deload swap'], ['down', 'deload swap'], ['flat', 'sets swap deload']])
   })
 
   it('leaves out a flat lift that hasn\'t been trained in a month', () => {

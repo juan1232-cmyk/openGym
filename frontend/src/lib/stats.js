@@ -143,28 +143,33 @@ export function sessionsSinceBest(S, exId) {
   return since
 }
 
-// What to do about a flat lift, in the order to try it: more work on it first (the cheapest
-// change, and often all it needed), then a different movement for the same muscle, and only
-// then a lighter week — a deload costs a week of training, so it is the last thing to spend.
-function flatFixes(S, id, cfg, planned) {
+// What to do about a lift on the list, in the order to try it — and the order depends on what
+// is wrong. Flat (hitting its reps, just not getting stronger): the weight is fine and the
+// stimulus isn't, so more work on it first (the cheapest change, and often all it needed),
+// then a different movement for a session, and only then a lighter week — a deload costs a
+// week of training, so it is the last thing to spend there. Stuck (missing the target session
+// after session) or sliding (the estimate falling): the weight is beating you, or tiredness
+// is. More sets of a weight you can't finish only dig the hole deeper, so a deload week leads
+// and adding sets isn't offered at all; the swap is the change of scenery after it.
+function fixesFor(S, id, cfg, planned, kind) {
   const all = allExercises(S)
   const ex = all.find(e => e.id === id)
   const alt = ex ? similarTo(ex, all, { exclude: [...planned], gymEq: S.gymEq, usage: usageOf(S) })[0] : null
   const last = [...(S.workouts || [])].reverse().map(w => w.entries.find(e => e.id === id)).find(e => e && e.sets.some(s => s.done))
   const w = Math.max(0, ...((last && last.sets) || []).filter(s => s.done).map(s => s.w || 0))
   const inc = cfg && cfg.inc > 0 ? cfg.inc : defaultIncrement(id, S.unit || 'kg')
-  return [
-    { kind: 'sets', add: [1, 2] },
-    { kind: 'swap', alt: alt ? alt.id : null },
-    { kind: 'deload', factor: DELOAD_FACTOR, weight: w > 0 ? deloadTo(w, inc) : null }
-  ]
+  const sets = { kind: 'sets', add: [1, 2] }
+  const swap = { kind: 'swap', alt: alt ? alt.id : null }
+  const deload = { kind: 'deload', factor: DELOAD_FACTOR, weight: w > 0 ? deloadTo(w, inc) : null }
+  return kind === 'flat' ? [sets, swap, deload] : [deload, swap]
 }
 
 // Lifts worth a look right now: planned lifts stuck on their target (the same stall count the
 // orb's "Stalled" verdict uses), then lifts whose estimated 1RM is trending down, then lifts
 // that have gone FLAT_SESSIONS without a new e1RM best. Stuck comes first because it already
 // says what's wrong; a falling trend only says that something is. One entry per lift: a flat
-// lift that is also stuck or falling stays under that heading and carries the fixes with it.
+// lift that is also stuck or falling stays under that heading (with `flat` set). Every entry
+// carries its fixes (fixesFor), ordered for the heading it's under.
 // Not range-bound on purpose — "is this lift stuck" is a question about today.
 export function liftsToWatch(S, now = new Date()) {
   const planned = new Map()
@@ -189,11 +194,11 @@ export function liftsToWatch(S, now = new Date()) {
     // the same "still trained" window the orb uses — a lift dropped a month ago isn't flat
     const pts = e1rmSeries(S, id)
     if ((today - at(pts[pts.length - 1].d)) / DAY > RECENT_DAYS) return
-    const fixes = flatFixes(S, id, planned.get(id), planned.keys())
     const x = byId.get(id)
-    if (x) Object.assign(x, { flat: since, fixes })
-    else out.push({ id, kind: 'flat', n: since, fixes })
+    if (x) x.flat = since
+    else out.push({ id, kind: 'flat', n: since })
   })
+  out.forEach(x => { x.fixes = fixesFor(S, x.id, planned.get(x.id), planned.keys(), x.kind) })
   const RANK = { stuck: 0, down: 1, flat: 2 }
   return out.sort((a, b) => (a.kind === b.kind ? (a.kind === 'down' ? a.rate - b.rate : b.n - a.n) : RANK[a.kind] - RANK[b.kind]))
 }

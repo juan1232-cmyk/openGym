@@ -1,4 +1,5 @@
-// One-tap fixes for a flat lift (Stats → Lifts to watch). stats.js flatFixes says what to try;
+// One-tap fixes for a lift that's stuck, sliding or flat (Stats → Lifts to watch). stats.js
+// liftFixes says what to try;
 // this says what accepting each one changes in the plan, makes the change, and can take it
 // back. Pure like the rest of lib/: every function either reads S or mutates the draft the
 // store's update() hands it, so the debounced sync sees every change.
@@ -32,8 +33,12 @@ const cfgsIn = (S, rid, id) => ((S.routines || []).find(r => r.id === rid)?.ex |
  * for long enough to adapt to it, and a set that silently vanishes next Monday would undo the
  * fix before it had a chance to work. It's one set per session it's planned in — the low end of
  * the 1–2 the advice gives, since the cheapest change goes first and Peek can suggest another.
- * Undo puts it back. The swap is the same: lasting until undone, since "for a block" means
- * weeks, not a session.
+ * Undo puts it back.
+ *
+ * The swap is the opposite: one session only. It is a change of scenery for a lift that's
+ * gone stale, not a new plan — so the routine keeps the lift and carries a `swap` marker on
+ * its entry; the next workout of that routine does the alternative instead (sessionPlan), and
+ * finishing it spends the marker (spendSwaps), so the session after has the lift back.
  */
 export function fixAction(S, id, fix, now = new Date()) {
   const rs = homes(S, id)
@@ -46,7 +51,12 @@ export function fixAction(S, id, fix, now = new Date()) {
     }).filter(Boolean)
     return routines.length ? { kind: 'sets', routines } : null
   }
-  if (fix.kind === 'swap') return fix.alt && fix.alt !== id ? { kind: 'swap', from: id, to: fix.alt, routines: rs.map(where) } : null
+  if (fix.kind === 'swap') {
+    if (!fix.alt || fix.alt === id) return null
+    // not in a routine that already does the alternative — that session would have it twice
+    const routines = rs.filter(r => !r.ex.some(c => c.id === fix.alt)).map(where)
+    return routines.length ? { kind: 'swap', from: id, to: fix.alt, routines } : null
+  }
   if (fix.kind === 'deload') {
     if (!(fix.weight > 0)) return null
     return { kind: 'deload', w: fix.weight, until: isoOf(new Date(now.getTime() + (DELOAD_DAYS - 1) * DAY)), routines: rs.map(where) }
@@ -60,7 +70,7 @@ export function applyFix(S, id, fix, now = new Date()) {
   if (!act) return null
   act.routines.forEach(({ rid }) => cfgsIn(S, rid, id).forEach(c => {
     if (act.kind === 'sets') c.sets = setsOf(c) + 1
-    else if (act.kind === 'swap') c.id = act.to
+    else if (act.kind === 'swap') c.swap = { to: act.to }
     else c.deload = { w: act.w, until: act.until }
   }))
   // markers from an earlier stall of this lift are spent — drop them with this one
@@ -71,14 +81,15 @@ export function applyFix(S, id, fix, now = new Date()) {
 
 /**
  * Take an accepted fix back, on a draft of S. Only what the fix itself changed: a set count
- * edited by hand since then, or an exercise swapped again, is the lifter's own call and stays.
+ * edited by hand since then is the lifter's own call and stays. A swap that has already been
+ * done can't be taken back — the session happened — so only the marker goes.
  */
 export function undoFix(S, id, kind) {
   const m = ((S.liftFixes || {})[id] || {})[kind]
   if (!m) return false
   m.routines.forEach(({ rid, to }) => {
     if (kind === 'sets') cfgsIn(S, rid, id).forEach(c => { if (setsOf(c) === to) c.sets = to - 1 })
-    else if (kind === 'swap') cfgsIn(S, rid, m.to).forEach(c => { c.id = m.from })
+    else if (kind === 'swap') cfgsIn(S, rid, id).forEach(c => { delete c.swap })
     else cfgsIn(S, rid, id).forEach(c => { delete c.deload })
   })
   const rest = { ...S.liftFixes[id] }
@@ -100,4 +111,32 @@ function current(S, id, m) {
 export function fixDone(S, id, kind) {
   const m = ((S.liftFixes || {})[id] || {})[kind]
   return m && current(S, id, m) ? m : null
+}
+
+/** Whether an accepted swap is still waiting for its session (else it has been done). */
+export const swapPending = (S, id) => (S.routines || []).some(r => (r.ex || []).some(c => c.id === id && c.swap))
+
+/**
+ * The exercise list the next workout of a routine is built from: the routine's own, with any
+ * one-session swap put in place. The stand-in keeps the entry's sets, reps and progression
+ * settings, but not a deload week — that weight was worked out for the lift it replaces.
+ */
+export function sessionPlan(routine) {
+  return ((routine && routine.ex) || []).map(c => {
+    if (!c.swap) return c
+    const { swap, deload, ...rest } = c
+    return { ...rest, id: swap.to }
+  })
+}
+
+/**
+ * After a workout is finished, on a draft of S: the swaps it did are spent. Only ones it
+ * actually logged a set of — a swapped-in exercise removed mid-session hasn't had its go yet,
+ * so the swap waits for the next one.
+ */
+export function spendSwaps(S, w) {
+  const r = (S.routines || []).find(x => x.id === w.routineId)
+  if (!r) return
+  const did = new Set((w.entries || []).filter(e => (e.sets || []).some(s => s.done)).map(e => e.id))
+  r.ex.forEach(c => { if (c.swap && did.has(c.swap.to)) delete c.swap })
 }

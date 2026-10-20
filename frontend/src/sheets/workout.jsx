@@ -19,6 +19,7 @@ import { loadOfWorkouts } from '../lib/muscles.js'
 import { parseImport, mergeImport } from '../lib/import-csv.js'
 import { is1RMRecord } from '../lib/onerm.js'
 import { nextPrescription, applyPrescription } from '../lib/progression.js'
+import { sessionPlan, spendSwaps } from '../lib/liftfix.js'
 import { sessionVerdict } from '../lib/verdict.js'
 import { S, update, ui, toast, snd, confirmSheet } from './common.jsx'
 import { dayOverrideSheet } from './plan.jsx'
@@ -200,8 +201,9 @@ export function beginWorkout(routineId) {
   const r = routineId ? st.routines.find(x => x.id === routineId) : null
   // The prescription is applied as the session is built, so you walk up to the bar with the
   // right weight already on the screen instead of being told about it afterwards. `plan` is
-  // kept on the entry purely so the workout can explain the number it chose.
-  const entries = (r ? r.ex : []).map(cfg => {
+  // kept on the entry purely so the workout can explain the number it chose. A one-session
+  // swap Peek suggested (lib/liftfix.js) is put in place here.
+  const entries = sessionPlan(r).map(cfg => {
     const plan = nextPrescription(st, cfg, r)
     return { id: cfg.id, sg: cfg.sg, target: { ...cfg }, plan, sets: applyPrescription(buildSets(st, cfg), plan) }
   })
@@ -331,6 +333,7 @@ function doFinishWorkout() {
       if (mx > 0) { const cur = s.exWeights[e.id]; if (!cur || mx > cur.w) s.exWeights[e.id] = { w: mx, d: w.d } }
     })
     s.workouts.push(w)
+    spendSwaps(s, w)
     s.active = null
   })
   useUI.getState().stopRest()

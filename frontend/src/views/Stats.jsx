@@ -7,8 +7,8 @@ import { EXIDX } from '../lib/exercises.js'
 import { lastBW, streakWeeks } from '../lib/history.js'
 import { fmtNum, fmtDate, fmtDur, fmtVol, todayISO, isoOf } from '../lib/format.js'
 import { t, dateLocale } from '../lib/i18n.js'
-import { fixAction, applyFix, undoFix, fixDone } from '../lib/liftfix.js'
-import { bwSheet, calendarSheet, swapSheet } from '../sheets.jsx'
+import { fixAction, applyFix, undoFix, fixDone, swapPending } from '../lib/liftfix.js'
+import { bwSheet, calendarSheet } from '../sheets.jsx'
 import { loadOfWorkouts, rankOf, MUSCLE_NAME } from '../lib/muscles.js'
 import {
   rangeBounds, prevBounds, inRange, volumeOf, minutesOf, adherence, buckets, bucketBy,
@@ -106,50 +106,53 @@ function MuscleBalance({ S, ws, b }) {
   </div>
 }
 
-// What Peek says about each fix for a flat lift, in the order to try them — the order is the
-// advice, so the lines read as one train of thought ("you should… or… still stuck?") and a
-// deload comes last: it is the last resort, not one option among three. `act` is what
-// accepting it would change (lib/liftfix.js), which lets the line name the actual numbers.
+// What Peek says about each fix, in the order to try them (stats.js fixesFor) — the order is
+// the advice, so the lines read as one train of thought: the first says "you should", the rest
+// "or…", and a deload that leads says why (missing the target over and over, or sliding),
+// where one at the end is the last resort. `act` is what accepting it would change
+// (lib/liftfix.js), which lets the line name the actual numbers.
 const pctOff = f => Math.round((1 - f.factor) * 100)
 const where = act => (act.routines.length === 1 ? act.routines[0].name : t('{0} routines', act.routines.length))
 const shortDate = iso => new Date(iso + 'T12:00:00').toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short' })
-function fixSay(f, act, S) {
+function fixSay(f, act, S, x, first) {
   if (f.kind === 'sets') return act && act.routines.length === 1
     ? t('You should add a set: {0} → {1} in {2}.', act.routines[0].from, act.routines[0].to, act.routines[0].name)
     : act ? t('You should add a set to it, everywhere it’s planned.') : t('You should add {0}–{1} sets to it this week.', f.add[0], f.add[1])
-  if (f.kind === 'swap') return f.alt ? t('Or switch to {0} for a block.', nameOf(f.alt)) : t('Or switch to a similar exercise for a block.')
-  return f.weight != null
-    ? t('Still stuck? Take a deload week at {0} ({1} % lighter).', fmtNum(f.weight) + ' ' + S.unit, pctOff(f))
-    : t('Still stuck? Take a deload week, about {0} % lighter.', pctOff(f))
+  if (f.kind === 'swap') return !f.alt ? t('Or try a similar exercise for a session.')
+    : first ? t('Swap in {0} for your next session.', nameOf(f.alt)) : t('Or swap in {0} for your next session.', nameOf(f.alt))
+  const why = !first ? t('Still stuck?')
+    : x.kind === 'stuck' ? t('{0} misses in a row says the weight’s too heavy right now.', x.n)
+      : t('It’s sliding, and that’s usually tiredness, not lost strength.')
+  return why + ' ' + (f.weight != null
+    ? t('Take a deload week at {0} ({1} % lighter).', fmtNum(f.weight) + ' ' + S.unit, pctOff(f))
+    : t('Take a deload week, about {0} % lighter.', pctOff(f)))
 }
-function fixAsk(act, S) {
-  if (act.kind === 'sets') return t('One more set every session, from now on?')
-  if (act.kind === 'swap') return t('Swap it for {0} in {1}?', nameOf(act.to), where(act))
-  return t('Plan {0} for it until {1}?', fmtNum(act.w) + ' ' + S.unit, shortDate(act.until))
-}
-function fixDoneLine(m, S) {
+const FIX_BUTTON = { sets: 'Add set', swap: 'Swap', deload: 'Deload' }
+function fixDoneLine(m, S, pending) {
   if (m.kind === 'sets') return m.routines.length === 1 ? t('Added a set: {0} → {1}.', m.routines[0].from, m.routines[0].to) : t('Added a set in {0}.', where(m))
-  if (m.kind === 'swap') return t('Switched to {0}.', nameOf(m.to))
+  if (m.kind === 'swap') return pending ? t('Next session: {0} instead.', nameOf(m.to)) : t('Swapped in {0} for a session.', nameOf(m.to))
   return t('Deload week: {0} until {1}.', fmtNum(m.w) + ' ' + S.unit, shortDate(m.until))
 }
 function fixToast(act, id, S) {
   if (act.kind === 'sets') return t('One more set of {0} from now on', nameOf(id))
-  if (act.kind === 'swap') return t('Swapped in {0}', nameOf(act.to))
+  if (act.kind === 'swap') return t('Next session: {0} instead', nameOf(act.to))
   return t('Deload week set: {0}', fmtNum(act.w) + ' ' + S.unit)
 }
+// Whether an accepted fix can still be taken back: a swap only until its session happens, a
+// deload only while its week lasts. Added sets always can.
+const undoable = (S, id, m) => (m.kind === 'swap' ? swapPending(S, id) : m.kind === 'deload' ? m.until >= todayISO() : true)
 
-// Peek's take on one flat lift: each fix as a line you can tap, tap asks once, yes makes the
-// change and the line turns into what was done, with an undo. A fix with nothing to change
-// (a lift you only do freestyle, a bodyweight lift's deload) is still said, just not tappable.
-// Once the swap is done the other fixes are moot — they'd be about a lift no longer planned.
+// Peek's take on one lift: each fix as a line with its own button — one tap does it, no
+// "are you sure", since every one of them can be undone right there. Then the line turns into
+// what was done. A fix with nothing to change (a lift you only do freestyle, a bodyweight
+// lift's deload) is still said, just without a button.
 // Only one lift's take is open at a time (`open`); the rest are a single line until tapped,
 // so three stalled lifts read as one coach talking, not a wall of advice.
 function PeekFixes({ S, x, open, onOpen }) {
   const orb = useRef(null)
-  const [ask, setAsk] = useState(null)
   const update = useStore(s => s.update)
   if (!open) {
-    const left = fixDone(S, x.id, 'swap') ? 0 : x.fixes.filter(f => !fixDone(S, x.id, f.kind)).length
+    const left = x.fixes.filter(f => !fixDone(S, x.id, f.kind)).length
     return <div className="sa-peek">
       <Orb size={30} mood="curious" poke="joyful-wide" />
       <div className="sa-say"><button className="sa-sug" onClick={onOpen}>
@@ -157,42 +160,28 @@ function PeekFixes({ S, x, open, onOpen }) {
       </button></div>
     </div>
   }
-  const accept = (f, alt) => {
-    const fix = alt ? { ...f, alt } : f
+  const accept = f => {
     let act = null
-    update(s => { act = applyFix(s, x.id, fix) })
-    setAsk(null)
+    update(s => { act = applyFix(s, x.id, f) })
     if (!act) return
     orb.current?.react('joyful-wide', 900)
     orb.current?.bump('nod')
     toast(fixToast(act, x.id, S))
   }
   const undo = kind => { update(s => { undoFix(s, x.id, kind) }); toast(t('Undone')) }
-  const swapped = fixDone(S, x.id, 'swap')
-  const fixes = swapped ? x.fixes.filter(f => f.kind === 'swap') : x.fixes
   return <div className="sa-peek">
     <Orb ref={orb} size={30} mood="curious" poke="joyful-wide" />
-    <div className="sa-say">{fixes.map(f => {
+    <div className="sa-say">{x.fixes.map((f, i) => {
       const done = fixDone(S, x.id, f.kind)
       if (done) return <div key={f.kind} className="sa-sug done">
-        <Icon name="check" /><span>{fixDoneLine(done, S)}</span>
-        {(done.kind !== 'deload' || done.until >= todayISO()) && <button className="undo" onClick={() => undo(f.kind)}>{t('Undo')}</button>}
+        <Icon name="check" /><span>{fixDoneLine(done, S, swapPending(S, x.id))}</span>
+        {undoable(S, x.id, done) && <button className="undo" onClick={() => undo(f.kind)}>{t('Undo')}</button>}
       </div>
       const act = fixAction(S, x.id, f)
-      if (!act) return <p key={f.kind} className="sa-sug off">{fixSay(f, null, S)}</p>
-      if (ask === f.kind) return <div key={f.kind} className="sa-sug ask">
-        <p>{fixSay(f, act, S)}</p>
-        <p className="q">{fixAsk(act, S)}</p>
-        <div className="acts">
-          <Button size="sm" variant="primary" onClick={() => accept(f)}>{t('Yeah')}</Button>
-          {f.kind === 'swap' && <Button size="sm" variant="soft"
-            onClick={() => swapSheet(EXIDX[x.id] || { id: x.id }, (S.routines || []).flatMap(r => r.ex.map(c => c.id)), alt => accept(f, alt.id))}>{t('Pick another')}</Button>}
-          <Button size="sm" variant="ghost" className="dim" onClick={() => setAsk(null)}>{t('Not now')}</Button>
-        </div>
+      return <div key={f.kind} className={'sa-sug' + (act ? '' : ' off')}>
+        <span>{fixSay(f, act, S, x, i === 0)}</span>
+        {act && <Button size="sm" variant="tinted" onClick={() => accept(f)}>{t(FIX_BUTTON[f.kind])}</Button>}
       </div>
-      return <button key={f.kind} className="sa-sug" onClick={() => setAsk(f.kind)}>
-        <span>{fixSay(f, act, S)}</span><Icon name="chevronRight" />
-      </button>
     })}</div>
   </div>
 }
@@ -204,8 +193,8 @@ function LiftsToWatch({ S }) {
   const list = liftsToWatch(S).slice(0, 4)
   const [pick, setPick] = useState(null)
   // the one you tapped open, else the first lift Peek still has something to suggest for
-  const pending = x => x.fixes && !fixDone(S, x.id, 'swap') && x.fixes.some(f => !fixDone(S, x.id, f.kind))
-  const open = (list.find(x => x.id === pick && x.fixes) || list.find(pending) || list.find(x => x.fixes) || {}).id
+  const pending = x => x.fixes.some(f => !fixDone(S, x.id, f.kind))
+  const open = (list.find(x => x.id === pick) || list.find(pending) || list[0] || {}).id
   return <div className="card sa-card">
     <div className="pk-card-h"><b>{t('Lifts to watch')}</b><span>{t('Right now')}</span></div>
     {list.length ? list.map(x => <div key={x.id} className="sa-watch">
@@ -219,7 +208,7 @@ function LiftsToWatch({ S }) {
         </span>
         <Icon name="chevronRight" className="chev" />
       </button>
-      {x.fixes && <PeekFixes S={S} x={x} open={x.id === open} onOpen={() => setPick(x.id)} />}
+      {x.fixes.length > 0 && <PeekFixes S={S} x={x} open={x.id === open} onOpen={() => setPick(x.id)} />}
     </div>) : <div className="muted small" style={{ marginTop: 10 }}>{t('Nothing stuck. Every lift you train is holding or moving up.')}</div>}
   </div>
 }
