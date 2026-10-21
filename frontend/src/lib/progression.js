@@ -19,6 +19,7 @@
 import { modeOf, repStep } from './history.js'
 import { EXIDX } from './exercises.js'
 import { rirOf } from './effort.js'
+import { isoOf } from './format.js'
 
 export const POLICIES = ['off', 'linear', 'greyskull', 'double', 'time']
 
@@ -165,11 +166,19 @@ export function stallCount(sessions) {
  * always answer "why this number?". A field the policy has no opinion on comes back
  * undefined and the caller keeps whatever the plan said.
  */
-export function nextPrescription(S, cfg, routine) {
+export function nextPrescription(S, cfg, routine, now = new Date()) {
   const mode = modeOf(cfg)
   const policy = policyFor(cfg, routine, mode)
   const unit = S.unit || 'kg'
   const inc = cfg.inc > 0 ? cfg.inc : (mode === 'time' ? DEFAULT_SEC_INCREMENT : defaultIncrement(cfg.id, unit))
+  // A deload week the lifter chose (Stats → Lifts to watch, lib/liftfix.js) is the one thing
+  // stored rather than derived: nothing in the log says "go lighter this week". It wins over
+  // every policy, `off` included — they asked for it — and only until the week is up. After
+  // that the lighter sessions are just history, and the policy builds back up from them the
+  // way it would after a deload of its own.
+  if (cfg.deload && mode === 'reps' && cfg.deload.w > 0 && isoOf(now) <= cfg.deload.until) {
+    return { policy, kind: 'deload', weight: cfg.deload.w, why: ['The deload week you picked — {0} {1}, then build back up from there.', cfg.deload.w, unit] }
+  }
   if (policy === 'off') return { policy, kind: 'off' }
 
   const sessions = sessionsFor(S, cfg.id, cfg).filter(s => s.mode === mode)

@@ -177,20 +177,28 @@ describe('liftsToWatch', () => {
     expect(liftsToWatch(sessions([100, 100, 100, 102.5, 100, 100, 100]), NOW)[0].n).toBe(3)
   })
 
-  it('lists the fixes in order: more sets, a similar exercise, then a deload week', () => {
+  it("lists a flat lift's fixes in order: more sets, smaller steps, a variant, then a deload week", () => {
     const [x] = liftsToWatch(sessions([100, 100, 100, 100]), NOW)
-    expect(x.fixes.map(f => f.kind)).toEqual(['sets', 'swap', 'deload'])
+    expect(x.fixes.map(f => f.kind)).toEqual(['sets', 'steps', 'swap', 'deload'])
     expect(x.fixes[0].add).toEqual([1, 2])
-    expect(x.fixes[1].alt).toBeTruthy()
-    expect(x.fixes[1].alt).not.toBe(LIFT)
-    expect(x.fixes[2].factor).toBe(0.9)
-    expect(x.fixes[2].weight).toBeLessThan(100)
+    expect(x.fixes[1].w).toBe(100)
+    expect(x.fixes[2].alts.length).toBeGreaterThan(1)
+    expect(x.fixes[2].alts).not.toContain(LIFT)
+    expect(x.fixes[3]).toMatchObject({ factor: 0.9, from: 100 })
+    expect(x.fixes[3].weight).toBeLessThan(100)
   })
 
-  it('shows a lift that is both stuck and flat once, as stuck, with the fixes', () => {
+  it('shows a lift that is both stuck and flat once, as stuck — deload first, no extra sets', () => {
     const w = liftsToWatch(sessions([100, 100, 100, 100], { id: LIFT, sets: 3, reps: 8 }), NOW)
     expect(w.map(x => x.kind)).toEqual(['stuck'])
-    expect(w[0].fixes.map(f => f.kind)).toEqual(['sets', 'swap', 'deload'])
+    expect(w[0].flat).toBe(3)
+    expect(w[0].fixes.map(f => f.kind)).toEqual(['deload', 'steps', 'double', 'swap'])
+  })
+
+  it('leads with a deload for every lift that is stuck or sliding, more sets only for flat ones', () => {
+    const order = S => liftsToWatch(S, NOW).map(x => [x.kind, x.fixes.map(f => f.kind).join(' ')])
+    expect(order(SCENARIOS.stalled.state(NOW))).toEqual([['stuck', 'deload steps double swap'], ['stuck', 'deload steps double swap'], ['flat', 'sets steps swap deload']])
+    expect(order(SCENARIOS.slipping.state(NOW))).toEqual([['down', 'deload swap steps'], ['down', 'deload swap steps'], ['flat', 'sets steps swap deload']])
   })
 
   it('leaves out a flat lift that hasn\'t been trained in a month', () => {

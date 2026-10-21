@@ -143,28 +143,46 @@ export function sessionsSinceBest(S, exId) {
   return since
 }
 
-// What to do about a flat lift, in the order to try it: more work on it first (the cheapest
-// change, and often all it needed), then a different movement for the same muscle, and only
-// then a lighter week — a deload costs a week of training, so it is the last thing to spend.
-function flatFixes(S, id, cfg, planned) {
+// What to do about a lift on the list, in the order Peek suggests it — and the order depends on
+// what is wrong. Flat (hitting its reps, just not getting stronger): the weight is fine and the
+// stimulus isn't, so more work on it first (the cheapest change, and often all it needed), then
+// smaller jumps, a week on a variant, and only then a lighter week — a deload costs a week of
+// training, so it is the last thing to spend there. Stuck (missing the target session after
+// session): the weight is beating you, so a deload week leads, then smaller jumps, then adding
+// reps before weight (double progression) — more sets of a weight you can't finish only dig the
+// hole deeper, so they aren't offered. Sliding (the estimate falling): tiredness is winning, so
+// rest first and a change of scenery after.
+// These are kinds, not decisions: lib/liftfix.js works out which can actually be done to this
+// lift's plan (smaller jumps need a weight to jump, double progression a policy to switch
+// from), and the swap picks the first of `alts` not tried yet during this stall.
+const ORDER = {
+  flat: ['sets', 'steps', 'swap', 'deload'],
+  stuck: ['deload', 'steps', 'double', 'swap'],
+  down: ['deload', 'swap', 'steps']
+}
+function fixesFor(S, id, cfg, planned, kind) {
   const all = allExercises(S)
   const ex = all.find(e => e.id === id)
-  const alt = ex ? similarTo(ex, all, { exclude: [...planned], gymEq: S.gymEq, usage: usageOf(S) })[0] : null
+  const alts = ex ? similarTo(ex, all, { exclude: [...planned], gymEq: S.gymEq, usage: usageOf(S) }).slice(0, 4).map(e => e.id) : []
   const last = [...(S.workouts || [])].reverse().map(w => w.entries.find(e => e.id === id)).find(e => e && e.sets.some(s => s.done))
   const w = Math.max(0, ...((last && last.sets) || []).filter(s => s.done).map(s => s.w || 0))
   const inc = cfg && cfg.inc > 0 ? cfg.inc : defaultIncrement(id, S.unit || 'kg')
-  return [
-    { kind: 'sets', add: [1, 2] },
-    { kind: 'swap', alt: alt ? alt.id : null },
-    { kind: 'deload', factor: DELOAD_FACTOR, weight: w > 0 ? deloadTo(w, inc) : null }
-  ]
+  const fixes = {
+    sets: { kind: 'sets', add: [1, 2] },
+    steps: { kind: 'steps', w },
+    double: { kind: 'double', w },
+    swap: { kind: 'swap', alt: alts[0] || null, alts },
+    deload: { kind: 'deload', factor: DELOAD_FACTOR, from: w, weight: w > 0 ? deloadTo(w, inc) : null }
+  }
+  return ORDER[kind].map(k => fixes[k])
 }
 
 // Lifts worth a look right now: planned lifts stuck on their target (the same stall count the
 // orb's "Stalled" verdict uses), then lifts whose estimated 1RM is trending down, then lifts
 // that have gone FLAT_SESSIONS without a new e1RM best. Stuck comes first because it already
 // says what's wrong; a falling trend only says that something is. One entry per lift: a flat
-// lift that is also stuck or falling stays under that heading and carries the fixes with it.
+// lift that is also stuck or falling stays under that heading (with `flat` set). Every entry
+// carries its fixes (fixesFor), ordered for the heading it's under.
 // Not range-bound on purpose — "is this lift stuck" is a question about today.
 export function liftsToWatch(S, now = new Date()) {
   const planned = new Map()
@@ -189,11 +207,11 @@ export function liftsToWatch(S, now = new Date()) {
     // the same "still trained" window the orb uses — a lift dropped a month ago isn't flat
     const pts = e1rmSeries(S, id)
     if ((today - at(pts[pts.length - 1].d)) / DAY > RECENT_DAYS) return
-    const fixes = flatFixes(S, id, planned.get(id), planned.keys())
     const x = byId.get(id)
-    if (x) Object.assign(x, { flat: since, fixes })
-    else out.push({ id, kind: 'flat', n: since, fixes })
+    if (x) x.flat = since
+    else out.push({ id, kind: 'flat', n: since })
   })
+  out.forEach(x => { x.fixes = fixesFor(S, x.id, planned.get(x.id), planned.keys(), x.kind) })
   const RANK = { stuck: 0, down: 1, flat: 2 }
   return out.sort((a, b) => (a.kind === b.kind ? (a.kind === 'down' ? a.rate - b.rate : b.n - a.n) : RANK[a.kind] - RANK[b.kind]))
 }

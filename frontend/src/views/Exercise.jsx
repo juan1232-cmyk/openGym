@@ -371,7 +371,8 @@ export function ExerciseScreen({ ex, onBack, tab: tab0 = 'summary' }) {
   </div>
 }
 
-// The route, #/exercise/:id — ?tab=history opens straight on the progress (what Stats links to).
+// The route, #/exercise/:id — every exercise tap in the app lands here on Summary, the same
+// screen wherever it came from; ?tab= can still open another tab for a deep link.
 export default function ExerciseRoute() {
   const { id } = useParams()
   const [params] = useSearchParams()
