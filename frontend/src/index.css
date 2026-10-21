@@ -1836,10 +1836,13 @@ button.sa-tile:active{transform:scale(.985)}
 .sa-tile .s.good{color:var(--acc-ink);font-weight:500}
 .sa-tile .s.warn{color:var(--orange);font-weight:500}
 .sa-tile .s + .s{margin-top:-4px}
-.sa-pb .ic.stuck{background:color-mix(in srgb,var(--orange) 14%,transparent);color:var(--orange)}
-.sa-pb .ic.down{background:color-mix(in srgb,var(--red) 12%,transparent);color:var(--red)}
+/* Lifts to watch rows: the lift's own picture, and a one-word tag before the reason */
+.sa-watch .sa-pb .thumb{width:44px;height:44px}
+.sa-why em{font-style:normal;font-size:11.5px;font-weight:600;padding:1px 7px;margin-right:6px;border-radius:999px;white-space:nowrap}
+.sa-why em.stuck{background:color-mix(in srgb,var(--orange) 16%,transparent);color:var(--orange)}
+.sa-why em.flat{background:color-mix(in srgb,var(--yellow) 18%,transparent);color:var(--orange)}
+.sa-why em.down{background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red)}
 .sa-pb .chev{color:var(--label-3);font-size:14px;flex:none}
-.sa-pb .ic.flat{background:color-mix(in srgb,var(--yellow) 16%,transparent);color:var(--orange)}
 /* Lifts to watch: Peek's take on a lift, under its row — a small orb and a bubble holding what
    has been done, then the one thing it suggests next with the button that does it */
 .sa-watch + .sa-watch{border-top:1px solid var(--sep)}
@@ -1856,6 +1859,13 @@ button.sa-tile:active{transform:scale(.985)}
 .sa-sug .btn.sm{flex:none;padding:6px 14px;font-size:13.5px}
 .sa-sug .more{color:var(--label-2);font-size:13px;font-weight:500;padding:4px 0}
 .sa-sug.done{color:var(--label-2)}
+/* Peek thinking before a swap or another idea: three dots that take turns */
+.sa-sug.think{color:var(--label-2);gap:3px;justify-content:flex-start}
+.sa-sug.think i{width:4px;height:4px;border-radius:50%;background:currentColor;animation:sa-dot 900ms ease-in-out infinite}
+.sa-sug.think i:first-of-type{margin-left:2px}
+.sa-sug.think i:nth-of-type(2){animation-delay:150ms}
+.sa-sug.think i:nth-of-type(3){animation-delay:300ms}
+@keyframes sa-dot{0%,60%,100%{opacity:.25;transform:none}30%{opacity:1;transform:translateY(-2px)}}
 .sa-sug.done .icn{color:var(--acc);font-size:14px}
 .sa-sug .undo{flex:none;padding:2px 4px;color:var(--acc);font-size:13px;font-weight:500}
 .sa-m i{position:relative}
