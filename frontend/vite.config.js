@@ -26,7 +26,9 @@ export default defineConfig({
       '/gif': { target: media, changeOrigin: true }
     }
   },
-  test: { setupFiles: ['./src/test-setup.js'] },
+  // A few tests sweep the whole exercise dataset (search, scoring, 300 coach lines) and take
+  // 2–8s when every file runs at once; 5s, the default, made them fail on a busy machine.
+  test: { setupFiles: ['./src/test-setup.js'], testTimeout: 20000 },
   build: {
     chunkSizeWarningLimit: 1500,
     // the app, and the device page that shows it inside an iPhone (device.html)
