@@ -111,7 +111,9 @@ function MuscleBalance({ S, ws, b }) {
 // the target over and over, or sliding — since that is the reason to spend a week lighter.
 // `act` is what accepting it would change (lib/liftfix.js fixAction).
 const shortDate = iso => new Date(iso + 'T12:00:00').toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short' })
-const kg = (v, S) => fmtNum(v) + ' ' + S.unit
+// two decimals, not fmtNum's one: a 1.25 kg step or a 63.75 kg deload is a real plate load,
+// and "1.3 kg" isn't one
+const kg = (v, S) => v.toLocaleString(dateLocale(), { maximumFractionDigits: 2 }) + ' ' + S.unit
 const one = act => act.routines[0]
 function fixSay(f, act, S, x) {
   if (f.kind === 'sets') return t('You should add a set ({0} → {1}) to give it more work to grow from.', one(act).from, one(act).to)
