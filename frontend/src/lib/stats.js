@@ -143,25 +143,38 @@ export function sessionsSinceBest(S, exId) {
   return since
 }
 
-// What to do about a lift on the list, in the order to try it — and the order depends on what
-// is wrong. Flat (hitting its reps, just not getting stronger): the weight is fine and the
-// stimulus isn't, so more work on it first (the cheapest change, and often all it needed),
-// then a different movement for a session, and only then a lighter week — a deload costs a
-// week of training, so it is the last thing to spend there. Stuck (missing the target session
-// after session) or sliding (the estimate falling): the weight is beating you, or tiredness
-// is. More sets of a weight you can't finish only dig the hole deeper, so a deload week leads
-// and adding sets isn't offered at all; the swap is the change of scenery after it.
+// What to do about a lift on the list, in the order Peek suggests it — and the order depends on
+// what is wrong. Flat (hitting its reps, just not getting stronger): the weight is fine and the
+// stimulus isn't, so more work on it first (the cheapest change, and often all it needed), then
+// smaller jumps, a week on a variant, and only then a lighter week — a deload costs a week of
+// training, so it is the last thing to spend there. Stuck (missing the target session after
+// session): the weight is beating you, so a deload week leads, then smaller jumps, then adding
+// reps before weight (double progression) — more sets of a weight you can't finish only dig the
+// hole deeper, so they aren't offered. Sliding (the estimate falling): tiredness is winning, so
+// rest first and a change of scenery after.
+// These are kinds, not decisions: lib/liftfix.js works out which can actually be done to this
+// lift's plan (smaller jumps need a weight to jump, double progression a policy to switch
+// from), and the swap picks the first of `alts` not tried yet during this stall.
+const ORDER = {
+  flat: ['sets', 'steps', 'swap', 'deload'],
+  stuck: ['deload', 'steps', 'double', 'swap'],
+  down: ['deload', 'swap', 'steps']
+}
 function fixesFor(S, id, cfg, planned, kind) {
   const all = allExercises(S)
   const ex = all.find(e => e.id === id)
-  const alt = ex ? similarTo(ex, all, { exclude: [...planned], gymEq: S.gymEq, usage: usageOf(S) })[0] : null
+  const alts = ex ? similarTo(ex, all, { exclude: [...planned], gymEq: S.gymEq, usage: usageOf(S) }).slice(0, 4).map(e => e.id) : []
   const last = [...(S.workouts || [])].reverse().map(w => w.entries.find(e => e.id === id)).find(e => e && e.sets.some(s => s.done))
   const w = Math.max(0, ...((last && last.sets) || []).filter(s => s.done).map(s => s.w || 0))
   const inc = cfg && cfg.inc > 0 ? cfg.inc : defaultIncrement(id, S.unit || 'kg')
-  const sets = { kind: 'sets', add: [1, 2] }
-  const swap = { kind: 'swap', alt: alt ? alt.id : null }
-  const deload = { kind: 'deload', factor: DELOAD_FACTOR, weight: w > 0 ? deloadTo(w, inc) : null }
-  return kind === 'flat' ? [sets, swap, deload] : [deload, swap]
+  const fixes = {
+    sets: { kind: 'sets', add: [1, 2] },
+    steps: { kind: 'steps', w },
+    double: { kind: 'double', w },
+    swap: { kind: 'swap', alt: alts[0] || null, alts },
+    deload: { kind: 'deload', factor: DELOAD_FACTOR, from: w, weight: w > 0 ? deloadTo(w, inc) : null }
+  }
+  return ORDER[kind].map(k => fixes[k])
 }
 
 // Lifts worth a look right now: planned lifts stuck on their target (the same stall count the

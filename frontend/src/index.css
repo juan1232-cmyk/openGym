@@ -1751,8 +1751,8 @@ button.sa-tile:active{transform:scale(.985)}
 .sa-pb .ic.down{background:color-mix(in srgb,var(--red) 12%,transparent);color:var(--red)}
 .sa-pb .chev{color:var(--label-3);font-size:14px;flex:none}
 .sa-pb .ic.flat{background:color-mix(in srgb,var(--yellow) 16%,transparent);color:var(--orange)}
-/* Lifts to watch: Peek's take on a lift, under its row — a small orb and a bubble of lines,
-   each with the button that does it */
+/* Lifts to watch: Peek's take on a lift, under its row — a small orb and a bubble holding what
+   has been done, then the one thing it suggests next with the button that does it */
 .sa-watch + .sa-watch{border-top:1px solid var(--sep)}
 .sa-peek{display:flex;gap:8px;align-items:flex-start;margin:-4px 0 14px}
 .sa-peek .orb-wrap{flex:none;margin-top:2px;width:40px;display:flex;justify-content:center}
@@ -1760,10 +1760,12 @@ button.sa-tile:active{transform:scale(.985)}
 .sa-say{flex:1;min-width:0;position:relative;display:flex;flex-direction:column;padding:4px;border-radius:var(--r-lg);border-top-left-radius:6px;background:var(--surface-2)}
 .sa-sug{display:flex;align-items:center;gap:8px;width:100%;padding:9px 10px;border-radius:var(--r);text-align:left;font-size:13.5px;line-height:1.35;color:var(--label)}
 .sa-sug > span{flex:1;min-width:0;text-wrap:pretty}
-button.sa-sug:active{background:var(--surface-3)}
 .sa-sug .icn{flex:none;color:var(--label-3);font-size:12px}
 .sa-sug.off{color:var(--label-2)}
-.sa-sug .btn.sm{flex:none;padding:6px 12px;font-size:13.5px}
+.sa-sug.idea{flex-direction:column;align-items:stretch;gap:8px}
+.sa-sug .acts{display:flex;align-items:center;gap:14px}
+.sa-sug .btn.sm{flex:none;padding:6px 14px;font-size:13.5px}
+.sa-sug .more{color:var(--label-2);font-size:13px;font-weight:500;padding:4px 0}
 .sa-sug.done{color:var(--label-2)}
 .sa-sug.done .icn{color:var(--acc);font-size:14px}
 .sa-sug .undo{flex:none;padding:2px 4px;color:var(--acc);font-size:13px;font-weight:500}
