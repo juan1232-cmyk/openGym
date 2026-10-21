@@ -872,6 +872,95 @@ h4.sec{
 }
 .steps-list::marker{color:var(--label-3)}
 
+/* --- one exercise's screen: Summary / History / How to, laid out like Hevy (views/Exercise.jsx) --- */
+/* full width: it cancels #app's padding and pads itself, so the picture and the tab bar can run
+   edge to edge. In the full-screen sheet (opened over another sheet) there is nothing to cancel. */
+.exs{margin:calc(-1 * (var(--sat) + 8px)) calc(-1 * var(--pad)) 0}
+.fullsheet.exsheet{padding:0}
+.exsheet .exs{margin:0}
+.exs-top{position:sticky;top:0;z-index:6;background:var(--bg);padding-top:var(--sat)}
+.exs-bar{display:flex;align-items:center;gap:6px;min-height:52px;padding:0 var(--pad)}
+.exs-bar .pk-back{margin-left:-10px}
+.exs-bar h1{flex:1;min-width:0;font-size:17px;font-weight:600;letter-spacing:-.02em;color:var(--label);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.exs-add{flex:none;display:flex;align-items:center;gap:5px;height:34px;padding:0 14px 0 10px;border-radius:99px;
+  background:var(--acc);color:var(--on-acc);font-size:14px;font-weight:600}
+.exs-add .icn{font-size:16px;--icon-stroke:2.4}
+.exs-add:active{opacity:.7}
+.exs-icon{flex:none;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--label-2)}
+.exs-body{padding:0 var(--pad) calc(40px + var(--sab))}
+.exs-body .exmedia{margin:0 calc(-1 * var(--pad)) 14px;border-radius:0}
+.exs .card{border-radius:var(--r-card);margin-bottom:10px}
+/* underlined tabs, equal thirds, a hairline under the lot */
+.dt-tabs{display:flex;border-bottom:1px solid var(--sep)}
+.dt-tabs button{flex:1;padding:11px 0 10px;font-size:15px;font-weight:500;color:var(--label-3);
+  border-bottom:2px solid transparent;margin-bottom:-1px;transition:color var(--fast),border-color var(--fast)}
+.dt-tabs button.on{color:var(--acc);border-bottom-color:var(--acc)}
+.dt-name{margin:4px 0 6px;font-size:22px;font-weight:600;letter-spacing:-.025em}
+.dt-targets{display:flex;flex-direction:column;gap:2px;margin-bottom:14px;font-size:14px;color:var(--label-3)}
+.dt-targets span{color:var(--label-2);text-transform:capitalize}
+/* the headline over the chart: the latest value big, its date small, the range on the right */
+.dt-head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin:18px 0 6px}
+.dt-head b{font-size:22px;font-weight:600;letter-spacing:-.02em;margin-right:8px}
+.dt-head span{font-size:14px;color:var(--acc)}
+.dt-range{appearance:none;-webkit-appearance:none;border:0;background:transparent;color:var(--acc);
+  font:inherit;font-size:14px;padding:4px 18px 4px 4px;cursor:pointer;text-align:right;
+  background-image:linear-gradient(45deg,transparent 50%,var(--acc) 50%),linear-gradient(135deg,var(--acc) 50%,transparent 50%);
+  background-position:calc(100% - 9px) 55%,calc(100% - 4px) 55%;background-size:5px 5px;background-repeat:no-repeat}
+.dt-range option{color:#000}
+.dt-chart{margin:0 -4px 4px}
+.dt-chips{margin:10px calc(-1 * var(--pad)) 0;padding:2px var(--pad)}
+/* both charts follow a finger dragged along them; pan-y leaves vertical swipes to the page */
+.dt-chart .chart-i,.pk-spark-i{touch-action:pan-y;cursor:crosshair;-webkit-user-select:none;user-select:none}
+.dt-hint{margin-top:6px;font-size:12px;color:var(--label-3);text-align:center}
+.pk-at{font-weight:600;color:var(--label)}
+/* a phone-width column on a wide screen, not lines of steps 1000px long */
+@media (min-width:1000px){
+  .exs{max-width:640px;margin:-32px auto 0}
+}
+/* the records: an icon tile, what it is and when, the number */
+.dt-recs{background:var(--surface);border-radius:var(--r-card);padding:2px 14px}
+.dt-rec{display:flex;align-items:center;gap:12px;padding:12px 0;font-size:15px}
+.dt-rec+.dt-rec{border-top:1px solid var(--sep)}
+.dt-rec-i{flex:none;width:34px;height:34px;border-radius:10px;background:var(--acc-soft);color:var(--acc);
+  display:flex;align-items:center;justify-content:center;font-size:17px}
+.dt-rec-l{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;color:var(--label)}
+.dt-rec small{font-size:12px;color:var(--label-3)}
+.dt-rec b{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--acc);flex:none}
+.dt-1rm{padding:16px;margin-top:22px}
+.dt-coach{margin:4px 0 0}
+/* the last sessions as a timeline: a dot per session (the newest in the accent) on a thin rail,
+   a tappable line beside it, and under an open one its sets on a surface card */
+.dt-tl{margin-bottom:10px}
+.dt-tl-item{position:relative;padding-left:24px}
+.dt-tl-item::before{content:"";position:absolute;left:1px;top:21px;width:10px;height:10px;border-radius:99px;background:var(--surface-3)}
+.dt-tl-item.now::before{background:var(--acc)}
+.dt-tl-item::after{content:"";position:absolute;left:5px;top:35px;bottom:-21px;width:2px;background:var(--surface-2)}
+.dt-tl-item.last::after{display:none}
+.dt-tl-h{width:100%;min-height:56px;display:flex;align-items:center;gap:10px;padding:10px 0;text-align:left;color:inherit}
+.dt-tl-h:active{opacity:.6}
+.dt-tl-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dt-tl-t small{font-size:13px;color:var(--label-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dt-tl-v{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dt-tl-v b{font-size:20px;font-weight:600;letter-spacing:-.03em;color:var(--label);font-variant-numeric:tabular-nums}
+.dt-chg{font-size:12px;font-weight:600;padding:2px 7px;border-radius:99px;color:var(--label-2);background:var(--surface)}
+.dt-chg.up{color:var(--acc);background:var(--acc-soft)}
+.dt-tl-chev{flex:none;font-size:16px;color:var(--label-3);transition:transform var(--fast) var(--ease)}
+.dt-tl-chev.on{transform:rotate(180deg)}
+.dt-tl-sets{background:var(--surface);border-radius:14px;padding:4px 14px;margin-bottom:8px}
+.dt-set{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:15px;color:var(--label)}
+.dt-set i{font-style:normal;width:18px;flex:none;font-weight:600;color:var(--label-3)}
+.dt-set .lbl{flex:1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dt-pr{flex:none;display:inline-flex;align-items:center;gap:3px;height:22px;padding:0 8px;border-radius:99px;
+  font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--yellow);background:color-mix(in srgb,var(--yellow) 16%,transparent)}
+.dt-pr .icn{font-size:12px;--icon-stroke:2.2}
+/* the steps: bold numerals in their own column, like Hevy's How to */
+.dt-steps{list-style:none;padding:0;display:flex;flex-direction:column;gap:14px;font-size:15px;line-height:1.45;color:var(--label)}
+.dt-steps li{display:flex;gap:12px}
+.dt-steps b{flex:none;width:22px;font-weight:600;color:var(--label)}
+.dt-empty{display:flex;flex-direction:column;align-items:center;gap:10px;padding:36px 20px;text-align:center;color:var(--label-3);font-size:14px;line-height:1.4}
+.dt-empty .icn{font-size:26px}
+
 /* --- month calendar --- */
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:10px}
 .cal-h{text-align:center;font-size:11px;color:var(--label-3);font-weight:500;text-transform:uppercase;padding:2px 0}

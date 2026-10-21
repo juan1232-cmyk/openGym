@@ -1,6 +1,6 @@
-// Everything about one exercise: the library detail card, adding it to a routine, its
+// Everything about one exercise: opening its screen (views/Exercise.jsx), adding it to a routine, its
 // sets/reps/progression config, the exercise picker, and custom (user-created) exercises.
-import { useState, useRef } from 'react'
+import { useState, useRef, lazy, Suspense } from 'react'
 import { useStore } from '../store/useStore.js'
 import { EXDB, EXIDX, BODYPARTS, isCardio, isBodyweightEq, allExercises } from '../lib/exercises.js'
 import { searchExercises, browseOrder, usageOf, recentIds, regionOf, secondaryOf, muscleChips, matchesMuscle, suggestionFor, similarTo, gymFilter, wordsFrom, quickConfig } from '../lib/pick.js'
@@ -10,80 +10,27 @@ import { fmtDate, fmtNum, uid, exCount } from '../lib/format.js'
 import { lastEntryFor, bestWeightFor, setLabel, defaultConfig, cleanupSg, modeOf, isBw, isPerSide, sideReps, repRangeOf } from '../lib/history.js'
 import { withRepRange, suggestScheme } from '../lib/scheme.js'
 import { SetsChips, RepsChips } from '../components/Scheme.jsx'
-import { t, instrFor, getLang, INSTR_LANGS } from '../lib/i18n.js'
+import { t, getLang } from '../lib/i18n.js'
 import { nav } from '../lib/nav.js'
-import Media, { Thumb } from '../components/Media.jsx'
+import { Thumb } from '../components/Media.jsx'
 import Stepper from '../components/Stepper.jsx'
 import Icon from '../components/Icon.jsx'
 import { Button, Switch, Segmented, SelectRow, Row, Section } from '../components/ui.jsx'
 import { glyphOf, DEFAULT_GLYPH } from '../lib/glyphs.js'
-import { estimate1RM, best1RM, REP_CAP } from '../lib/onerm.js'
 import { policyFor, defaultIncrement, nextPrescription, POLICIES_FOR, POLICY_NAME, POLICY_DESC } from '../lib/progression.js'
 import { S, update, ui, toast, confirmSheet } from './common.jsx'
 
-/* ============================ exercise detail ============================ */
-// Estimated 1RM for one exercise (issue #18): what the log already implies, plus a calculator
-// for a set you have not done — so the number is reachable before there is any history.
-function OneRM({ ex }) {
-  const st = useStore(s => s.S)
-  const best = best1RM(st, ex.id)
-  const [w, setW] = useState(best ? best.w : (st.exWeights[ex.id] || {}).w || 20)
-  const [r, setR] = useState(best ? best.r : 5)
-  const est = estimate1RM(w, r)
-  return <>
-    <h4 className="sec">{t('Estimated 1RM')}</h4>
-    {best && <div className="small" style={{ marginBottom: 8 }}>
-      {t('From your log:')} <b className="accent">{fmtNum(best.est)} {st.unit}</b>
-      <span className="dim"> · {t('{0} × {1} on {2}', fmtNum(best.w) + ' ' + st.unit, best.r, fmtDate(best.d, true))}
-        {/* the estimate counted the reps left in the tank, so say so — otherwise 60 × 8
-            "giving" 80 reads like a wrong sum */}
-        {best.rir != null && ' · ' + t('{0} in reserve', fmtNum(best.rir))}</span>
-    </div>}
-    <div className="row cfgrow" style={{ marginBottom: 10 }}>
-      <Stepper label={t('Weight ({0})', st.unit)} value={w} step={2.5} onChange={setW} />
-      <Stepper label={t('Reps')} value={r} step={1} decimal={false} onChange={setR} />
-    </div>
-    <div className="row between" style={{ marginBottom: 4 }}>
-      <span className="muted small">{t('Estimate')}</span>
-      <b className="accent" style={{ fontSize: 20 }}>{est === null ? '—' : fmtNum(est) + ' ' + st.unit}</b>
-    </div>
-    <div className="small dim">{est === null
-      ? t('Enter a weight and 1–{0} reps — beyond that an estimate is guesswork.', REP_CAP)
-      : t('Epley formula — a calculation from one set, not a tested max.')}</div>
-  </>
+/* ============================ exercise screen ============================ */
+// An exercise opens as its own screen (views/Exercise.jsx), not a sheet. Over an open sheet —
+// the picker's info button, the config sheet's picture — a route change would land under it,
+// so there the same screen comes up as a full-screen sheet instead, loaded on demand: a static
+// import would tie this file and the view (which uses the sheets) into a cycle.
+const ExerciseScreen = lazy(() => import('../views/Exercise.jsx').then(m => ({ default: m.ExerciseScreen })))
+export function exerciseDetailSheet(ex, tab) {
+  if (!ui().sheets.length) { nav('/exercise/' + ex.id + (tab ? '?tab=' + tab : '')); return }
+  ui().openSheet(close => <Suspense fallback={null}><ExerciseScreen ex={ex} onBack={close} tab={tab} /></Suspense>,
+    { kind: 'full', className: 'exsheet' })
 }
-
-// What an exercise trains, in one line: the specific muscle ("Upper chest") and the kit.
-function MuscleTags({ ex }) {
-  return <div className="row" style={{ gap: 6, flexWrap: 'wrap', margin: '12px 0 14px' }}>
-    <span className="tag acc">{muscleLine(ex)}</span>
-    {ex.eq && ex.eq !== 'custom' && <span className="tag"><Icon name="dumbbell" />{t(ex.eq)}</span>}
-  </div>
-}
-
-function ExerciseDetail({ ex, close }) {
-  const st = useStore(s => s.S)
-  const last = lastEntryFor(st, ex.id)
-  const best = bestWeightFor(st, ex.id)
-  const logged = st.workouts.some(w => w.entries.some(e => e.id === ex.id && e.sets.some(s => s.done)))
-  return <>
-    <h3 className="capitalize">{ex.n}</h3>
-    <Media ex={ex} />
-    <MuscleTags ex={ex} />
-    {ex.desc && <div className="exnote">{ex.desc}</div>}
-    {best > 0 && <div className="small row" style={{ marginBottom: 6, gap: 5 }}><Icon name="trophy" style={{ fontSize: 14, color: 'var(--yellow)' }} />{t('Best:')} <b className="accent">{fmtNum(best)} {st.unit}</b>{last ? ` · ${t('last')} ${fmtDate(last.d)}: ${last.sets.map(s => setLabel(ex.id, s, last.target)).join(', ')}` : ''}</div>}
-    {/* the progress page, unless that's where this sheet was opened from */}
-    {logged && !location.hash.startsWith('#/exercise/') && <Button variant="soft" icon="chartLine" style={{ marginTop: 10 }} onClick={() => { close(); nav('/exercise/' + ex.id) }}>{t('Progress')}</Button>}
-    <Button variant="primary" icon="plus" style={{ margin: '10px 0 4px' }} onClick={() => addToRoutineSheet(ex)}>{t('Add to my plan')}</Button>
-    {ex.custom && <div className="row" style={{ gap: 8, marginTop: 8 }}>
-      <Button icon="pencil" style={{ flex: 1 }} onClick={() => { close(); customExSheet(ex) }}>{t('Edit')}</Button>
-      <Button variant="danger" icon="trash" style={{ flex: 1 }} onClick={() => deleteCustomEx(ex, close)}>{t('Delete')}</Button>
-    </div>}
-    {!isCardio(ex) && <OneRM ex={ex} />}
-    {instrFor(ex).length > 0 &&<><h4 className="sec">{t('How to')}{!INSTR_LANGS.includes(getLang()) && <span className="dim" style={{ textTransform: 'none', letterSpacing: 0 }}> · {t('instructions in English')}</span>}</h4><ol className="steps-list">{instrFor(ex).map((s, i) => <li key={i}>{s}</li>)}</ol></>}
-  </>
-}
-export const exerciseDetailSheet = ex => ui().openSheet(close => <ExerciseDetail ex={ex} close={close} />)
 
 /* ============================ add to routine ============================ */
 function AddToRoutine({ ex, close }) {

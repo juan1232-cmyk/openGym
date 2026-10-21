@@ -120,7 +120,7 @@ function LiftsToWatch({ S }) {
   return <div className="card sa-card">
     <div className="pk-card-h"><b>{t('Lifts to watch')}</b><span>{t('Right now')}</span></div>
     {list.length ? list.map(x => (
-      <button key={x.id} className={'sa-pb' + (x.fixes ? ' fx' : '')} onClick={() => nav('/exercise/' + x.id)}>
+      <button key={x.id} className={'sa-pb' + (x.fixes ? ' fx' : '')} onClick={() => nav('/exercise/' + x.id + '?tab=history')}>
         <span className={'ic ' + x.kind}><Icon name={x.kind === 'stuck' ? 'pause' : x.kind === 'flat' ? 'minus' : 'arrowDown'} /></span>
         <span className="l"><b>{nameOf(x.id)}</b><span>{x.kind === 'stuck'
           ? t('Missed the target {0} sessions in a row', x.n)
@@ -146,7 +146,7 @@ function MainLifts({ S }) {
   return <div className="card sa-card">
     <div className="pk-card-h"><b>{t('Main lifts')}</b><span>{t('This week')}</span></div>
     {list.map(x => (
-      <button key={x.id} className="sa-pb" onClick={() => nav('/exercise/' + x.id)}>
+      <button key={x.id} className="sa-pb" onClick={() => nav('/exercise/' + x.id + '?tab=history')}>
         <span className={'ic' + (x.few ? ' few' : '')}><Icon name={x.few ? 'lightbulb' : 'check'} /></span>
         <span className="l"><b>{nameOf(x.id)}</b><span className={x.few ? 'warn' : ''}>{x.sessions === 1
           ? t('Once so far. Twice a week builds strength faster.')
@@ -266,7 +266,7 @@ export default function Stats() {
         {goalLine && <span className={'s ' + (pace && pace.dir === 'away' ? 'warn' : pace && pace.dir === 'toward' ? 'good' : '')}>{goalLine}</span>}
       </button>
 
-      <button className="sa-tile dark" onClick={() => lift && nav('/exercise/' + lift.id)} disabled={!lift}>
+      <button className="sa-tile dark" onClick={() => lift && nav('/exercise/' + lift.id + '?tab=history')} disabled={!lift}>
         <span className="l"><span className="nm">{lift ? nameOf(lift.id) : t('Strength')}</span><span className="k">· {t('est. 1RM')}</span></span>
         <b className="sa-v">{lift ? <>{fmtNum(lift.now)}<small> {S.unit}</small></> : '—'}</b>
         <Spark values={lift ? lift.pts.map(p => p.y) : []} color="var(--acc)" h={40} />
@@ -277,7 +277,7 @@ export default function Stats() {
     <div className="card sa-card">
       <div className="pk-card-h"><b>{t('Personal bests')}</b><span>{prs.length} {inLabel(days)}</span></div>
       {prs.length ? prs.slice(0, 5).map((p, i) => (
-        <button key={p.d + p.id + i} className="sa-pb" onClick={() => nav('/exercise/' + p.id)}>
+        <button key={p.d + p.id + i} className="sa-pb" onClick={() => nav('/exercise/' + p.id + '?tab=history')}>
           <span className="ic"><Icon name="trophy" /></span>
           <span className="l"><b>{nameOf(p.id)}</b><span>{t(p.bw ? 'Added weight' : 'Weight')} · {dayLabel(p.d)}</span></span>
           <span className="v">{(p.bw ? '+' : '') + fmtNum(p.w) + ' ' + S.unit} × {p.r}</span>
