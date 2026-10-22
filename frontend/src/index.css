@@ -1857,15 +1857,7 @@ button.sa-tile:active{transform:scale(.985)}
 .sa-sug.idea{flex-direction:column;align-items:stretch;gap:8px}
 .sa-sug .acts{display:flex;align-items:center;gap:14px}
 .sa-sug .btn.sm{flex:none;padding:6px 14px;font-size:13.5px}
-.sa-sug .more{color:var(--label-2);font-size:13px;font-weight:500;padding:4px 0}
 .sa-sug.done{color:var(--label-2)}
-/* Peek thinking before a swap or another idea: three dots that take turns */
-.sa-sug.think{color:var(--label-2);gap:3px;justify-content:flex-start}
-.sa-sug.think i{width:4px;height:4px;border-radius:50%;background:currentColor;animation:sa-dot 900ms ease-in-out infinite}
-.sa-sug.think i:first-of-type{margin-left:2px}
-.sa-sug.think i:nth-of-type(2){animation-delay:150ms}
-.sa-sug.think i:nth-of-type(3){animation-delay:300ms}
-@keyframes sa-dot{0%,60%,100%{opacity:.25;transform:none}30%{opacity:1;transform:translateY(-2px)}}
 .sa-sug.done .icn{color:var(--acc);font-size:14px}
 .sa-sug .undo{flex:none;padding:2px 4px;color:var(--acc);font-size:13px;font-weight:500}
 .sa-m i{position:relative}
