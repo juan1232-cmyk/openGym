@@ -35,6 +35,57 @@ const profile = workouts => ({
 const up = (from, step) => i => [from + i * step, 5]
 const flat = w => () => [w, 5]
 
+// A fuller profile for the Actions version of Stats: eight weeks of Push / Pull / Legs, trained
+// Monday, Wednesday and Saturday. The plan says Friday for legs and it never happens, so there is
+// a skipped weekday with a day already trained to move it to. Overhead press sits at 40 × 8 the
+// whole time (a flat lift), legs get only two sets of hamstring work (a muscle the plan leaves
+// short), and the last weigh-in is nine days old while the trend runs away from the goal. Body
+// weight and a goal are in so the Numbers version has something to draw too. What the week
+// holds depends on the weekday it is opened on — that is the point of building it from today.
+const OHP = '0091', PUSHDOWN = '0201', LAT = '0818', CURL = '0031', LEGCURL = '0586', CALF = '1372'
+const pplRoutines = () => [
+  { id: 'push', name: 'Push', ex: [{ id: BENCH, sets: 4, reps: 5 }, { id: OHP, sets: 3, reps: 8 }, { id: PUSHDOWN, sets: 3, reps: 10 }] },
+  { id: 'pull', name: 'Pull', ex: [{ id: ROW, sets: 4, reps: 6 }, { id: LAT, sets: 3, reps: 10 }, { id: CURL, sets: 3, reps: 10 }] },
+  { id: 'legs', name: 'Legs', ex: [{ id: SQUAT, sets: 4, reps: 5 }, { id: LEGCURL, sets: 2, reps: 10 }, { id: CALF, sets: 3, reps: 12 }] }
+]
+// session number i of a lift → [weight, reps]
+const PPL_LOAD = {
+  [BENCH]: i => [60 + 2.5 * i, 5], [OHP]: () => [40, 8], [PUSHDOWN]: i => [30 + 2.5 * (i >> 1), 10],
+  [ROW]: i => [60 + 2.5 * i, 6], [LAT]: i => [50 + 2.5 * (i >> 1), 10], [CURL]: i => [25 + 2.5 * (i >> 1), 10],
+  [SQUAT]: i => [80 + 5 * i, 5], [LEGCURL]: i => [30 + 2.5 * (i >> 1), 10], [CALF]: i => [50 + 2.5 * (i >> 1), 12]
+}
+// (an accessory that goes up only every few sessions would show as flat too, and crowd out the
+// lift this profile is meant to have flat)
+function logPPL(now) {
+  const today = isoOf(now)
+  const mon = new Date(now.getTime() - ((now.getDay() + 6) % 7) * DAY)
+  const routines = pplRoutines()
+  const done = {}
+  const out = []
+  for (let w = 7; w >= 0; w--) {
+    for (const [rid, offset] of [['push', 0], ['pull', 2], ['legs', 5]]) {
+      const d = isoOf(new Date(mon.getTime() + (offset - 7 * w) * DAY))
+      if (d >= today) continue                 // today stays open, and nothing is in the future
+      const r = routines.find(x => x.id === rid)
+      const i = done[rid] = (done[rid] ?? -1) + 1
+      const start = new Date(d + 'T18:00:00').getTime()
+      const entries = r.ex.map(c => {
+        const [w, reps] = PPL_LOAD[c.id](i)
+        return { id: c.id, sets: Array.from({ length: c.sets }, () => ({ w, r: reps, done: true })), target: { sets: c.sets, reps: c.reps } }
+      })
+      const vol = entries.reduce((a, e) => a + e.sets.reduce((b, s) => b + s.w * s.r, 0), 0)
+      out.push({ id: 'ppl-' + d, d, start, end: start + 62 * 6e4, routineId: rid, name: r.name, vol, entries, prs: [] })
+    }
+  }
+  return out
+}
+const busyWeek = now => ({
+  unit: 'kg', goal: 'strength', days: 3, routines: pplRoutines(), week: { 1: 'push', 3: 'pull', 5: 'legs' }, dayPlan: {},
+  workouts: logPPL(now), exWeights: {}, active: null, customEx: [], targetW: 75,
+  // weekly weigh-ins, the newest nine days ago, drifting up from 79.2 to 80.7 against a goal of 75
+  bodyweight: Array.from({ length: 7 }, (_, k) => ({ d: isoOf(new Date(now.getTime() - (9 + 7 * (6 - k)) * DAY)), w: 79.2 + k * 0.25 }))
+})
+
 export const SCENARIOS = {
   fresh: { label: 'Fresh start', verdict: null, state: () => null },
   progressing: { label: 'Progressing', verdict: 'progressing',
@@ -48,6 +99,8 @@ export const SCENARIOS = {
     state: now => profile(log(now, { [BENCH]: () => [70, 3], [SQUAT]: () => [100, 3], [ROW]: flat(60) })) },
   away: { label: 'Away', verdict: 'away',
     state: now => profile(log(now, { [BENCH]: up(60, 2.5), [SQUAT]: up(90, 5) }, [34, 31, 27, 24, 20, 17, 14, 12])) },
+  // three routines over eight weeks, built so every suggestion on Stats → Actions has something to say
+  busy: { label: 'Busy week', verdict: 'progressing', path: '/stats', state: busyWeek },
   // progressing, with a session open on bench: set 1 heavier than last time, 2 the same, 3 lighter
   // — tick them to see the orb hop, nod and sink
   workout: { label: 'Mid-workout', verdict: 'progressing', path: '/workout',
