@@ -46,7 +46,7 @@ function dayLabel(iso) {
 
 // Days trained against days planned, as a closing ring. No plan → the ring just fills once
 // there is any training, since there is nothing to measure it against.
-function Ring({ done, planned }) {
+export function Ring({ done, planned }) {
   const R = 22, C = 2 * Math.PI * R
   const p = planned ? Math.min(1, done / planned) : done ? 1 : 0
   return <svg className="sa-ring" viewBox="0 0 56 56" aria-hidden="true">
@@ -187,24 +187,29 @@ function PeekFixes({ S, x }) {
 // picture, as in the Exercises tab, with a one-word tag for what's wrong; tapping it opens the
 // same exercise screen the Exercises tab does.
 const TAG = { stuck: 'Stuck', flat: 'Flat', down: 'Dropping' }
-function LiftsToWatch({ S }) {
+// One lift and Peek's one suggestion for it. Shared with the action version of Stats.
+export function WatchRow({ S, x }) {
   const nav = useNavigate()
+  return <div className="sa-watch">
+    <button className="sa-pb" onClick={() => nav('/exercise/' + x.id)}>
+      <Thumb ex={EXIDX[x.id] || { id: x.id }} />
+      <span className="l"><b>{nameOf(x.id)}</b><span className="sa-why"><em className={x.kind}>{t(TAG[x.kind])}</em>{x.kind === 'stuck'
+        ? t('Missed reps {0} times', x.n)
+        : x.kind === 'flat'
+          ? t('No progress in {0} sessions', x.n)
+          : t('Getting weaker lately')}</span>
+      </span>
+      <Icon name="chevronRight" className="chev" />
+    </button>
+    {x.fixes.length > 0 && <PeekFixes S={S} x={x} />}
+  </div>
+}
+function LiftsToWatch({ S }) {
   const list = liftsToWatch(S).slice(0, 4)
   return <div className="card sa-card">
     <div className="pk-card-h"><b>{t('Lifts to watch')}</b><span>{t('Right now')}</span></div>
-    {list.length ? list.map(x => <div key={x.id} className="sa-watch">
-      <button className="sa-pb" onClick={() => nav('/exercise/' + x.id)}>
-        <Thumb ex={EXIDX[x.id] || { id: x.id }} />
-        <span className="l"><b>{nameOf(x.id)}</b><span className="sa-why"><em className={x.kind}>{t(TAG[x.kind])}</em>{x.kind === 'stuck'
-          ? t('Missed reps {0} times', x.n)
-          : x.kind === 'flat'
-            ? t('No progress in {0} sessions', x.n)
-            : t('Getting weaker lately')}</span>
-        </span>
-        <Icon name="chevronRight" className="chev" />
-      </button>
-      {x.fixes.length > 0 && <PeekFixes S={S} x={x} />}
-    </div>) : <div className="muted small" style={{ marginTop: 10 }}>{t('Nothing stuck. Every lift you train is holding or moving up.')}</div>}
+    {list.length ? list.map(x => <WatchRow key={x.id} S={S} x={x} />)
+      : <div className="muted small" style={{ marginTop: 10 }}>{t('Nothing stuck. Every lift you train is holding or moving up.')}</div>}
   </div>
 }
 
@@ -255,7 +260,7 @@ function WeekPattern({ S, b, ws }) {
   </div>
 }
 
-export default function Stats() {
+export default function Stats({ switcher }) {
   const nav = useNavigate()
   const S = useStore(s => s.S)
   const [days, setDays] = useState(30)
@@ -294,6 +299,7 @@ export default function Stats() {
     <div className="hdr"><div><h1>{t('Stats')}</h1><div className="sub">{t('Progress & history')}</div></div>
       <button className="iconbtn" onClick={() => nav('/history')} aria-label={t('History')}><Icon name="history" /></button></div>
 
+    {switcher}
     <Segmented className="seg-range" value={days} onChange={setDays} options={RANGES.map(r => ({ value: r.value, label: t(r.label) }))} />
 
     <div className="sa-grid" data-tour="stats-main">
