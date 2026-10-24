@@ -1697,12 +1697,35 @@ button.pk-tile:active{background:var(--surface-2)}
 .pick-list .pk-link{display:block;margin:2px auto}
 .pick-foot{flex:none;padding:10px 0 calc(var(--sab) + 12px);background:var(--bg);border-top:1px solid var(--sep-op)}
 
-/* Plan: "New routine" as a full row, not a small button in the corner */
-.item.rt-new{min-height:72px}
-.rt-new-i{
-  width:48px;height:48px;border-radius:14px;flex:none;display:grid;place-items:center;
-  background:var(--acc);color:var(--on-acc);font-size:22px;
+/* Plan: a big "New routine" button; the routines are the page, the week schedule is quiet */
+.btn.pl-new{min-height:60px;font-size:17px;font-weight:600;margin-bottom:4px}
+.pl-rt{
+  background:var(--surface);border-radius:var(--r-card);padding:14px 16px;
+  display:flex;flex-direction:column;gap:10px;transition:background var(--fast);
 }
+.pl-rt:active{background:var(--surface-2)}
+.pl-rh{display:flex;align-items:center;gap:12px}
+.pl-rh .grow{flex:1;min-width:0}
+.pl-rh .tt{font-size:17px;font-weight:600}
+.pl-days{display:flex;flex-wrap:wrap;gap:6px}
+.tag.now{box-shadow:inset 0 0 0 1.5px var(--acc)}
+.pl-ex{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;font-size:14px;color:var(--label-2)}
+.pl-ex li:not(.more){text-transform:capitalize}
+.pl-ex li.more,.pl-none{color:var(--label-3)}
+.pl-none{font-size:14px}
+/* the schedule: one card, one slim line a day, so it never competes with the routines above */
+.pl-sched{background:var(--surface);border-radius:var(--r-card);padding:2px 0}
+.pl-sr{
+  display:flex;align-items:center;gap:12px;width:100%;padding:11px 16px;text-align:left;
+  font-size:15px;color:var(--label);
+}
+.pl-sr + .pl-sr{border-top:1px solid var(--sep)}
+.pl-sr:active{background:var(--surface-2)}
+.pl-sd{width:34px;flex:none;font-weight:600;color:var(--label-2)}
+.pl-sr.today .pl-sd{color:var(--acc)}
+.pl-sv{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-sv.off{color:var(--label-3)}
+.pl-sr .chev{color:var(--label-3);font-size:13px}
 
 /* picker rows: details on the left of the add mark, both thumb-sized */
 .pick-row{padding-right:8px}
@@ -1764,6 +1787,7 @@ button.pk-tile:active{background:var(--surface-2)}
 .rt-list>.btn{margin-top:14px}
 .rt-del,:root[data-skin="peek"] .btn.rt-del{color:var(--red)}
 .pk-link.rt-del{display:block;margin:6px auto 0}
+.btn.rt-save{min-height:56px;font-size:17px;font-weight:600;margin-top:4px}
 .rt-main .ss{font-size:13px;color:var(--label-2);margin-top:2px}
 /* while a row is being dragged: it floats, nothing gets selected, the rest make room */
 .rt-row.dragging{position:relative;z-index:2;background:var(--surface);border-radius:14px;box-shadow:0 14px 34px rgba(0,0,0,.18)}
