@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
 import { useRatings } from '../store/useRatings.js'
@@ -107,20 +107,19 @@ function MuscleBalance({ S, ws, b }) {
   </div>
 }
 
-// What Peek suggests: one short line, the number in it, readable at a glance between sets. The
-// why is left to the row above, which already says what's wrong with the lift — except for a
-// lighter week leading, where "too heavy" or "tired" is the reason to take it.
-// `act` is what accepting it would change (lib/liftfix.js fixAction).
+// What Peek suggests: one short line that answers what's wrong with the lift, the number in it,
+// readable at a glance between sets. `act` is what accepting it would change (lib/liftfix.js
+// fixAction).
 const shortDate = iso => new Date(iso + 'T12:00:00').toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short' })
 // two decimals, not fmtNum's one: a 1.25 kg step or a 63.75 kg deload is a real plate load,
 // and "1.3 kg" isn't one
 const kg = (v, S) => v.toLocaleString(dateLocale(), { maximumFractionDigits: 2 }) + ' ' + S.unit
 const one = act => act.routines[0]
 function fixSay(f, act, S, x) {
-  if (f.kind === 'sets') return t('Add one more set ({0} → {1}).', one(act).from, one(act).to)
-  if (f.kind === 'steps') return t('Add {0} at a time, not {1}.', kg(one(act).to, S), kg(one(act).from, S))
+  if (f.kind === 'sets') return t('Add one more set ({0} → {1}) to get it moving.', one(act).from, one(act).to)
+  if (f.kind === 'steps') return t('Smaller jumps: add {0} at a time, not {1}.', kg(one(act).to, S), kg(one(act).from, S))
   if (f.kind === 'double') return t('Do more reps first ({0} → {1}), then add weight.', one(act).low, one(act).high)
-  if (f.kind === 'swap') return t('Try {0} this week.', nameOf(act.to))
+  if (f.kind === 'swap') return t('Try {0} this week for a change.', nameOf(act.to))
   if (x.kind === 'stuck') return t('Too heavy right now. Go lighter for a week: {0}.', kg(act.w, S))
   if (x.kind === 'down') return t('You’re tired. Go lighter for a week: {0}.', kg(act.w, S))
   return t('Go lighter for a week ({0}), then push again.', kg(act.w, S))
@@ -148,61 +147,37 @@ function fixToast(act, S) {
 // Whether an accepted fix can still be taken back: a swap while it's waiting or in its week
 // (undo ends it early), a deload while its week lasts. The lasting changes always can.
 const undoable = (S, id, m) => (m.kind === 'swap' ? swapPending(S, id) : m.kind === 'deload' ? m.until >= todayISO() : true)
-// How long Peek "thinks" before a swap or another idea: long enough to read as coming up with
-// something, short enough not to feel like waiting. None with reduced motion.
-const THINK_MS = 900
-const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
-// Peek's take on one lift: what's already been done for it (each with an undo), then the one
-// thing it suggests next, with the button that does it — one tap, no "are you sure", since it
-// can be undone right there. "Another idea" moves on to the next suggestion, round and round.
-// A swap and another idea are Peek coming up with something, so both get a moment of thinking
-// first — eyes up, dots in the bubble — before the answer lands.
+// Peek's take on one lift: the one thing it suggests, with the button that does it — one tap, no
+// "are you sure", since it can be undone right there. It is the first idea that can be done for
+// what's wrong with this lift (stats.js ORDER). Once accepted that is all there is: it shows as
+// done with its undo, and no second idea queues up behind it. One answer, not a list to try.
 function PeekFixes({ S, x }) {
   const orb = useRef(null)
-  const tm = useRef(0)
   const update = useStore(s => s.update)
-  const [n, setN] = useState(0)
-  const [thinking, setThinking] = useState(false)
-  useEffect(() => () => clearTimeout(tm.current), [])
-  const done = x.fixes.map(f => fixDone(S, x.id, f.kind)).filter(Boolean)
-  const ideas = x.fixes.filter(f => !fixDone(S, x.id, f.kind))
-    .map(f => ({ f, act: fixAction(S, x.id, f) })).filter(i => i.act)
-  const idea = ideas.length ? ideas[n % ideas.length] : null
-  const think = then => {
-    if (reducedMotion()) return then()
-    setThinking(true)
-    orb.current?.react('upward-side-glance', THINK_MS)
-    tm.current = setTimeout(() => { setThinking(false); then() }, THINK_MS)
-  }
-  const apply = f => {
+  const done = x.fixes.map(f => fixDone(S, x.id, f.kind)).filter(Boolean).sort((a, b) => b.t - a.t)[0]
+  const idea = done ? null : x.fixes.map(f => ({ f, act: fixAction(S, x.id, f) })).find(i => i.act)
+  const accept = f => {
     let act = null
     update(s => { act = applyFix(s, x.id, f) })
     if (!act) return
-    setN(0)
     orb.current?.react('joyful-wide', 900)
     orb.current?.bump('nod')
     toast(fixToast(act, S))
   }
-  const accept = f => (f.kind === 'swap' ? think(() => apply(f)) : apply(f))
   const undo = kind => { update(s => { undoFix(s, x.id, kind) }); toast(t('Undone')) }
   return <div className="sa-peek">
     <Orb ref={orb} size={30} mood="curious" poke="joyful-wide" />
     <div className="sa-say" aria-live="polite">
-      {done.map(m => <div key={m.kind} className="sa-sug done">
-        <Icon name="check" /><span>{fixDoneLine(m, S, x.id)}</span>
-        {undoable(S, x.id, m) && <button className="undo" onClick={() => undo(m.kind)}>{t('Undo')}</button>}
-      </div>)}
-      {thinking ? <p className="sa-sug think">{t('Hmm, let me think')}<i /><i /><i /></p>
-        : idea ? <div className="sa-sug idea">
-          <span>{fixSay(idea.f, idea.act, S, x)}</span>
-          <div className="acts">
-            <Button size="sm" variant="tinted" onClick={() => accept(idea.f)}>{t(FIX_BUTTON[idea.f.kind])}</Button>
-            {ideas.length > 1 && <button className="more" onClick={() => think(() => setN(i => i + 1))}>{t('Another idea')}</button>}
-          </div>
-        </div> : <p className="sa-sug off">{done.length
-          ? t('That’s all for now. Give it a week or two.')
-          : t('Add it to a routine and I can help.')}</p>}
+      {done ? <div className="sa-sug done">
+        <Icon name="check" /><span>{fixDoneLine(done, S, x.id)}</span>
+        {undoable(S, x.id, done) && <button className="undo" onClick={() => undo(done.kind)}>{t('Undo')}</button>}
+      </div> : idea ? <div className="sa-sug idea">
+        <span>{fixSay(idea.f, idea.act, S, x)}</span>
+        <div className="acts">
+          <Button size="sm" variant="tinted" onClick={() => accept(idea.f)}>{t(FIX_BUTTON[idea.f.kind])}</Button>
+        </div>
+      </div> : <p className="sa-sug off">{t('Add it to a routine and I can help.')}</p>}
     </div>
   </div>
 }
