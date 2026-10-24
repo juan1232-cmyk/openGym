@@ -1896,3 +1896,37 @@ button.mchip{font:inherit;font-size:12px}
 /* Home: this week's sets against the goal (reuses the Stats page's .sa-m bar) */
 .pk-sets-list{display:grid;gap:12px;margin-top:12px}
 .pk-sets .sa-note{margin-top:12px}
+
+/* Stats, the action version: where the week stands, then each thing worth doing about it —
+   what is wrong, what to do, the button that does it */
+.seg-design{margin-bottom:12px}
+.sx-hero{display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:16px;margin-bottom:16px;border-radius:var(--r-card);background:var(--ink);color:var(--on-ink)}
+.sx-hero .top{display:flex;align-items:center;gap:14px;width:100%}
+.sx-hero .sa-ring{width:60px;height:60px}
+.sx-hero .sa-ring .bg{stroke:color-mix(in srgb,var(--on-ink) 18%,transparent)}
+.sx-hero .sa-ring .fg{stroke:var(--on-ink)}
+.sx-hero .sa-ring .fg.full{stroke:var(--acc)}
+.sx-hero .n{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.sx-hero .n b{font-size:28px;font-weight:600;letter-spacing:-.03em;line-height:1}
+.sx-hero .n small{font-size:16px;font-weight:500;color:var(--on-ink-2)}
+.sx-hero .n span{font-size:13px;color:var(--on-ink-2)}
+.sx-hero .streak{display:flex;align-items:center;gap:4px;flex:none;padding:5px 10px;border-radius:999px;background:color-mix(in srgb,var(--on-ink) 12%,transparent);font-size:13px;font-weight:600}
+.sx-hero .streak .icn{color:var(--orange);font-size:15px}
+.sx-hero p{font-size:16px;font-weight:500;line-height:1.35;text-wrap:pretty}
+.sx-head{display:flex;justify-content:space-between;align-items:baseline;margin:0 2px 8px}
+.sx-head b{font-size:17px;font-weight:600;letter-spacing:-.02em;color:var(--label)}
+.sx-head span{font-size:12px;color:var(--label-3)}
+.sx-act{display:flex;gap:12px;padding:14px;margin-bottom:10px;border-radius:var(--r-card);background:var(--surface)}
+.sx-act .ic{flex:none;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--acc-soft);color:var(--acc-ink);font-size:17px}
+.sx-act .ic.warn{background:color-mix(in srgb,var(--orange) 15%,transparent);color:var(--orange)}
+.sx-act .bd{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.sx-act .why{font-size:13px;line-height:1.35;color:var(--label-2)}
+.sx-act .what{font-size:15px;font-weight:600;line-height:1.35;color:var(--label);text-wrap:pretty}
+.sx-act .acts{display:flex;align-items:center;gap:12px;margin-top:8px}
+.sx-act.done .what{font-weight:500;color:var(--label-2)}
+.sx-act.done .ic{background:none;color:var(--acc);width:24px}
+.sx-act.done .acts{margin-top:2px}
+.sx-act .undo{padding:2px 0;color:var(--acc);font-size:13px;font-weight:500}
+.sx-lift{margin-bottom:10px}
+.sx-lift .sa-watch .sa-peek{margin-bottom:0}
+.sx-more{margin:2px 2px 0;font-size:12px;color:var(--label-3)}

@@ -387,6 +387,22 @@ const rankAlt = (usage, eq) => (a, b) =>
   a.n.length - b.n.length || (a.n < b.n ? -1 : 1)
 
 /**
+ * The exercise to add to `list` to train `muscle` more: one whose main muscle it is, that the
+ * gym has and the list doesn't already do. What you already use comes first, then the
+ * better-rated one (`score(ex)` → a number, or null for unrated — Peek's exercise score, which
+ * this file doesn't import so the ranking stays testable without the ratings table), then the
+ * plainest equipment. Null when nothing fits.
+ */
+export function exerciseForMuscle(muscle, list, all, { gymEq = null, usage = {}, score = () => null } = {}) {
+  const inList = new Set((list || []).map(e => e.id))
+  const rank = rankAlt(usage)
+  const sc = new Map()
+  const scoreOf = e => { if (!sc.has(e.id)) sc.set(e.id, score(e) ?? -1); return sc.get(e.id) }
+  return all.filter(e => !inList.has(e.id) && gymAllows(e, gymEq) && primaryOf(e) === muscle)
+    .sort((a, b) => isJunk(a) - isJunk(b) || (usage[b.id] || 0) - (usage[a.id] || 0) || scoreOf(b) - scoreOf(a) || rank(a, b))[0] || null
+}
+
+/**
  * When adding `exId` would overlap, something the list is missing instead → { overlap, ex }:
  * first a part of the same muscle nothing in the list trains yet (two flat presses → an
  * incline one), else the neighbouring muscle the day neglects most. Just { overlap } when
