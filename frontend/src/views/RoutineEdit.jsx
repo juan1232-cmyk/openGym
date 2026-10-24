@@ -221,6 +221,11 @@ export default function RoutineEdit() {
       </div>
     </div>}
 
+    {/* Every change is already stored as you make it; this is the "I'm done" step, so there is
+        a clear way out of the editor that says the routine is kept. */}
+    {r.ex.length > 0 && <Button variant="primary" icon="check" className="rt-save"
+      onClick={() => { toast(t('Routine saved')); nav('/plan') }}>{t('Save routine')}</Button>}
+
     <button className="pk-link rt-del" onClick={() => deleteRoutine(id, () => nav('/plan'))}>{t('Delete routine')}</button>
   </div>
 }
