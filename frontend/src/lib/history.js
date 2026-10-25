@@ -321,11 +321,12 @@ export function nextSetLabel(entry, s, unit) {
   return modeOf(cfg) === 'reps' && !isBw(cfg) ? `${fmtNum(s.w || 0)} ${unit} × ${s.r || 0}` : setLabel(entry.id, s, cfg)
 }
 
-export function streakWeeks(S) {
+// `now` is injectable so callers that take a clock (weekActions) and their tests agree with it.
+export function streakWeeks(S, now = new Date()) {
   if (!S.workouts.length) return 0
   const weeks = new Set(S.workouts.map(w => weekKey(w.d)))
   let streak = 0
-  const cur = new Date()
+  const cur = new Date(now)
   for (let i = 0; i < 520; i++) {
     const wk = weekKey(isoOf(cur))
     if (weeks.has(wk)) streak++
