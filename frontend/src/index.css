@@ -1775,12 +1775,35 @@ button.pk-tile:active{background:var(--surface-2)}
 .pick-list .pk-link{display:block;margin:2px auto}
 .pick-foot{flex:none;padding:10px 0 calc(var(--sab) + 12px);background:var(--bg);border-top:1px solid var(--sep-op)}
 
-/* Plan: "New routine" as a full row, not a small button in the corner */
-.item.rt-new{min-height:72px}
-.rt-new-i{
-  width:48px;height:48px;border-radius:14px;flex:none;display:grid;place-items:center;
-  background:var(--acc);color:var(--on-acc);font-size:22px;
+/* Plan: a big "New routine" button; the routines are the page, the week schedule is quiet */
+.btn.pl-new{min-height:60px;font-size:17px;font-weight:600;margin-bottom:4px}
+.pl-rt{
+  background:var(--surface);border-radius:var(--r-card);padding:14px 16px;
+  display:flex;flex-direction:column;gap:10px;transition:background var(--fast);
 }
+.pl-rt:active{background:var(--surface-2)}
+.pl-rh{display:flex;align-items:center;gap:12px}
+.pl-rh .grow{flex:1;min-width:0}
+.pl-rh .tt{font-size:17px;font-weight:600}
+.pl-days{display:flex;flex-wrap:wrap;gap:6px}
+.tag.now{box-shadow:inset 0 0 0 1.5px var(--acc)}
+.pl-ex{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;font-size:14px;color:var(--label-2)}
+.pl-ex li:not(.more){text-transform:capitalize}
+.pl-ex li.more,.pl-none{color:var(--label-3)}
+.pl-none{font-size:14px}
+/* the schedule: one card, one slim line a day, so it never competes with the routines above */
+.pl-sched{background:var(--surface);border-radius:var(--r-card);padding:2px 0}
+.pl-sr{
+  display:flex;align-items:center;gap:12px;width:100%;padding:11px 16px;text-align:left;
+  font-size:15px;color:var(--label);
+}
+.pl-sr + .pl-sr{border-top:1px solid var(--sep)}
+.pl-sr:active{background:var(--surface-2)}
+.pl-sd{width:34px;flex:none;font-weight:600;color:var(--label-2)}
+.pl-sr.today .pl-sd{color:var(--acc)}
+.pl-sv{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-sv.off{color:var(--label-3)}
+.pl-sr .chev{color:var(--label-3);font-size:13px}
 
 /* picker rows: details on the left of the add mark, both thumb-sized */
 .pick-row{padding-right:8px}
@@ -1842,6 +1865,7 @@ button.pk-tile:active{background:var(--surface-2)}
 .rt-list>.btn{margin-top:14px}
 .rt-del,:root[data-skin="peek"] .btn.rt-del{color:var(--red)}
 .pk-link.rt-del{display:block;margin:6px auto 0}
+.btn.rt-save{min-height:56px;font-size:17px;font-weight:600;margin-top:4px}
 .rt-main .ss{font-size:13px;color:var(--label-2);margin-top:2px}
 /* while a row is being dragged: it floats, nothing gets selected, the rest make room */
 .rt-row.dragging{position:relative;z-index:2;background:var(--surface);border-radius:14px;box-shadow:0 14px 34px rgba(0,0,0,.18)}
@@ -1935,15 +1959,7 @@ button.sa-tile:active{transform:scale(.985)}
 .sa-sug.idea{flex-direction:column;align-items:stretch;gap:8px}
 .sa-sug .acts{display:flex;align-items:center;gap:14px}
 .sa-sug .btn.sm{flex:none;padding:6px 14px;font-size:13.5px}
-.sa-sug .more{color:var(--label-2);font-size:13px;font-weight:500;padding:4px 0}
 .sa-sug.done{color:var(--label-2)}
-/* Peek thinking before a swap or another idea: three dots that take turns */
-.sa-sug.think{color:var(--label-2);gap:3px;justify-content:flex-start}
-.sa-sug.think i{width:4px;height:4px;border-radius:50%;background:currentColor;animation:sa-dot 900ms ease-in-out infinite}
-.sa-sug.think i:first-of-type{margin-left:2px}
-.sa-sug.think i:nth-of-type(2){animation-delay:150ms}
-.sa-sug.think i:nth-of-type(3){animation-delay:300ms}
-@keyframes sa-dot{0%,60%,100%{opacity:.25;transform:none}30%{opacity:1;transform:translateY(-2px)}}
 .sa-sug.done .icn{color:var(--acc);font-size:14px}
 .sa-sug .undo{flex:none;padding:2px 4px;color:var(--acc);font-size:13px;font-weight:500}
 .sa-m i{position:relative}
@@ -1982,3 +1998,37 @@ button.mchip{font:inherit;font-size:12px}
 /* Home: this week's sets against the goal (reuses the Stats page's .sa-m bar) */
 .pk-sets-list{display:grid;gap:12px;margin-top:12px}
 .pk-sets .sa-note{margin-top:12px}
+
+/* Stats, the action version: where the week stands, then each thing worth doing about it —
+   what is wrong, what to do, the button that does it */
+.seg-design{margin-bottom:12px}
+.sx-hero{display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:16px;margin-bottom:16px;border-radius:var(--r-card);background:var(--ink);color:var(--on-ink)}
+.sx-hero .top{display:flex;align-items:center;gap:14px;width:100%}
+.sx-hero .sa-ring{width:60px;height:60px}
+.sx-hero .sa-ring .bg{stroke:color-mix(in srgb,var(--on-ink) 18%,transparent)}
+.sx-hero .sa-ring .fg{stroke:var(--on-ink)}
+.sx-hero .sa-ring .fg.full{stroke:var(--acc)}
+.sx-hero .n{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.sx-hero .n b{font-size:28px;font-weight:600;letter-spacing:-.03em;line-height:1}
+.sx-hero .n small{font-size:16px;font-weight:500;color:var(--on-ink-2)}
+.sx-hero .n span{font-size:13px;color:var(--on-ink-2)}
+.sx-hero .streak{display:flex;align-items:center;gap:4px;flex:none;padding:5px 10px;border-radius:999px;background:color-mix(in srgb,var(--on-ink) 12%,transparent);font-size:13px;font-weight:600}
+.sx-hero .streak .icn{color:var(--orange);font-size:15px}
+.sx-hero p{font-size:16px;font-weight:500;line-height:1.35;text-wrap:pretty}
+.sx-head{display:flex;justify-content:space-between;align-items:baseline;margin:0 2px 8px}
+.sx-head b{font-size:17px;font-weight:600;letter-spacing:-.02em;color:var(--label)}
+.sx-head span{font-size:12px;color:var(--label-3)}
+.sx-act{display:flex;gap:12px;padding:14px;margin-bottom:10px;border-radius:var(--r-card);background:var(--surface)}
+.sx-act .ic{flex:none;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--acc-soft);color:var(--acc-ink);font-size:17px}
+.sx-act .ic.warn{background:color-mix(in srgb,var(--orange) 15%,transparent);color:var(--orange)}
+.sx-act .bd{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.sx-act .why{font-size:13px;line-height:1.35;color:var(--label-2)}
+.sx-act .what{font-size:15px;font-weight:600;line-height:1.35;color:var(--label);text-wrap:pretty}
+.sx-act .acts{display:flex;align-items:center;gap:12px;margin-top:8px}
+.sx-act.done .what{font-weight:500;color:var(--label-2)}
+.sx-act.done .ic{background:none;color:var(--acc);width:24px}
+.sx-act.done .acts{margin-top:2px}
+.sx-act .undo{padding:2px 0;color:var(--acc);font-size:13px;font-weight:500}
+.sx-lift{margin-bottom:10px}
+.sx-lift .sa-watch .sa-peek{margin-bottom:0}
+.sx-more{margin:2px 2px 0;font-size:12px;color:var(--label-3)}
