@@ -1630,6 +1630,52 @@ button.pk-tile:active{background:var(--surface-2)}
 .pk-done{min-height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;color:var(--label)}
 .pk-done-orb{flex:1;min-height:250px;display:flex;align-items:center;justify-content:center}
 .pk-done-orb .orb:not([class*=' v-']){animation-duration:4s}
+/* The finish moment (FinishSummary): sparks and rings leave from behind the orb, a check badge
+   pops onto its corner and draws itself, then the headline rises. Every piece's resting style is
+   its final one, so prefers-reduced-motion (which switches animations off) lands on the finished
+   picture; the sparks are the exception and are not rendered at all in that case. */
+.pk-done-stage{position:relative;width:180px;height:180px}
+.pk-done-stage .orb-wrap{position:relative;z-index:1}
+.pk-done-sparks{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none}
+.pk-done-sparks i{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:var(--acc);opacity:0;
+  animation:pk-spark 1100ms cubic-bezier(.16,1,.3,1) var(--dl) forwards}
+.pk-done-sparks i:nth-of-type(3n){left:-3px;top:-3px;width:5px;height:5px;background:var(--acc-line)}
+.pk-done-sparks i:nth-of-type(4n){border-radius:2px}
+.pk-done-sparks b{position:absolute;left:calc(-90px*var(--k,1));top:calc(-90px*var(--k,1));width:calc(180px*var(--k,1));height:calc(180px*var(--k,1));border-radius:50%;box-shadow:0 0 0 3px var(--acc);opacity:0;
+  animation:pk-done-ring 1000ms ease-out 300ms forwards}
+.pk-done-sparks b.two{animation-delay:750ms}
+@keyframes pk-done-ring{from{transform:scale(1);opacity:.7}to{transform:scale(2);opacity:0}}
+.pk-done-badge{position:absolute;right:-10px;bottom:2px;z-index:2;width:58px;height:58px;overflow:visible;
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,.22));animation:pk-done-pop 560ms cubic-bezier(.34,1.56,.64,1) 560ms both}
+.pk-done-badge circle{fill:var(--acc);stroke:var(--bg);stroke-width:4}
+.pk-done-badge path{fill:none;stroke:var(--on-acc);stroke-width:5.5;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:40;stroke-dashoffset:0;animation:pk-done-draw 380ms ease-out 900ms both}
+@keyframes pk-done-pop{from{transform:scale(0) rotate(-25deg)}to{transform:none}}
+@keyframes pk-done-draw{from{stroke-dashoffset:40}to{stroke-dashoffset:0}}
+/* a lighter day: the same check, but an outline — present, calm, not the loud green disc */
+.pk-done.light .pk-done-badge circle{fill:var(--surface);stroke:var(--acc);stroke-width:3}
+.pk-done.light .pk-done-badge path{stroke:var(--acc-ink)}
+.pk-done-h h1{animation:pk-done-rise 520ms var(--spring) 760ms both}
+.pk-done-h p{animation:pk-done-rise 520ms var(--spring) 880ms both}
+.pk-done.record .pk-done-h h1{color:var(--acc-ink)}
+@keyframes pk-done-rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+/* room for Peek's line before it's typed, so nothing below shifts when it arrives */
+.pk-done-say{min-height:78px;margin:6px auto 0;max-width:300px;display:flex;justify-content:center}
+.pk-done-say .pk-say{margin-top:10px;max-width:none;text-align:center}
+/* what happened, exercise by exercise: ticks in after the headline, one row at a time */
+.pk-lifts{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.pk-lift{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:16px;background:var(--surface);
+  animation:pk-done-rise 460ms var(--spring) calc(1250ms + var(--i)*190ms) both}
+.pk-lift .ic{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:15px;font-weight:700;line-height:1;
+  background:var(--surface-2);color:var(--label);animation:pk-done-pop 420ms cubic-bezier(.34,1.56,.64,1) calc(1400ms + var(--i)*190ms) both}
+.pk-lift b{flex:1;min-width:0;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk-lift .v{flex:none;font-size:13px;font-weight:500;color:var(--label-2)}
+.pk-lift.best{background:var(--acc-soft)}
+.pk-lift.best .ic,.pk-lift.up .ic{background:var(--acc);color:var(--on-acc)}
+.pk-lift.best .v,.pk-lift.up .v{color:var(--acc-ink)}
+.pk-lift.down .ic{background:color-mix(in srgb,var(--orange) 24%,transparent);color:var(--orange)}
+.pk-lift.partial .ic,.pk-lift.skipped .ic{background:transparent;box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--label) 26%,transparent);color:var(--label-2)}
+.pk-lift.skipped b{color:var(--label-2)}
 .pk-done-h{text-align:center;display:flex;flex-direction:column;gap:8px}
 .pk-done-h h1{font-size:34px;line-height:1.05;font-weight:600;letter-spacing:-.045em}
 .pk-done-h p{font-size:16px;line-height:1.4;color:var(--label-2)}
@@ -1646,9 +1692,41 @@ button.pk-tile:active{background:var(--surface-2)}
 .pk-best em{font-style:normal;font-size:12px;font-weight:500;color:var(--acc-ink)}
 .pk-best b{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pk-best .v{font-family:var(--mono);font-size:15px;font-weight:500;flex:none}
-.pk-done-map{margin:8px 0 0}
-.pk-done-map .pk-card-h{margin-bottom:6px}
-.pk-done-acts{display:flex;gap:10px;margin-top:24px}
+.pk-done-card{margin:8px 0 0;animation:pk-done-rise 480ms var(--spring) 1900ms both}
+.pk-done-card .pk-card-h{margin-bottom:12px}
+/* the week strip on the finish screen: today's dot fills last, with a pop and a glow */
+.pk-done-week .pk-day i{background:var(--bg)}
+.pk-done-week .pk-day i.done{background:var(--acc)}
+.pk-done-week .pk-day i.now{animation:pk-day-now 700ms cubic-bezier(.34,1.56,.64,1) 2300ms both}
+@keyframes pk-day-now{0%{transform:scale(.4);box-shadow:0 0 0 0 var(--acc)}60%{transform:scale(1.25)}100%{transform:none;box-shadow:0 0 0 10px transparent}}
+.pk-next-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-top:1px solid var(--sep)}
+.pk-next-row:first-child{border-top:0;padding-top:0}
+.pk-next-row:last-child{padding-bottom:0}
+.pk-next-row b{min-width:0;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk-next-row span{flex:none;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--label-2)}
+.pk-next-row em{font-style:normal;font-weight:700}
+.pk-next-row.up span{color:var(--acc-ink)}
+.pk-next-row.deload span{color:var(--orange)}
+/* The finish prompt (FinishPrompt): Peek on a small stage, one dot per set, then its line.
+   Dots fill in left to right; the first hollow one breathes, and when you're leaving early the
+   hollow ones are red-rimmed — the sets still owed. */
+.pk-fin{text-align:center;padding:4px 0 2px}
+.pk-fin-stage{position:relative;width:150px;height:126px;margin:0 auto;display:flex;align-items:center;justify-content:center}
+.pk-fin-stage .orb-wrap{position:relative;z-index:1}
+.pk-fin h3{margin:2px 0 0}
+.pk-pips{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:12px 4px 4px}
+.pk-pips i{width:14px;height:14px;border-radius:50%;box-sizing:border-box;border:2px solid color-mix(in srgb,var(--label) 28%,transparent)}
+.pk-pips i.on{background:var(--acc);border-color:var(--acc);animation:pk-pip-in 380ms var(--spring) calc(260ms + var(--i)*60ms) both}
+.pk-fin.early .pk-pips i:not(.on){border-color:color-mix(in srgb,var(--red) 65%,transparent)}
+.pk-pips i.next{animation:pk-pip-wait 1.5s ease-in-out 900ms infinite}
+@keyframes pk-pip-in{from{transform:scale(0)}60%{transform:scale(1.4)}to{transform:none}}
+@keyframes pk-pip-wait{50%{transform:scale(1.3)}}
+.pk-fin .btn.ghost.dim{color:var(--label-2)}
+.pk-fin-say{min-height:78px;display:flex;justify-content:center;margin-bottom:14px}
+.pk-fin-say .pk-say{margin-top:10px;max-width:none;text-align:center}
+/* pinned, so Done is one tap away however far the muscle map pushes the page down */
+.pk-done-acts{display:flex;gap:10px;margin-top:16px;position:sticky;bottom:0;z-index:3;
+  padding:14px 0 max(14px,env(safe-area-inset-bottom));background:linear-gradient(to bottom,transparent,var(--bg) 28%)}
 .pk-done-acts .btn:first-child{flex:2}
 .pk-done-acts .btn:last-child{flex:1}
 
