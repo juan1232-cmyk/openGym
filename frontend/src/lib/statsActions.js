@@ -162,7 +162,7 @@ export function weighAction(S, now = new Date()) {
  */
 export function weekActions(S, now = new Date()) {
   const ahead = weekAhead(S, now)
-  const streak = streakWeeks(S)
+  const streak = streakWeeks(S, now)
   const next = ahead.left[0] || null
   const hero = {
     done: ahead.done, planned: ahead.planned, streak,
