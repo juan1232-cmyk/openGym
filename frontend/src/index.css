@@ -2023,6 +2023,7 @@ button.mchip{font:inherit;font-size:12px}
 .sx-act .ic.warn{background:color-mix(in srgb,var(--orange) 15%,transparent);color:var(--orange)}
 .sx-act .bd{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
 .sx-act .why{font-size:13px;line-height:1.35;color:var(--label-2)}
+.sx-act .because{font-size:12px;line-height:1.35;color:var(--label-3)}
 .sx-act .what{font-size:15px;font-weight:600;line-height:1.35;color:var(--label);text-wrap:pretty}
 .sx-act .acts{display:flex;align-items:center;gap:12px;margin-top:8px}
 .sx-act.done .what{font-weight:500;color:var(--label-2)}
