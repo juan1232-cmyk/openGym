@@ -2,8 +2,9 @@ import { setRatings, loadRatings } from './ratings.js'
 import { describe, it, expect } from 'vitest'
 import {
   rangeBounds, prevBounds, inRange, adherence, buckets, bucketBy, weeksTrained, bestRun,
-  personalBests, mainLift, AREAS, areaSets, liftsToWatch, weeklySets, setZone, weekGoals, mainLiftsWeek, isMainLift, bwPace, weekdayPattern
+  personalBests, mainLift, AREAS, areaSets, liftsToWatch, weeklySets, setZone, weekGoals, mainLiftsWeek, isMainLift, bwPace, weekdayPattern, MAJOR
 } from './stats.js'
+import { WEEKLY_ZONES, WEEK_GOAL, MUSCLE_GOALS, goalFor, goalWhy } from './engine-config.js'
 import { SCENARIOS } from '../device/scenarios.js'
 import { MUSCLES } from './muscles.js'
 import { EXDB } from './exercises.js'
@@ -334,9 +335,33 @@ describe('weekGoals', () => {
   it('counts the week’s effective sets against the goal, furthest-behind first', () => {
     const g = weekGoals([wo('2026-09-21', [sets(4), sets(3, SQUAT)])], TODAY)
     expect(row(g, 'chest')).toMatchObject({ done: 4, goal: 10, short: 6 })
-    expect(g.behind[0].m).toBe('gluteal')            // 3 sets against chest's 4: furthest behind
+    expect(row(g, 'gluteal')).toMatchObject({ done: 3, goal: 8, short: 5 })
+    expect(g.behind[0].m).toBe('chest')              // 6 short of 10, against glutes' 5 short of 8
     expect(g.behind.every((r, i) => !i || g.behind[i - 1].short >= r.short)).toBe(true)
     expect(g.met).toBe(false)
+  })
+
+  it('gives every muscle it tracks its own goal, and the reason for it', () => {
+    const g = weekGoals([wo('2026-09-21', [sets(4), sets(3, SQUAT)])], TODAY)
+    g.rows.forEach(r => {
+      expect(r.goal).toBe(goalFor(r.m))
+      expect(r.why).toEqual(expect.any(String))
+    })
+    expect(new Set(g.rows.map(r => r.goal)).size).toBeGreaterThan(1)
+  })
+
+  it('keeps every goal inside the zones: never under the "under" line, never past the productive one', () => {
+    const [low, , high] = WEEKLY_ZONES
+    MAJOR.forEach(m => {
+      expect(MUSCLE_GOALS[m], m).toBeDefined()
+      expect(goalFor(m)).toBeGreaterThanOrEqual(low)    // below it Stats shows "under" while Home says hit
+      expect(goalFor(m)).toBeLessThanOrEqual(high)
+    })
+  })
+
+  it('falls back to the flat goal for a muscle the table does not list', () => {
+    expect(goalFor('forearm')).toBe(WEEK_GOAL)
+    expect(goalWhy('forearm')).toBeNull()
   })
 
   it('has no shortfall once the goal is reached', () => {
@@ -347,7 +372,7 @@ describe('weekGoals', () => {
 
   it('holds you to muscles trained in the last three weeks, not older ones or never', () => {
     const g = weekGoals([wo('2026-09-21', [sets(4)]), wo('2026-09-01', [sets(3, SQUAT)]), wo('2026-08-10', [sets(3, SQUAT)])], TODAY)
-    expect(row(g, 'gluteal')).toMatchObject({ done: 0, short: 10 })       // squatted 3 weeks ago, not since
+    expect(row(g, 'gluteal')).toMatchObject({ done: 0, short: 8 })        // squatted 3 weeks ago, not since
     const old = weekGoals([wo('2026-08-10', [sets(3, SQUAT)])], TODAY)
     expect(old.rows).toEqual([])                                          // five weeks ago: nothing to hold you to
     expect(old.met).toBe(false)

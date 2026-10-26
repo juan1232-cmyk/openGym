@@ -34,7 +34,7 @@ function SetsWeek({ S }) {
   if (!g.rows.length) return null
   const shown = (g.behind.length ? g.behind : g.rows).slice(0, 4)
   return <div className="card pk-sets">
-    <div className="pk-card-h"><b>{t('Sets this week')}</b><span>{g.met ? t('Goal hit') : t('Goal {0} per muscle', g.rows[0].goal)}</span></div>
+    <div className="pk-card-h"><b>{t('Sets this week')}</b><span>{g.met ? t('Goal hit') : t('Goal set per muscle')}</span></div>
     <div className="pk-sets-list">{shown.map(r => {
       const p = Math.min(1, r.done / r.goal)
       return <div key={r.m} className={'sa-m ' + (r.short === 0 ? 'productive' : p < 0.5 ? 'under' : 'ok')}>
