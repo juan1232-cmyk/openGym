@@ -19,6 +19,8 @@ web/dist/
 
 # Env files (copy .env.example -> .env locally, never commit .env)
 .env
+.env.local
+.env.*.local
 
 # OS cruft
 .DS_Store
