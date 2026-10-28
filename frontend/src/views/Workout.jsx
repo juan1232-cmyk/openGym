@@ -398,7 +398,8 @@ function ActiveWorkout() {
     const top = cards[unitIdx].getBoundingClientRect().top - shift
     if (top >= 8 && top <= innerHeight * 0.4) return
     const still = matchMedia('(prefers-reduced-motion: reduce)').matches
-    scrollTo({ top: scrollY + top - 16, behavior: still ? 'auto' : 'smooth' })
+    const page = document.getElementById('app')   // the scroller; the window itself never moves
+    page.scrollTo({ top: page.scrollTop + top - 16, behavior: still ? 'auto' : 'smooth' })
   }, [unitIdx])
 
   const discard = () => confirmSheet({

@@ -1,6 +1,11 @@
 # Runtime data — passkeys, per-user state, session secret, VAPID keys.
 # Generated on first run; never commit real instance data.
 /data/
+/data-dev/
+
+# Local dev server output and Claude Code's per-session worktrees.
+*.log
+.claude/worktrees/
 
 # Downloaded exercise media (~140 MB, pulled by the `media` compose service).
 /media/
