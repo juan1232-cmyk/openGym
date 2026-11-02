@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { modeOf, isTimed, fmtSec, setLabel, defaultConfig, buildSets, exLine, workoutVolume, effortOf, stepEffort, capEffort, rirChip, isBw, isPerSide, sideReps, repStep, nextUp, nextSetLabel, previousSession, topSet, isLoadPR, moveItem } from './history.js'
+import { modeOf, isTimed, fmtSec, setLabel, defaultConfig, buildSets, exLine, workoutVolume, effortOf, stepEffort, capEffort, rirChip, isBw, isPerSide, sideReps, repStep, nextUp, nextSetLabel, previousSession, topSet, isLoadPR, moveItem, sideSplit } from './history.js'
 import { EXDB } from './exercises.js'
 
 // Real ids out of the shipped catalogue, so the body-part fallback is exercised for real.
@@ -336,6 +336,12 @@ describe('exLine', () => {
     expect(exLine({ id: LIFT, sets: 3, reps: 12, repsMin: 8, prog: 'double', weight: 60 }, 'kg')).toBe('3 × 8–12 · 60 kg')
     expect(exLine({ id: BW, sets: 3, reps: 8, repsMax: 15 }, 'kg')).toBe('3 × 8–15')
     expect(exLine({ id: LIFT, sets: 3, reps: 16, repsMin: 12, side: true }, 'kg')).toBe('3 × 12–16 · 6–8/side')
+  })
+  // The routine editor shows reps as pills and only this split beside the muscle line.
+  it('gives the per-side split on its own, and nothing for two-sided or timed work', () => {
+    expect(sideSplit({ id: LIFT, sets: 3, reps: 24, repsMin: 20, side: true })).toBe('10–12/side')
+    expect(sideSplit({ id: LIFT, sets: 3, reps: 12, repsMin: 8 })).toBe('')
+    expect(sideSplit({ id: LIFT, sets: 3, sec: 30, mode: 'time', side: true })).toBe('')
   })
 })
 

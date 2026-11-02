@@ -4,7 +4,7 @@ import { useStore } from '../store/useStore.js'
 import { exOr } from '../lib/exercises.js'
 import { uid } from '../lib/format.js'
 import { t } from '../lib/i18n.js'
-import { supersetUnits, cleanupSg, moveItem, exLine, modeOf } from '../lib/history.js'
+import { supersetUnits, cleanupSg, moveItem, exLine, modeOf, sideSplit } from '../lib/history.js'
 import { followsSuggestion, applySuggestion } from '../lib/scheme.js'
 import { SchemePills } from '../components/Scheme.jsx'
 import Orb from '../components/Orb.jsx'
@@ -165,7 +165,7 @@ export default function RoutineEdit() {
       <Thumb ex={ex} />
       <div className="grow rt-main">
         <div className="tt capitalize">{ex.n}</div>
-        <div className="ss">{pills ? muscleLine(ex) : exLine(e, S.unit)}</div>
+        <div className="ss">{pills ? muscleLine(ex) + (sideSplit(e) && ' · ' + sideSplit(e)) : exLine(e, S.unit)}</div>
       </div>
       {/* drag to reorder; a tap opens the same moves as a menu */}
       <button className="rt-grip" aria-label={t('Move')} {...drag.handle(i, r.ex.length)}
