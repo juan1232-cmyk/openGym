@@ -8,7 +8,7 @@ export {
   exercisePicker, exConfigSheet, swapSheet, muscleLine, chipLabel, gymEquipmentSheet, gymEqLabel
 } from './sheets/exercise.jsx'
 export {
-  loadStarterPlan, glyphPicker, planToolsSheet, planImportSheet,
+  loadStarterPlan, planToolsSheet, planImportSheet,
   dayOverrideSheet, dayAssignSheet
 } from './sheets/plan.jsx'
 export {
