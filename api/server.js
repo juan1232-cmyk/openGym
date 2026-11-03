@@ -145,7 +145,7 @@ setInterval(() => {
     user.lastReminder = now.date;
     saveDb();
     sendPush(user.id, {
-      title: routine ? `${routine.emoji || '🏋️'} ${routine.name} today` : 'Workout planned today',
+      title: routine ? `${routine.name} today` : 'Workout planned today',
       body: "It's on your plan — let's go 💪",
       tag: 'day-reminder'
     });
@@ -518,7 +518,7 @@ const routes = {
       user: { id: u.id, name: u.name, created: u.created || null, disabled: !!u.disabled, admin: isAdmin(u), invitedBy: u.invitedBy || null },
       unit: S.unit || 'kg',
       lastSync: S._ts || null,
-      routines: (S.routines || []).map(r => ({ id: r.id, name: r.name, emoji: r.emoji, count: (r.ex || []).length })),
+      routines: (S.routines || []).map(r => ({ id: r.id, name: r.name, count: (r.ex || []).length })),
       bodyweight: S.bodyweight || [],
       workouts: (S.workouts || []).slice().reverse()   // newest first for display
     });

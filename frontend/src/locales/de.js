@@ -89,7 +89,6 @@ export default {
   'Weight ({0})': 'Gewicht ({0})',
   'Add to routine': 'Zur Routine hinzufügen',
   'Remove exercise': 'Übung entfernen',
-  'Pick an icon': 'Symbol auswählen',
   // --- day planning / calendar ---
   'Back to weekly plan': 'Zurück zum Wochenplan',
   '{0} set to rest': '{0} als Pausentag gesetzt',
@@ -574,7 +573,6 @@ export default {
   'Each session starts from what you last lifted, so this is only a fallback.': 'Jede Einheit startet mit deinem letzten Gewicht – das hier ist nur ein Ersatzwert.',
   'Focus': 'Fokus',
   'Move': 'Verschieben',
-  'Icon': 'Symbol',
   'Routine name': 'Name der Routine',
   'Routine settings': 'Routine-Einstellungen',
   'Move up': 'Nach oben',
