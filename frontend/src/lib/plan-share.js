@@ -90,6 +90,8 @@ export function parsePlan(raw) {
   }))
   return {
     name: (data.name || '').trim(),
+    // How to run the plan, shown before importing it. Only built-in programs carry one so far.
+    note: typeof data.note === 'string' ? data.note.trim() : '',
     routines,
     week: data.week || {},
     customEx,
@@ -115,7 +117,8 @@ export function mergePlan(s, bundle, { schedule } = {}) {
     if (same) { exIdMap[c.id] = same.id; return }
     const nid = uid()
     exIdMap[c.id] = nid
-    s.customEx.push({ id: nid, n: c.n, bp: c.bp, ...(c.desc ? { desc: c.desc } : {}) })
+    // The shape the custom-exercise form writes — without `custom` an imported one couldn't be edited.
+    s.customEx.push({ id: nid, n: c.n, bp: c.bp, desc: c.desc || '', tg: '', eq: 'custom', custom: true })
   })
   const ridMap = {}
   bundle.routines.forEach(r => {
@@ -134,6 +137,12 @@ export function mergePlan(s, bundle, { schedule } = {}) {
     Object.entries(bundle.week || {}).forEach(([d, oldId]) => {
       if (ridMap[oldId]) s.week[d] = ridMap[oldId]
     })
+    // The onboarding's picked days mark an empty day as "waiting for a routine"; once the week
+    // is replaced they're the old plan's days, and a rest day here would read as one missing.
+    if (Array.isArray(s.trainDays)) {
+      s.trainDays = WEEK_ORDER.filter(d => s.week[d])
+      s.days = s.trainDays.length || null
+    }
   }
   return { routines: bundle.routines.length }
 }
