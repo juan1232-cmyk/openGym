@@ -8,6 +8,7 @@ import { fmtNum, fmtVol, todayISO, exCount, DAYN } from '../lib/format.js'
 import { beep, vibrate } from '../lib/sound.js'
 import { t } from '../lib/i18n.js'
 import { api } from '../lib/api.js'
+import { SERVER_EXTRAS } from '../lib/backend.js'
 import { Thumb } from '../components/Media.jsx'
 import { startFlow, exercisePicker, exConfigSheet, swapSheet, exerciseDetailSheet, finishWorkout, workoutCompleteSheet, confirmSheet } from '../sheets.jsx'
 import Icon from '../components/Icon.jsx'
@@ -422,7 +423,8 @@ function ActiveWorkout() {
     const top = cards[unitIdx].getBoundingClientRect().top - shift
     if (top >= 8 && top <= innerHeight * 0.4) return
     const still = matchMedia('(prefers-reduced-motion: reduce)').matches
-    scrollTo({ top: scrollY + top - 16, behavior: still ? 'auto' : 'smooth' })
+    const page = document.getElementById('app')   // the scroller; the window itself never moves
+    page.scrollTo({ top: page.scrollTop + top - 16, behavior: still ? 'auto' : 'smooth' })
   }, [unitIdx])
 
   const discard = () => confirmSheet({
@@ -433,7 +435,7 @@ function ActiveWorkout() {
   // Live-presence heartbeat so the admin dashboard can show who's training now. Signed-in only —
   // guests have no server session. Reads fresh state each tick so progress stays current.
   useEffect(() => {
-    if (!useStore.getState().user) return
+    if (!useStore.getState().user || !SERVER_EXTRAS) return
     let stopped = false
     const ping = active => {
       const A2 = useStore.getState().S.active

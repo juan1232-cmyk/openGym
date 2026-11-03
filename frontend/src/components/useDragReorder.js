@@ -20,6 +20,8 @@ const SLOP = 6           // px of movement before a press becomes a drag (or a h
 const HOLD = 400         // ms of holding still on a row before it lifts
 const EDGE = 90          // px from the top, or from the tab bar, where the page scrolls
 const LIFT = 'scale(1.03)'
+// the document never scrolls — #app is the scroller (index.css), so positions and auto-scroll read from it
+const pageEl = () => document.getElementById('app')
 
 export default function useDragReorder({ containerRef, onMove }) {
   const st = useRef(null)
@@ -52,7 +54,7 @@ export default function useDragReorder({ containerRef, onMove }) {
     if (!s || !s.dragging) return
     const bottomEdge = window.innerHeight - EDGE - 60   // the floating tab bar sits there
     const v = s.clientY < EDGE ? -(EDGE - s.clientY) / 6 : s.clientY > bottomEdge ? (s.clientY - bottomEdge) / 6 : 0
-    if (v) { window.scrollBy(0, v); layout(s, s.clientY + window.scrollY) }
+    if (v) { pageEl().scrollBy(0, v); layout(s, s.clientY + pageEl().scrollTop) }
     s.raf = requestAnimationFrame(autoScroll)
   }
 
@@ -64,7 +66,7 @@ export default function useDragReorder({ containerRef, onMove }) {
   const lift = s => {
     s.dragging = true
     s.rows = rowsOf()
-    s.rects = s.rows.map(el => { const r = el.getBoundingClientRect(); return { top: r.top + window.scrollY, height: r.height } })
+    s.rects = s.rows.map(el => { const r = el.getBoundingClientRect(); return { top: r.top + pageEl().scrollTop, height: r.height } })
     // a held row eases up into its lift; one picked up by the handle is already moving
     s.rows.forEach((el, i) => { el.style.transition = i !== s.from ? 'transform 160ms var(--ease)' : s.hold ? 'transform 120ms var(--ease)' : 'none' })
     s.rows[s.from]?.classList.add('dragging')
@@ -91,7 +93,7 @@ export default function useDragReorder({ containerRef, onMove }) {
     const s = st.current
     if (!s || e.pointerId !== s.id) return
     s.clientY = e.clientY
-    const pageY = e.clientY + window.scrollY
+    const pageY = e.clientY + pageEl().scrollTop
     if (!s.dragging) {
       const moved = Math.abs(e.clientY - s.startClientY) >= SLOP || Math.abs(e.clientX - s.startX) >= SLOP
       if (!moved) return
@@ -110,7 +112,7 @@ export default function useDragReorder({ containerRef, onMove }) {
     end(false)
     const s = st.current = {
       id: e.pointerId, from: i, to: i, hold, dragging: false,
-      startY: e.clientY + window.scrollY, startClientY: e.clientY, startX: e.clientX, clientY: e.clientY,
+      startY: e.clientY + pageEl().scrollTop, startClientY: e.clientY, startX: e.clientX, clientY: e.clientY,
     }
     const target = e.currentTarget
     if (!hold) { target.setPointerCapture(e.pointerId); return }
@@ -119,7 +121,7 @@ export default function useDragReorder({ containerRef, onMove }) {
       if (st.current !== s) return
       try { target.setPointerCapture(s.id) } catch { /* pointer already gone */ }
       lift(s)
-      layout(s, s.clientY + window.scrollY)
+      layout(s, s.clientY + pageEl().scrollTop)
       navigator.vibrate?.(10)
     }, HOLD)
   }
