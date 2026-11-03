@@ -93,9 +93,10 @@ function Coach({ S }) {
     const scroll = () => at(innerWidth / 2, innerHeight)
     addEventListener('pointerdown', down)
     addEventListener('pointermove', move, { passive: true })
-    addEventListener('scroll', scroll, { passive: true })
+    // #app is the scroller, not the window, and scroll doesn't bubble — capture hears it
+    addEventListener('scroll', scroll, { passive: true, capture: true })
     return () => {
-      removeEventListener('pointerdown', down); removeEventListener('pointermove', move); removeEventListener('scroll', scroll)
+      removeEventListener('pointerdown', down); removeEventListener('pointermove', move); removeEventListener('scroll', scroll, true)
       clearTimeout(gaze.current)
     }
   }, [])

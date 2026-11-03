@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useStore, hasData } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { webauthnOK, passkeyLogin, passkeyRegister, api, BIO } from '../lib/api.js'
+import { AUTH } from '../lib/backend.js'
 import { t } from '../lib/i18n.js'
 import { EXIDX } from '../lib/exercises.js'
 import { GOALS, LEVELS, KITS, MODES, MAX_DAYS, MON_FIRST, withDefaults, planFor, commitAnswers, becauseRows } from '../lib/onboard.js'
@@ -9,6 +10,7 @@ import { DAYN } from '../lib/format.js'
 import Orb from '../components/Orb.jsx'
 import Say from '../components/Say.jsx'
 import Icon from '../components/Icon.jsx'
+import CodeSignIn from '../components/CodeSignIn.jsx'
 import { Button } from '../components/ui.jsx'
 
 const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -168,7 +170,15 @@ function Welcome({ onStart }) {
     try { const u = await passkeyLogin(); setUser(u); await pullState(); toast(t('Welcome back, {0}', u.name)) }
     catch (e) { if (e.name !== 'NotAllowedError' && e.name !== 'AbortError') toast(e.message || t('Sign-in failed')) }
   }
-  const passkeys = webauthnOK()
+  // with email-code accounts there is nothing for the browser to support
+  const passkeys = AUTH === 'code' || webauthnOK()
+  const [emailing, setEmailing] = useState(false)
+  if (emailing) return <div className="pk-step ob-welcome">
+    <div className="grow" />
+    <div className="pk-hero"><h1>{t('Welcome back.')}</h1></div>
+    <CodeSignIn />
+    <button className="pk-link" onClick={() => setEmailing(false)}>{t('Back')}</button>
+  </div>
   return <div className="pk-step ob-welcome">
     <div className="grow" />
     <div className="pk-hero">
@@ -178,7 +188,7 @@ function Welcome({ onStart }) {
     <div className="pk-actions">
       {passkeys ? <>
         <Button variant="primary" onClick={() => onStart(true)}>{t('Create account')}</Button>
-        <Button variant="soft" onClick={signIn}>{t('Sign in')}</Button>
+        <Button variant="soft" onClick={AUTH === 'code' ? () => setEmailing(true) : signIn}>{t('Sign in')}</Button>
         <button className="pk-link" onClick={() => onStart(false)}>{t('Continue without account')}</button>
       </> : <Button variant="primary" onClick={() => onStart(false)}>{t('Continue without account')}</Button>}
     </div>
@@ -297,7 +307,8 @@ function SaveStep({ name, orb, say, setUser, setGuest, pushState, pullState }) {
   const [inviteOnly, setInviteOnly] = useState(false)
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
-  useEffect(() => { api('/api/config').then(c => setInviteOnly(!!c.invite_only)).catch(() => {}) }, [])
+  // the self-hosted server's invite gate; the hosted app has neither /api nor invites
+  useEffect(() => { if (AUTH === 'passkey') api('/api/config').then(c => setInviteOnly(!!c.invite_only)).catch(() => {}) }, [])
   const create = async () => {
     const n = (name || '').trim() || useStore.getState().S.name || ''
     if (!n) { toast(t('Enter a name')); return }
@@ -315,6 +326,13 @@ function SaveStep({ name, orb, say, setUser, setGuest, pushState, pullState }) {
       setBusy(false)
     }
   }
+  if (AUTH === 'code') return <div className="pk-step ob-save">
+    <div className="grow" />
+    <CodeSignIn name={name} />
+    <div className="pk-actions" style={{ marginTop: 10 }}>
+      <Button variant="soft" onClick={() => setGuest(true)}>{t('Not now, keep it on this device')}</Button>
+    </div>
+  </div>
   return <div className="pk-step ob-save">
     <div className="grow" />
     <div className="pk-actions">
