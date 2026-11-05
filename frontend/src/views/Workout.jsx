@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { exOr } from '../lib/exercises.js'
+import { swapConfig } from '../lib/pick.js'
 import { effectiveRoutine, lastEntryFor, buildSets, setsDoneActive, supersetUnits, unitOf, setLabel, modeOf, isBw, isPerSide, sideReps, EFFORT, effortOf, capEffort, RIR_CHIPS, rirChip, fmtSec, nextUp, nextSetLabel, isLoadPR } from '../lib/history.js'
 import { fmtNum, fmtVol, todayISO, exCount, DAYN } from '../lib/format.js'
 import { beep, vibrate } from '../lib/sound.js'
@@ -157,8 +158,7 @@ function ExerciseBody({ entryIdx, inSuperset, onToggle, onField, onAddSet, onRem
   const update = useStore(s => s.update)
   const swap = () => swapSheet(ex, S.active.entries.map(e => e.id), alt => update(s => {
     const e = s.active.entries[entryIdx]
-    const { weight, bodyweight, ...keep } = e.target || {}
-    s.active.entries[entryIdx] = { ...entryFor(s, alt.id, { ...keep, id: alt.id, weight: 0 }), sg: e.sg }
+    s.active.entries[entryIdx] = { ...entryFor(s, alt.id, swapConfig(e.target, ex, alt)), sg: e.sg }
   }))
   return <div className="pk-ex-part">
     {inSuperset && <div className="pk-ex-sub">{ex.n}</div>}
