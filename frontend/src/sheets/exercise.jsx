@@ -15,9 +15,7 @@ import { nav } from '../lib/nav.js'
 import { Thumb } from '../components/Media.jsx'
 import Stepper from '../components/Stepper.jsx'
 import Icon from '../components/Icon.jsx'
-import Glyph from '../components/Glyph.jsx'
 import { Button, Switch, Segmented, SelectRow, Row, Section } from '../components/ui.jsx'
-import { glyphOf, DEFAULT_GLYPH } from '../lib/glyphs.js'
 import { policyFor, defaultIncrement, nextPrescription, POLICIES_FOR, POLICY_NAME, POLICY_DESC } from '../lib/progression.js'
 import { S, update, ui, toast, confirmSheet } from './common.jsx'
 
@@ -41,7 +39,7 @@ function AddToRoutine({ ex, close }) {
     const isNew = rid === '_new'
     exConfigSheet(ex, null, cfg => {
       update(s => {
-        let r = isNew ? { id: uid(), name: t('New routine'), emoji: DEFAULT_GLYPH, ex: [] } : s.routines.find(x => x.id === rid)
+        let r = isNew ? { id: uid(), name: t('New routine'), ex: [] } : s.routines.find(x => x.id === rid)
         if (isNew) s.routines.push(r)
         if (r) r.ex.push({ id: ex.id, ...cfg })
       })
@@ -55,11 +53,10 @@ function AddToRoutine({ ex, close }) {
     <div className="muted small" style={{ marginBottom: 12 }}>{t('Pick a routine — sets, reps & weight come next.')}</div>
     <div className="list">
       {st.routines.map(r => <div key={r.id} className="item" onClick={() => pick(r.id)}>
-        <span className="lrow-i"><Glyph name={glyphOf(r.emoji)} /></span>
         <div className="grow"><div className="tt">{r.name}</div><div className="ss">{exCount(r.ex.length)}</div></div>
         {r.ex.some(e => e.id === ex.id) && <span className="tag">{t('already in')}</span>}<Icon name="plus" className="chev" />
       </div>)}
-      <div className="item" onClick={() => pick('_new')}><span className="lrow-i" style={{ background: 'var(--surface-3)' }}><Icon name="sparkles" /></span>
+      <div className="item" onClick={() => pick('_new')}>
         <div className="grow"><div className="tt">{t('New routine')}</div><div className="ss">{t('Create one and start with this exercise')}</div></div><Icon name="plus" className="chev" /></div>
     </div>
   </>
@@ -272,21 +269,66 @@ function GymEquipment() {
 export const gymEquipmentSheet = () => ui().openSheet(() => <GymEquipment />)
 
 /* ============================ swap for similar ============================ */
-// Same main muscle, different exercise — for when the rack is taken, or a lift stops
-// agreeing with you. Closest movement first ("barbell bench press" → "dumbbell bench press").
+// Two ways to swap: the exercises for the same main muscle (closest movement first, so
+// "barbell bench press" → "dumbbell bench press") — the default, because it is what you want
+// when the rack is taken or a lift stops agreeing with you — and the whole library, for when
+// you want something else entirely. Both search, and both list everything, not a top 30.
+// `exclude` = ids already in the routine/workout, so a swap never makes a duplicate.
 function SwapPicker({ ex, exclude, onSwap, close }) {
   const st = useStore(s => s.S)
-  const f = similarTo(ex, allExercises(st), { exclude, gymEq: st.gymEq, usage: usageOf(st) }).slice(0, 30)
-  return <>
-    <h3>{t('Swap for')}</h3>
-    <div className="list">
-      {f.map(e => <PickRow key={e.id} ex={e} icon="shuffle" onPick={alt => { close(); onSwap(alt) }} />)}
-      {f.length === 0 && <div className="empty">{t('No match')}</div>}
-    </div>
-  </>
+  const [mode, setMode] = useState('same')   // 'same' | 'all'
+  const [q, setQ] = useState('')
+  const [mu, setMu] = useState('')           // 'all' mode only: '' = every muscle
+  const [shown, setShown] = useState(50)
+  const [allKit, setAllKit] = useState(false)
+  const inputRef = useRef(null)
+  const reset = () => setShown(50)
+  const all = allExercises(st)
+  const searching = !!q.trim()
+  const opts = { usage: usageOf(st), extraWords }
+  const skip = new Set([ex.id, ...exclude])
+  const pool = mode === 'same'
+    ? similarTo(ex, all, { exclude, usage: usageOf(st) })
+    : all.filter(e => !skip.has(e.id) && matchesMuscle(e, mu))
+  const found = searching ? searchExercises(pool, q, opts) : mode === 'same' ? pool : browseOrder(pool, { recent: recentIds(st) })
+  // The gym profile hides kit you can't use, as in the picker, with the same way out.
+  const f = st.gymEq && !allKit ? gymFilter(found, st.gymEq) : found
+  const hidden = found.length - f.length
+  const switchTo = m => { setMode(m); setQ(''); setMu(''); reset() }
+  const blur = () => { if (document.activeElement === inputRef.current) inputRef.current.blur() }
+  return <div className="pick">
+    <div className="pick-head"><div className="pick-col">
+      <div className="pick-top">
+        <button className="iconbtn" onClick={close} aria-label={t('Close')}><Icon name="chevronLeft" /></button>
+        <h3>{t('Swap exercise')}</h3>
+      </div>
+      <Segmented value={mode} onChange={switchTo}
+        options={[{ value: 'same', label: t('Same muscle') }, { value: 'all', label: t('All exercises') }]} />
+      <form className="search" role="search" onSubmit={e => { e.preventDefault(); inputRef.current?.blur() }}>
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+        <input ref={inputRef} className="input" type="search" placeholder={t('Search')} value={q}
+          autoCorrect="off" autoCapitalize="none" autoComplete="off" spellCheck={false} enterKeyHint="search"
+          onChange={e => { setQ(e.target.value); reset() }} />
+        {q && <button type="button" className="search-x" aria-label={t('Clear')} onClick={() => { setQ(''); reset() }}><Icon name="xmark" /></button>}
+      </form>
+      {mode === 'all' && <div className="chips">
+        <button className={'chip nocap' + (!mu ? ' on' : '')} onClick={() => { setMu(''); reset() }}>{t('All')}</button>
+        {muscleChips(all).map(m => <button key={m} className={'chip' + (mu === m ? ' on' : '')} onClick={() => { setMu(m); reset() }}>{chipLabel(m)}</button>)}
+      </div>}
+    </div></div>
+    <div className="pick-list" onTouchStart={blur}><div className="pick-col">
+      <div className="list">
+        {f.slice(0, shown).map(e => <PickRow key={e.id} ex={e} icon="shuffle" onInfo={exerciseDetailSheet} onPick={alt => { close(); onSwap(alt) }} />)}
+        {f.length === 0 && <div className="empty">{t('No match')}</div>}
+        {hidden > 0 && <button className="pk-link" onClick={() => setAllKit(true)}>{t('Show {0} more for other gyms', hidden)}</button>}
+        {mode === 'same' && <button className="pk-link" onClick={() => switchTo('all')}>{t('Browse the whole library')}</button>}
+      </div>
+      {f.length > shown && <><div style={{ height: 8 }} /><Button variant="soft" onClick={() => setShown(n => n + 50)}>{t('Show more')}</Button></>}
+    </div></div>
+  </div>
 }
-// `exclude` = ids already in the routine/workout, so a swap never makes a duplicate.
-export const swapSheet = (ex, exclude, onSwap) => ui().openSheet(close => <SwapPicker ex={ex} exclude={exclude} onSwap={onSwap} close={close} />)
+export const swapSheet = (ex, exclude, onSwap) =>
+  ui().openSheet(close => <SwapPicker ex={ex} exclude={exclude} onSwap={onSwap} close={close} />, { kind: 'full', className: 'picker' })
 
 /* ============================ Peek: overlap ============================ */
 // A third exercise for the exact same part of a muscle is usually the same lift twice in

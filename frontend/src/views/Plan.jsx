@@ -4,9 +4,7 @@ import { DAYN, uid, exCount } from '../lib/format.js'
 import { t } from '../lib/i18n.js'
 import { dayAssignSheet, loadStarterPlan, planToolsSheet } from '../sheets.jsx'
 import Icon from '../components/Icon.jsx'
-import Glyph from '../components/Glyph.jsx'
 import { Button } from '../components/ui.jsx'
-import { glyphOf, DEFAULT_GLYPH } from '../lib/glyphs.js'
 import { exOr } from '../lib/exercises.js'
 import { WEEK_ORDER, daysOnRoutine, previewList } from '../lib/week.js'
 
@@ -21,7 +19,7 @@ export default function Plan() {
 
   const addRoutine = () => {
     // starts on the progression the onboarding picked from your experience, if it asked
-    const r = { id: uid(), name: t('New routine'), emoji: DEFAULT_GLYPH, ex: [], ...(S.progDefault ? { prog: S.progDefault } : {}) }
+    const r = { id: uid(), name: t('New routine'), ex: [], ...(S.progDefault ? { prog: S.progDefault } : {}) }
     update(s => { s.routines.push(r) })
     nav('/plan/r/' + r.id)
   }
@@ -33,7 +31,6 @@ export default function Plan() {
     const { shown, more } = previewList(r.ex.map(e => exOr(e.id).n))
     return <div key={r.id} className="pl-rt" onClick={() => nav('/plan/r/' + r.id)}>
       <div className="pl-rh">
-        <span className="lrow-i"><Glyph name={glyphOf(r.emoji)} /></span>
         <div className="grow"><div className="tt">{r.name}</div><div className="ss">{exCount(r.ex.length)}</div></div>
         <Icon name="chevronRight" className="chev" />
       </div>

@@ -2,8 +2,9 @@ import { describe, it, expect } from 'vitest'
 import { EXDB, EXIDX } from './exercises.js'
 import {
   searchExercises, primaryOf, muscleChips, matchesMuscle, recentIds, usageOf, gymFilter,
-  overlapFor, suggestionFor, similarTo, OVERLAP_AT, regionOf, browseOrder, STAPLES, ALIAS_ES, quickConfig,
+  overlapFor, suggestionFor, similarTo, OVERLAP_AT, regionOf, browseOrder, STAPLES, ALIAS_ES, quickConfig, swapConfig,
 } from './pick.js'
+import { defaultModeFor } from './scheme.js'
 
 // Real exercises out of the shipped catalogue, looked up by name so the tests read like the UI.
 const byName = n => { const e = EXDB.find(x => x.n === n); if (!e) throw new Error('no ' + n); return e }
@@ -239,6 +240,31 @@ describe('similarTo', () => {
     const run = EXDB.find(e => e.bp === 'cardio')
     expect(similarTo(run, EXDB).every(e => e.bp === 'cardio')).toBe(true)
     expect(EXIDX[run.id]).toBe(run)
+  })
+})
+
+describe('swapConfig', () => {
+  const cfg = { id: BENCH.id, sets: 4, reps: 6, weight: 80, mode: 'reps', policy: 'linear' }
+
+  it('keeps sets, reps and progression within the same kind of work, but not the load', () => {
+    const r = swapConfig(cfg, BENCH, DB_BENCH)
+    expect(r).toMatchObject({ id: DB_BENCH.id, sets: 4, reps: 6, policy: 'linear', weight: 0 })
+  })
+
+  it('starts fresh when the new exercise is a different kind of work', () => {
+    const run = EXDB.find(e => e.bp === 'cardio')
+    const r = swapConfig(cfg, BENCH, run)
+    expect(r.id).toBe(run.id)
+    expect(r.policy).toBeUndefined()
+    expect(r.reps).toBeUndefined()
+    expect(r.min).toBeGreaterThan(0)
+  })
+
+  it('does not carry a rep plan onto a hold', () => {
+    const plank = EXDB.find(e => defaultModeFor(e) === 'time')
+    const r = swapConfig(cfg, BENCH, plank)
+    expect(r.mode).toBe('time')
+    expect(r.reps).toBeUndefined()
   })
 })
 
