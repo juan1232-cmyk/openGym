@@ -16,7 +16,7 @@
 //   · fewer sets than prescribed                       → miss
 // So a session that fell apart can never advance the load as though it had succeeded.
 
-import { modeOf, repStep } from './history.js'
+import { modeOf, repStep, isWork, workSets } from './history.js'
 import { EXIDX } from './exercises.js'
 import { rirOf } from './effort.js'
 import { isoOf } from './format.js'
@@ -103,7 +103,10 @@ export function deloadTo(cur, step) {
 export function readSession(entry, fallback) {
   const target = (entry && entry.target) || fallback || {}
   const mode = modeOf({ ...target, id: entry && entry.id })
-  const sets = (entry && entry.sets) || []
+  // Warm-ups are prep, not the session. One filter here, rather than a guard in every
+  // consumer below: an unticked warm-up would otherwise keep `ok` false forever, and a
+  // one-rep opener would drag `low` and `count` down.
+  const sets = workSets(entry && entry.sets)
   const planned = target.sets || sets.length
   const enough = sets.length >= planned
 
@@ -135,7 +138,7 @@ export function sessionsFor(S, exId, fallback) {
   const out = []
   ;(S.workouts || []).forEach(w => {
     const entry = w.entries.find(e => e.id === exId)
-    if (entry && entry.sets.some(s => s.done)) out.push({ d: w.d, ...readSession(entry, fallback) })
+    if (entry && entry.sets.some(s => s.done && isWork(s))) out.push({ d: w.d, ...readSession(entry, fallback) })
   })
   return out
 }
@@ -274,7 +277,8 @@ export function nextPrescription(S, cfg, routine, now = new Date()) {
 export function applyPrescription(sets, p) {
   if (!p || p.kind === 'off' || p.kind === 'first') return sets
   const out = sets.map(s => {
-    if (s.done) return s
+    // A prescription speaks to the work rows; a warm-up is whatever you set it to
+    if (s.done || s.warmup) return s
     const o = { ...s }
     if (p.weight != null) o.w = p.weight
     if (p.reps != null) o.r = p.reps
@@ -284,9 +288,11 @@ export function applyPrescription(sets, p) {
   // A policy that decided on a set count gets to grow the list — bodyweight progression adds
   // a set where a barbell would have added a plate. Only ever upwards, and only by copying a
   // row that is already there: a session in progress must not lose a set it has logged.
-  if (p.sets > out.length) {
-    const seed = out[out.length - 1]
-    while (out.length < p.sets) out.push({ ...seed, done: false })
+  // The count is work sets; warm-ups sit in front and are not part of it.
+  if (p.sets > out.filter(isWork).length) {
+    // a seed copied from a warm-up (no work rows at all) must not stay one, or this never ends
+    const { warmup, ...seed } = out.filter(isWork).pop() || out[out.length - 1]
+    while (out.filter(isWork).length < p.sets) out.push({ ...seed, done: false })
   }
   return out
 }

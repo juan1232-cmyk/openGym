@@ -164,8 +164,8 @@ function fixesFor(S, id, cfg, planned, kind) {
   const all = allExercises(S)
   const ex = all.find(e => e.id === id)
   const alts = ex ? similarTo(ex, all, { exclude: [...planned], gymEq: S.gymEq, usage: usageOf(S) }).slice(0, 4).map(e => e.id) : []
-  const last = [...(S.workouts || [])].reverse().map(w => w.entries.find(e => e.id === id)).find(e => e && e.sets.some(s => s.done))
-  const w = Math.max(0, ...((last && last.sets) || []).filter(s => s.done).map(s => s.w || 0))
+  const last = [...(S.workouts || [])].reverse().map(w => w.entries.find(e => e.id === id)).find(e => e && e.sets.some(s => s.done && !s.warmup))
+  const w = Math.max(0, ...((last && last.sets) || []).filter(s => s.done && !s.warmup).map(s => s.w || 0))
   const inc = cfg && cfg.inc > 0 ? cfg.inc : defaultIncrement(id, S.unit || 'kg')
   const fixes = {
     sets: { kind: 'sets', add: [1, 2] },
@@ -273,7 +273,7 @@ export function mainLiftsWeek(workouts, now = new Date()) {
   const out = new Map()
   inRange(workouts, lately).forEach(w => (w.entries || []).forEach(e => {
     if (!isMainLift(e.id)) return
-    const done = (e.sets || []).filter(s => s.done)
+    const done = (e.sets || []).filter(s => s.done && !s.warmup)
     if (!done.length) return
     let x = out.get(e.id)
     if (!x) out.set(e.id, x = { id: e.id, sessions: 0, heavy: 0 })

@@ -171,13 +171,58 @@ export function cleanupSg(ex) {
   })
 }
 
+// Warm-up sets. A warm-up is an ordinary set row with `warmup: true` (written only when true,
+// so every existing workout and backup reads unchanged). It is ticked off, shown and saved
+// with the session — and then it is not the session: nothing that asks what you lifted, what
+// was a record, how hard it was or what to prescribe next may see it, because a warm-up
+// should never tell the app you got stronger. Every reader of logged sets goes through
+// isWork/workSets for that; the exceptions are the ones that walk the rows as the session
+// does (progress, what's next).
+export const isWork = s => !s.warmup
+export const workSets = sets => (sets || []).filter(isWork)
+// A row's number among the work rows, from 0; null for a warm-up. This is what "last time" and
+// the orb's verdict compare against, so a session with warm-ups lines up with one without.
+export function workIndexOf(rows, i) {
+  if (rows[i].warmup) return null
+  let n = 0
+  for (let k = 0; k < i; k++) if (!rows[k].warmup) n++
+  return n
+}
+// A new warm-up goes after the last one, before the first work row. The first takes half the
+// work weight on a weight you can load (`step`, as in progression.js); later ones copy the
+// one above, which is what you ramp from.
+export function addWarmup(rows, mode, target, step = 2.5) {
+  const at = rows.findIndex(isWork)
+  const end = at === -1 ? rows.length : at
+  const prevWarm = end > 0 ? rows[end - 1] : null
+  const work = rows[end] || rows[rows.length - 1]
+  const half = w => (w > 0 ? Math.max(step, Math.round(Math.round(w / 2 / step) * step * 100) / 100) : 0)
+  const row = mode === 'cardio'
+    ? { min: (prevWarm || work || {}).min || target.min || 20, speed: (prevWarm || work || {}).speed || target.speed || 8 }
+    : mode === 'time'
+      ? { sec: (prevWarm || work || {}).sec || target.sec || 45, w: (prevWarm || work || {}).w || 0 }
+      : { w: prevWarm ? prevWarm.w || 0 : half(work && work.w), r: (prevWarm || work || {}).r || target.reps }
+  const next = rows.slice()
+  next.splice(end, 0, { ...row, done: false, warmup: true })
+  return next
+}
+// Drops the last warm-up; work rows are never touched.
+export function removeWarmup(rows) {
+  const at = rows.findLastIndex(s => s.warmup)
+  if (at === -1) return rows.slice()
+  const next = rows.slice()
+  next.splice(at, 1)
+  return next
+}
+
 export function lastEntryFor(S, exId) {
   for (let i = S.workouts.length - 1; i >= 0; i--) {
     const en = S.workouts[i].entries.find(e => e.id === exId)
     // `target` is what the session prescribed; finished workouts carry it so labels and the
     // progression engine can read a session back the way it was logged. Older workouts have
     // none — modeOf() falls back to the body part for them, which is what they were.
-    if (en && en.sets.some(s => s.done)) return { d: S.workouts[i].d, sets: en.sets.filter(s => s.done), target: en.target || null }
+    const done = en && workSets(en.sets).filter(s => s.done)
+    if (done && done.length) return { d: S.workouts[i].d, sets: done, target: en.target || null }
   }
   return null
 }
@@ -185,7 +230,7 @@ export function bestWeightFor(S, exId) {
   let best = 0
   S.workouts.forEach(w => w.entries.forEach(e => {
     if (e.id === exId) {
-      e.sets.forEach(s => { if (s.done && s.w > best) best = s.w })
+      e.sets.forEach(s => { if (s.done && isWork(s) && s.w > best) best = s.w })
       if (e.topW && e.topW > best) best = e.topW
     }
   }))
@@ -197,7 +242,7 @@ export function bestWeightFor(S, exId) {
 // Compares against history that does not yet contain `entry`'s workout.
 export function isLoadPR(S, exId, entry) {
   if (!lastEntryFor(S, exId)) return false
-  const mx = Math.max(0, ...entry.sets.filter(s => s.done).map(s => s.w || 0))
+  const mx = Math.max(0, ...workSets(entry.sets).filter(s => s.done).map(s => s.w || 0))
   return mx > 0 && mx > bestWeightFor(S, exId)
 }
 export function effectiveRoutineId(S, iso) {
@@ -248,13 +293,14 @@ export function buildSets(S, cfg) {
 export function workoutVolume(w) {
   let v = 0
   // No special case for unilateral work: a per-side set logs its total, so both sides are
-  // already in the rep count that arrives here.
-  w.entries.forEach(e => e.sets.forEach(s => { if (s.done) v += (s.w || 0) * (s.r || 0) }))
+  // already in the rep count that arrives here. Warm-ups are not volume: it is the number
+  // that says whether the work grew.
+  w.entries.forEach(e => e.sets.forEach(s => { if (s.done && isWork(s)) v += (s.w || 0) * (s.r || 0) }))
   return v
 }
 export function setsDone(w) {
   let n = 0
-  w.entries.forEach(e => e.sets.forEach(s => { if (s.done) n++ }))
+  w.entries.forEach(e => e.sets.forEach(s => { if (s.done && isWork(s)) n++ }))
   return n
 }
 export function setsDoneActive(A) {
@@ -277,7 +323,7 @@ export function previousSession(workouts, w) {
 export function topSet(entry) {
   let b = null
   for (const s of (entry && entry.sets) || []) {
-    if (!s.done) continue
+    if (!s.done || s.warmup) continue
     if (!b || (s.w || 0) > (b.w || 0) || ((s.w || 0) === (b.w || 0) && (s.r || 0) > (b.r || 0))) b = s
   }
   return b
