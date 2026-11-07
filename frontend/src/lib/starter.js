@@ -3,22 +3,22 @@
 import { uid } from './format.js'
 
 const SPEC = [
-  ['Push Day', 'barbell', [['0025', 4, 8], ['0047', 3, 10], ['0426', 3, 10], ['0334', 3, 12], ['0241', 3, 12], ['0251', 3, 10]]],
-  ['Pull Day', 'pullup', [['2330', 4, 10], ['0027', 4, 8], ['1323', 3, 10], ['0031', 3, 10], ['0313', 3, 12]]],
-  ['Leg Day', 'legs', [['0043', 4, 8], ['0085', 3, 10], ['0739', 3, 12], ['0585', 3, 12], ['0586', 3, 12], ['0605', 4, 15]]]
+  ['Push Day', [['0025', 4, 8], ['0047', 3, 10], ['0426', 3, 10], ['0334', 3, 12], ['0241', 3, 12], ['0251', 3, 10]]],
+  ['Pull Day', [['2330', 4, 10], ['0027', 4, 8], ['1323', 3, 10], ['0031', 3, 10], ['0313', 3, 12]]],
+  ['Leg Day', [['0043', 4, 8], ['0085', 3, 10], ['0739', 3, 12], ['0585', 3, 12], ['0586', 3, 12], ['0605', 4, 15]]]
 ]
 
 // Fresh routine objects (new ids) — [push, pull, legs].
 export const starterRoutines = () =>
-  SPEC.map(([name, emoji, list]) => ({ id: uid(), name, emoji, ex: list.map(([id, sets, reps]) => ({ id, sets, reps, weight: 0 })) }))
+  SPEC.map(([name, list]) => ({ id: uid(), name, ex: list.map(([id, sets, reps]) => ({ id, sets, reps, weight: 0 })) }))
 
 // An upper/lower pair for the schedules PPL doesn't divide into (2 and 4 days a week, and the
 // last two days of 5). Built from the same exercises as the PPL days, so the library and any
 // logged history line up whichever split a profile starts on.
-const UPPER = ['Upper Body', 'dumbbell', [['0025', 4, 8], ['0027', 4, 8], ['0426', 3, 10], ['2330', 3, 10], ['0241', 3, 12], ['0031', 3, 12]]]
-const LOWER = ['Lower Body', 'legs', [['0043', 4, 8], ['0085', 3, 10], ['0739', 3, 12], ['0586', 3, 12], ['0605', 4, 15]]]
+const UPPER = ['Upper Body', [['0025', 4, 8], ['0027', 4, 8], ['0426', 3, 10], ['2330', 3, 10], ['0241', 3, 12], ['0031', 3, 12]]]
+const LOWER = ['Lower Body', [['0043', 4, 8], ['0085', 3, 10], ['0739', 3, 12], ['0586', 3, 12], ['0605', 4, 15]]]
 // One day a week gets everything once.
-const FULL = ['Full Body', 'barbell', [['0043', 3, 8], ['0025', 3, 8], ['0027', 3, 8], ['0426', 3, 10], ['0085', 3, 10]]]
+const FULL = ['Full Body', [['0043', 3, 8], ['0025', 3, 8], ['0027', 3, 8], ['0426', 3, 10], ['0085', 3, 10]]]
 
 // Which split runs on which weekday (0 = Sunday, as in S.week), per training days a week.
 // Every schedule leaves a day off between the two halves where it can, and Sunday free.
@@ -76,14 +76,14 @@ export function starterPlan({ goal = 'muscle', days = 3, weekdays = null, kit = 
   const week = {}
   Object.entries(sched).forEach(([wd, key]) => {
     if (!byKey[key]) {
-      const [name, emoji, list] = specs[key]
+      const [name, list] = specs[key]
       let ex = list
         .map(([id, sets, reps]) => [id in swaps ? swaps[id] : id, sets, reps])
         .filter(([id]) => id)
         .map(([id, sets, reps]) => ({ id, sets, reps, weight: 0 }))
       if (goal === 'strength') ex[0] = { ...ex[0], sets: 5, reps: 5 }
       if (goal === 'consistent') ex = ex.slice(0, 4)
-      byKey[key] = { id: uid(), name, emoji, ex, ...(prog ? { prog } : {}) }
+      byKey[key] = { id: uid(), name, ex, ...(prog ? { prog } : {}) }
     }
     week[wd] = byKey[key].id
   })
