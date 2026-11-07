@@ -41,6 +41,27 @@ export const WEEKLY_ZONES = [6, 10, 20]
 // The goal Peek holds you to: effective sets per big muscle, Monday to Sunday. It is the bottom of
 // the productive zone, so it is what's worth aiming for rather than a ceiling.
 export const WEEK_GOAL = WEEKLY_ZONES[1]
+// Per muscle, because one number for all ten was too easy for some and too hard for others: a
+// supporting muscle already earns half credit from the big lifts (muscles.js SECONDARY), so the
+// muscles those lifts feed need fewer sets of their own. Nothing goes under the first zone line
+// (6) — below it Stats calls a muscle "under", and Home saying "goal hit" there would contradict
+// it. The 10 vs 8 vs 6 split is judgement on top of the zones, not a measured result.
+// `why` is what Peek says when it holds you to the number, so it must stay true to that reasoning.
+export const MUSCLE_GOALS = {
+  chest:       { sets: 10, why: 'A big muscle you mostly train head-on, so it gets the full amount.' },
+  'upper-back': { sets: 10, why: 'A big muscle you mostly train head-on, so it gets the full amount.' },
+  quadriceps:  { sets: 10, why: 'A big muscle you mostly train head-on, so it gets the full amount.' },
+  hamstring:   { sets: 8, why: 'Squats and hinges already count half toward it, so it needs a little less.' },
+  gluteal:     { sets: 8, why: 'Squats and hinges already count half toward it, so it needs a little less.' },
+  deltoids:    { sets: 8, why: 'Presses already count half toward it, so it needs a little less.' },
+  biceps:      { sets: 8, why: 'Rows and pulldowns already count half toward it, so it needs a little less.' },
+  triceps:     { sets: 8, why: 'Presses already count half toward it, so it needs a little less.' },
+  calves:      { sets: 8, why: 'Small and quick to recover, but little else trains it.' },
+  abs:         { sets: 6, why: 'Squats, deadlifts and carries already work it, so the bottom of the OK band is enough.' }
+}
+// A muscle missing from the table falls back to the flat goal rather than to no goal.
+export const goalFor = m => (MUSCLE_GOALS[m] || { sets: WEEK_GOAL }).sets
+export const goalWhy = m => (MUSCLE_GOALS[m] || {}).why || null
 // Until this few days of the week are left (Sunday = 0, Monday = 6), a muscle that is behind is
 // just one you haven't trained yet, and Peek stays quiet. After that it says where the week stands.
 export const NUDGE_DAYS_LEFT = 3

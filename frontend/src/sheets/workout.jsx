@@ -1,26 +1,26 @@
 // The workout lifecycle: starting one, the workout-detail view, finishing (with the PR/1RM
 // summary), the calendar (which doubles as day-planning entry point), and importing workout/bodyweight history from another app's export.
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { EXIDX } from '../lib/exercises.js'
-import { fmtDate, fmtNum, fmtVol, fmtDur, durPart, todayISO, uid, MONTHS_LONG } from '../lib/format.js'
-import { isLoadPR, buildSets, effectiveRoutineId, workoutVolume, setsDone, setsDoneActive, setLabel, effortOf, previousSession, topSet, nextSetLabel } from '../lib/history.js'
+import { fmtDate, fmtNum, fmtVol, fmtDur, durPart, todayISO, isoOf, uid, MONTHS_LONG } from '../lib/format.js'
+import { isLoadPR, buildSets, effectiveRoutineId, workoutVolume, setsDone, setsDoneActive, lastEntryFor, setLabel, effortOf, previousSession } from '../lib/history.js'
 import { beep } from '../lib/sound.js'
-import { t } from '../lib/i18n.js'
+import { t, dateLocale } from '../lib/i18n.js'
 import { nav } from '../lib/nav.js'
 import { glyphOf } from '../lib/glyphs.js'
 import Icon from '../components/Icon.jsx'
 import { Thumb } from '../components/Media.jsx'
-import BodyMap from '../components/BodyMap.jsx'
 import Orb from '../components/Orb.jsx'
 import { Button } from '../components/ui.jsx'
-import { loadOfWorkouts } from '../lib/muscles.js'
 import { parseImport, mergeImport } from '../lib/import-csv.js'
 import { is1RMRecord } from '../lib/onerm.js'
 import { nextPrescription, applyPrescription } from '../lib/progression.js'
 import { sessionPlan, spendSwaps } from '../lib/liftfix.js'
 import { sessionVerdict } from '../lib/verdict.js'
+import { finishFeel, pickLine, liftVerdict, liftSummary, nextAsk, promptKind, PROMPT, PROMPT_LEAVE } from '../lib/finishfeel.js'
+import Say from '../components/Say.jsx'
 import { S, update, ui, toast, snd, confirmSheet } from './common.jsx'
 import { dayOverrideSheet } from './plan.jsx'
 
@@ -214,82 +214,181 @@ export function beginWorkout(routineId) {
   useUI.getState().stopRest()
   nav('/workout')
 }
-// Shown when the last exercise's last set is checked — finish, or keep going.
-function WorkoutComplete({ close }) {
-  return <div style={{ textAlign: 'center', padding: '8px 0' }}>
-    <div style={{ fontSize: 44, display: 'flex', justifyContent: 'center', color: 'var(--acc)' }}><Icon name="checkCircle" /></div>
-    <h3 style={{ margin: '8px 0' }}>{t("That's the whole workout!")}</h3>
-    <div className="muted small" style={{ marginBottom: 16 }}>{t('Every exercise done — great work. Finish up, or keep going and add another exercise.')}</div>
-    <Button variant="primary" icon="flag" onClick={() => { close(); finishWorkout() }}>{t('Finish workout')}</Button>
-    <div style={{ height: 8 }} />
-    <Button onClick={() => { close(); useUI.getState().toast(t('Keep going — tap “+ Add exercise” below')) }}>{t('Continue workout')}</Button>
+// The card that asks before finishing — shown when the last set is checked, and when Finish is
+// pressed with sets still open. Peek is glad when everything is done and visibly let down when
+// you're leaving sets on the table: its face and body sag, and a row of dots shows what's still
+// hollow. It's a nudge to stay, not a lock — "Finish anyway" is always one tap, after a beat for
+// Peek to take it in. (promptKind / PROMPT, lib/finishfeel.js)
+const PIPS_MAX = 30
+function FinishPrompt({ done, total, onFinish, close }) {
+  const kind = promptKind({ done, total })
+  const complete = kind === 'complete'
+  const orb = useRef(null)
+  const [leaving, setLeaving] = useState(false)
+  const lead = PROMPT[kind]
+  // one dot per set; a very long session is squeezed to PIPS_MAX so the row stays a row
+  const n = Math.min(total, PIPS_MAX)
+  const on = total > PIPS_MAX ? Math.round(done / total * n) : done
+  useEffect(() => {
+    if (reduced()) return
+    const tm = setTimeout(() => orb.current?.bump(complete ? 'hop' : 'sink'), 320)
+    return () => clearTimeout(tm)
+  }, [])
+  const leave = () => {
+    if (leaving) return
+    setLeaving(true)
+    orb.current?.react('shy-downward', 1400)
+    orb.current?.bump('sink')
+    setTimeout(() => { close(); onFinish() }, reduced() ? 0 : 900)
+  }
+  return <div className={'pk-fin ' + (complete ? 'complete' : 'early')}>
+    <div className="pk-fin-stage">
+      {complete && !reduced() && <Sparks k={0.55} />}
+      <Orb ref={orb} size={112} mood={complete ? 'celebrate' : 'disappointed'} verdict={complete ? 'progressing' : 'slipping'} poke={complete ? 'joyful-wide' : 'shy-downward'} />
+    </div>
+    <h3>{t(lead.head)}</h3>
+    <div className="pk-pips" aria-hidden="true">
+      {Array.from({ length: n }, (_, k) => <i key={k} className={k < on ? 'on' : k === on ? 'next' : ''} style={{ '--i': Math.min(k, 14) }} />)}
+    </div>
+    <div className="pk-fin-say">
+      <Say key={leaving ? 'leave' : 'line'} className="up" orb={orb} text={t(leaving ? PROMPT_LEAVE : lead.line)} />
+    </div>
+    {complete
+      ? <>
+        <Button variant="primary" icon="flag" onClick={() => { close(); onFinish() }}>{t('Finish workout')}</Button>
+        <div style={{ height: 8 }} />
+        <Button onClick={() => { close(); toast(t('Keep going — tap “+ Add exercise” below')) }}>{t('Continue workout')}</Button>
+      </>
+      : <>
+        <Button variant="primary" disabled={leaving} onPointerEnter={() => orb.current?.react('joyful-wide', 900)} onClick={close}>{t('Keep going')}</Button>
+        <div style={{ height: 8 }} />
+        <Button variant="ghost" className="dim" disabled={leaving} onPointerDown={() => orb.current?.react('shy-downward', 1200)} onClick={leave}>{t(kind === 'none' ? 'Wrap up anyway' : 'Finish anyway')}</Button>
+      </>}
   </div>
 }
-export const workoutCompleteSheet = () => ui().openSheet(close => <WorkoutComplete close={close} />, { kind: 'center' })
+function askFinish() {
+  const A = S().active
+  if (!A) return
+  const done = setsDoneActive(A)
+  const total = A.entries.reduce((n, e) => n + e.sets.length, 0)
+  ui().openSheet(close => <FinishPrompt done={done} total={total} onFinish={() => doFinishWorkout({ done, total })} close={close} />, { kind: 'center' })
+}
+export const workoutCompleteSheet = askFinish
 
-// D6 from the Peek design: the finished workout as a whole screen — the orb, the headline
-// numbers, how it compares with the last time this routine was done, and any records. The
-// muscle map ("what you just trained") stays: the design has no room drawn for it, but it is
-// the one part of this screen that says something the numbers don't.
+// The finished workout as a whole screen, in Peek’s voice — and without a single number. It is
+// meant to be read in one glance: did that go well? (finishFeel, lib/finishfeel.js) Peek hops and
+// says one line, a badge checks itself off, and a new best sets off sparks. Volume, duration and
+// per-lift figures live in the workout’s detail page and the progress views; here the point is
+// to feel done. A lighter day gets a calm check, never a scolding — you still showed up.
 //
-// The orb and headline say how this session went against the last one (sessionVerdict) rather
-// than cheering every time — a cheer for everything stops meaning anything. A lighter day gets
-// a shrug, not a scolding: you still showed up.
-const DONE_MOOD = { record: 'celebrate', more: 'happy', first: 'happy', same: 'proud', less: 'disappointed' }
-const DONE_BODY = { record: 'progressing', more: 'progressing', less: 'slipping' }
-function FinishSummary({ w, prs, e1prs = [], close }) {
+// The muscle map stays: it is the one part that says something a headline doesn't.
+const DONE_MOOD = { record: 'celebrate', good: 'happy', light: 'proud' }
+const DONE_BODY = { record: 'progressing', good: 'progressing' }
+const DONE_HEAD = { record: 'New best!', good: 'Good workout', light: 'Done for today' }
+const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+// sparks fly out from behind the orb: angle, distance, and a stagger so they don't leave as one ring
+const SPARKS = Array.from({ length: 18 }, (_, k) => ({ a: k * 20 + (k % 2) * 7, d: 118 + (k % 3) * 22, dl: 380 + (k % 6) * 45 }))
+// `k` scales how far they fly, for the smaller orb on the finish prompt
+function Sparks({ k = 1, rings = 1 }) {
+  return <div className="pk-done-sparks" aria-hidden="true">
+    <b style={{ '--k': k }} />{rings > 1 && <b className="two" style={{ '--k': k }} />}
+    {SPARKS.map((s, i) => <i key={i} style={{ '--a': s.a + 'deg', '--d': s.d * k + 'px', '--dl': s.dl + 'ms' }} />)}
+  </div>
+}
+
+// One row per exercise: a mark and a few words on how it went against last time. The mark is
+// what reads at a glance (a star, an arrow up, a check…); the words are for the second look.
+const LIFT_MARK = { best: '★', up: '↑', same: '✓', new: '✓', down: '↓', partial: '○', skipped: '–' }
+const LIFT_WORDS = { best: 'New best', up: 'Up on last time', same: 'Matched last time', new: 'First time', down: 'Lighter today', partial: 'Not all sets', skipped: 'Skipped' }
+
+const NEXT_MARK = { up: '↑', hold: '→', deload: '↓', first: '•' }
+
+function FinishSummary({ w, lifts = [], next = [], feel, close }) {
   const st = useStore(s => s.S)
-  const user = useStore(s => s.user)
   const unit = st.unit
-  const prev = previousSession(st.workouts, w)
-  const diff = prev ? (w.vol || 0) - (prev.vol || 0) : null
-  const entryOf = id => w.entries.find(e => e.id === id)
+  // this week, Monday first, as the Home strip draws it — today's dot is the one this workout
+  // just filled, so it is the last to light up
+  const week = (() => {
+    const at = new Date(w.d + 'T12:00:00')
+    const monday = new Date(at); monday.setDate(at.getDate() - ((at.getDay() + 6) % 7))
+    const days = new Set(st.workouts.map(x => x.d))
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(monday); d.setDate(monday.getDate() + i)
+      const iso = isoOf(d)
+      return { iso, d, done: days.has(iso), now: iso === w.d }
+    })
+  })()
+  const orb = useRef(null)
   const nameOf = id => (EXIDX[id] || {}).n || id
-  const line = [w.name, ...durPart(w.end - w.start), t('{0} sets', setsDone(w))].join(' · ')
-  const sv = sessionVerdict({ prs, e1prs, vol: w.vol || 0, prevVol: prev ? prev.vol || 0 : null })
-  const headline = sv === 'record' ? t('New best on {0}.', nameOf(prs.length ? prs[0] : e1prs[0].id))
-    : sv === 'more' ? t('More than last time.')
-      : sv === 'same' ? t('Held it. That counts.')
-        : sv === 'less' ? t('Lighter than last time. It happens.')
-          : user ? t('Nice work, {0}.', user.name) : t('Nice work.')
+  const good = feel !== 'light'
+  // Peek speaks once the badge has landed; a held-back line is the beat that makes it read as
+  // "it said that to me" rather than a caption
+  const [talk, setTalk] = useState(reduced())
+  useEffect(() => {
+    const tm = [setTimeout(() => setTalk(true), 1000)]
+    if (!reduced()) {
+      tm.push(setTimeout(() => orb.current?.bump(good ? 'hop' : 'nod'), 260))
+      if (feel === 'record') tm.push(setTimeout(() => orb.current?.bump('hop'), 1100))
+    }
+    return () => tm.forEach(clearTimeout)
+  }, [])
   const done = () => { close(); nav('/home') }
   // the system share sheet where there is one, the clipboard where there isn't
   const share = async () => {
-    const text = line + ' · ' + fmtVol(w.vol, unit)
+    const text = [w.name, ...durPart(w.end - w.start), t('{0} sets', setsDone(w))].join(' · ') + ' · ' + fmtVol(w.vol, unit)
     try {
       if (navigator.share) await navigator.share({ text })
       else { await navigator.clipboard.writeText(text); toast(t('Copied to clipboard')) }
     } catch (e) { if (e.name !== 'AbortError') toast(t('Could not share')) }
   }
-  return <div className="pk-done">
-    <div className="pk-done-orb"><Orb size={180} mood={DONE_MOOD[sv]} verdict={DONE_BODY[sv]} poke="joyful-wide" /></div>
-    <div className="pk-done-h">
-      <h1>{headline}</h1>
-      <p>{line}</p>
-    </div>
-    <div className="pk-done-tiles">
-      <div className="pk-tile"><span>{t('Volume')}</span><b>{fmtNum(w.vol || 0)}<small> {unit}</small></b></div>
-      {prev
-        ? <div className="pk-tile"><span>{t('vs last {0}', w.name)}</span><b className={diff > 0 ? 'up' : ''}>{diff > 0 ? '+' : diff < 0 ? '−' : ''}{fmtNum(Math.abs(diff))}<small> {unit}</small></b></div>
-        : <div className="pk-tile"><span>{t('Duration')}</span><b>{w.end - w.start >= 60000 ? fmtDur(w.end - w.start) : '—'}</b></div>}
-    </div>
-    {prs.map(id => {
-      const top = topSet(entryOf(id))
-      return <div key={id} className="pk-best">
-        <span className="l"><em>{t('New best')}</em><b className="capitalize">{nameOf(id)}</b></span>
-        {top && <span className="v">{nextSetLabel(entryOf(id), top, unit)}</span>}
+  return <div className={'pk-done ' + feel}>
+    <div className="pk-done-orb">
+      <div className="pk-done-stage">
+        {/* rendered only when it should be seen: under reduced motion the global rule would
+            freeze the sparks in place instead of removing them */}
+        {good && !reduced() && <Sparks rings={feel === 'record' ? 2 : 1} />}
+        <Orb ref={orb} size={180} mood={DONE_MOOD[feel]} verdict={DONE_BODY[feel]} poke="joyful-wide" />
+        <svg className="pk-done-badge" viewBox="0 0 56 56" aria-hidden="true">
+          <circle cx="28" cy="28" r="26" />
+          <path d="M17 29.5l8 8 15-17" />
+        </svg>
       </div>
-    })}
-    {/* a heavier estimate without a heavier top set is its own kind of progress — same weight
-        for more reps — so it is labelled as that, never as a load record */}
-    {e1prs.map(p => <div key={p.id} className="pk-best">
-      <span className="l"><em>{t('Best estimated 1RM')}</em><b className="capitalize">{nameOf(p.id)}</b></span>
-      <span className="v">{fmtNum(p.est)} {unit}</span>
-    </div>)}
-    <div className="card pk-done-map">
-      <div className="pk-card-h"><b>{t('What you just trained')}</b></div>
-      <BodyMap load={loadOfWorkouts([w])} body={st.body} />
     </div>
+    <div className="pk-done-h">
+      <h1>{t(DONE_HEAD[feel])}</h1>
+      <p>{lifts.length ? t(liftSummary(lifts.map(l => l.v))) : w.name}</p>
+    </div>
+    <div className="pk-done-say">
+      {talk && <Say className="up" orb={orb} text={t(pickLine(feel, w.id))} />}
+    </div>
+    {/* each lift ticks in one after another, the way Peek would go down the list with you */}
+    <div className="pk-lifts">
+      {lifts.map((l, i) => <div key={l.id} className={'pk-lift ' + l.v} style={{ '--i': Math.min(i, 8) }}>
+        <span className="ic" aria-hidden="true">{LIFT_MARK[l.v]}</span>
+        <b className="capitalize">{nameOf(l.id)}</b>
+        <span className="v">{t(LIFT_WORDS[l.v])}</span>
+      </div>)}
+    </div>
+    <div className="card pk-done-card">
+      <div className="pk-card-h"><b>{t('Your week')}</b></div>
+      <div className="pk-week pk-done-week">
+        {week.map(x => <div key={x.iso} className={'pk-day' + (x.now ? ' today' : '')}>
+          <span>{x.d.toLocaleDateString(dateLocale(), { weekday: 'narrow' })}</span>
+          <i className={x.now ? 'done now' : x.done ? 'done' : ''} />
+        </div>)}
+      </div>
+    </div>
+    {/* where each lift goes from here: the direction in words, so the next session already has
+        a goal before it starts */}
+    {next.length > 0 && <div className="card pk-done-card">
+      <div className="pk-card-h"><b>{t('Next time')}</b></div>
+      <div className="pk-next">
+        {next.map(n => <div key={n.id} className={'pk-next-row ' + n.k}>
+          <b className="capitalize">{nameOf(n.id)}</b>
+          <span><em aria-hidden="true">{NEXT_MARK[n.k]}</em>{t(n.what)}</span>
+        </div>)}
+      </div>
+    </div>}
     <div className="pk-done-acts">
       <Button variant="primary" onClick={done}>{t('Done')}</Button>
       <Button variant="soft" onClick={share}>{t('Share')}</Button>
@@ -301,11 +400,11 @@ export function finishWorkout() {
   if (!A) return
   const done = setsDoneActive(A)
   const total = A.entries.reduce((n, e) => n + e.sets.length, 0)
-  if (!done) { confirmSheet({ title: t('Nothing logged yet'), message: t('You haven’t checked off any sets. Finish the workout anyway?'), confirmText: t('Finish anyway'), onConfirm: doFinishWorkout }); return }
-  if (done < total) { confirmSheet({ title: t('Finish early?'), message: t(total - done === 1 ? '{0} set still unchecked. Finish the workout now?' : '{0} sets still unchecked. Finish the workout now?', total - done), confirmText: t('Finish workout'), onConfirm: doFinishWorkout }); return }
-  doFinishWorkout()
+  // everything done: no question to ask; anything less goes past Peek first
+  if (done < total || !done) { askFinish(); return }
+  doFinishWorkout({ done, total })
 }
-function doFinishWorkout() {
+function doFinishWorkout({ done, total }) {
   const st = S()
   const A = st.active
   if (!A) return
@@ -317,6 +416,13 @@ function doFinishWorkout() {
     // same weight for more reps. Reported separately so it can't be read as a load PR.
     const rec = is1RMRecord(st, e.id, e)
     if (rec && !prs.includes(e.id)) e1prs.push({ id: e.id, ...rec })
+  })
+  // Each exercise against the last time it was logged — read now, before this workout joins the
+  // history, and over the whole session so a skipped exercise shows up as skipped.
+  const lifts = A.entries.map(e => {
+    const prev = lastEntryFor(st, e.id)
+    const best = prs.includes(e.id) || e1prs.some(p => p.id === e.id)
+    return { id: e.id, v: liftVerdict({ sets: e.sets.filter(s => s.done), prevSets: prev && prev.sets, planned: e.sets.length, best }) }
   })
   const w = {
     id: A.id, d: A.d, start: A.start, end: Date.now(), routineId: A.routineId, name: A.name, bw: A.bw,
@@ -338,5 +444,16 @@ function doFinishWorkout() {
   })
   useUI.getState().stopRest()
   beep(snd(), 880, 0.15); beep(snd(), 1100, 0.15, 0.18); beep(snd(), 1320, 0.3, 0.36)
-  ui().openSheet(close => <FinishSummary w={w} prs={prs} e1prs={e1prs} close={close} />, { kind: 'full', locked: true })
+  // judged against the last time this routine was done (the workout is already in the log, so
+  // previousSession skips it), and against how much of the plan actually got checked off
+  const prev = previousSession(S().workouts, w)
+  const sv = sessionVerdict({ prs, e1prs, vol: w.vol || 0, prevVol: prev ? prev.vol || 0 : null })
+  const feel = finishFeel({ sv, done, total })
+  // what each exercise done today will be asked for next time — read from the log as it now stands,
+  // so today's session is the one the engine builds on
+  const after = S()
+  const routine = (after.routines || []).find(r => r.id === w.routineId)
+  const next = w.entries.map(e => ({ id: e.id, ask: nextAsk(nextPrescription(after, { ...(e.target || {}), id: e.id }, routine)) }))
+    .filter(n => n.ask).map(n => ({ id: n.id, ...n.ask }))
+  ui().openSheet(close => <FinishSummary w={w} lifts={lifts} next={next} feel={feel} close={close} />, { kind: 'full', locked: true })
 }

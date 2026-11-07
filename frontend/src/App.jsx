@@ -82,8 +82,8 @@ function Shell() {
   }, [S.appearance, S.accent, skin, hideTabs])
   useEffect(() => { setLang(S.lang || 'en') }, [S.lang])
   useEffect(() => { document.documentElement.lang = S.lang || 'en' }, [langV, S.lang])
-  // every tab/route change starts at the top of the page
-  useEffect(() => { window.scrollTo(0, 0) }, [loc.pathname])
+  // no scroll reset needed on route change: #app is the scroller and is keyed on the
+  // pathname below, so every tab/route gets a fresh one that starts at the top
   // worked out during render so the re-keyed #app mounts with the right class; idempotent
   // per pathname, so StrictMode's second render reads back the same direction
   const last = useRef({ path: null, dir: 'fade' })

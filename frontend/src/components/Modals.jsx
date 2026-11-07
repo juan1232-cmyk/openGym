@@ -70,16 +70,12 @@ function Sheet({ sheet }) {
 export default function Modals() {
   const sheets = useUI(s => s.sheets)
 
-  // lock the page behind any open sheet (iOS-safe)
+  // freeze the screen behind any open sheet; #app is the scroller, so this keeps its position
   useEffect(() => {
     if (!sheets.length) return
-    const y = window.scrollY || 0
-    const b = document.body.style
-    b.position = 'fixed'; b.top = -y + 'px'; b.left = '0'; b.right = '0'; b.width = '100%'
-    return () => {
-      b.position = b.top = b.left = b.right = b.width = ''
-      window.scrollTo(0, y)
-    }
+    const de = document.documentElement
+    de.classList.add('sheet-open')
+    return () => de.classList.remove('sheet-open')
   }, [sheets.length > 0])
 
   if (!sheets.length) return null

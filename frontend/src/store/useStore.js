@@ -1,7 +1,8 @@
 import { create } from 'zustand'
-import { api } from '../lib/api.js'
+import { backend } from '../lib/backend.js'
 import { localTZ } from '../lib/format.js'
 import { registerCustom } from '../lib/exercises.js'
+import { hasData, syncAction } from '../lib/sync.js'
 
 const KEY = 'gym_state_v1'
 export const DEF = {
@@ -49,8 +50,6 @@ function loadState() {
 // Whether a signed-in profile should be walked through the onboarding: nothing planned, nothing logged,
 // never answered — and only once the server has had its say about that.
 const needsGoals = (st, ready, pulling) => ready && !pulling && !st.goal && !(st.routines || []).length && !(st.workouts || []).length
-
-const hasData = st => !!((st.workouts || []).length || (st.routines || []).length || (st.bodyweight || []).length)
 
 export const useStore = create((set, get) => {
   let pushTm = null
@@ -108,10 +107,19 @@ export const useStore = create((set, get) => {
       set({ user: u })
     },
 
+    // Take the server's copy as this device's own. A workout in progress stays: it is device-local
+    // and never uploaded.
+    adopt(state) {
+      const active = get().S.active
+      const next = Object.assign(clone(DEF), state)
+      if (active) next.active = active
+      persist(next, false)
+    },
+
     async pushState() {
       if (!get().user) return
       clearTimeout(pushTm)
-      try { await api('/api/data', { method: 'PUT', body: JSON.stringify({ state: get().S }) }); localStorage.removeItem('gym_dirty') }
+      try { await backend.putState(get().S); localStorage.removeItem('gym_dirty') }
       catch (e) { localStorage.setItem('gym_dirty', '1') }
     },
     // true while a pull is in flight, so a screen that depends on "does this profile have any
@@ -121,21 +129,17 @@ export const useStore = create((set, get) => {
     async pullState() {
       set({ pulling: true })
       try {
-        const { state } = await api('/api/data')
+        const state = await backend.getState()
         const S = get().S
-        const dirty = localStorage.getItem('gym_dirty') === '1'
-        if (state && (!hasData(S) || ((state._ts || 0) >= (S._ts || 0) && !dirty))) {
-          const active = S.active
-          const next = Object.assign(clone(DEF), state)
-          if (active) next.active = active
-          persist(next, false)
-        } else if (hasData(S)) { await get().pushState() }
+        const act = syncAction(state, S, localStorage.getItem('gym_dirty') === '1')
+        if (act === 'adopt') get().adopt(state)
+        else if (act === 'push') { await get().pushState() }
       } catch (e) { /* offline — keep local */ }
       finally { set({ pulling: false }) }
     },
 
     async signOut() {
-      try { await get().pushState(); await api('/api/logout', { method: 'POST', body: '{}' }) } catch (e) { /* */ }
+      try { await get().pushState(); await backend.signOut() } catch (e) { /* */ }
       clearLocalSession()
     },
 
@@ -146,15 +150,14 @@ export const useStore = create((set, get) => {
     // would sign the user out of the one place the bump didn't reach. Caller reports the error.
     async signOutAll() {
       await get().pushState()   // never throws — stores gym_dirty and moves on when offline
-      await api('/api/logout/all', { method: 'POST', body: '{}' })
+      await backend.signOutAll()
       clearLocalSession()
     },
 
     // Boot: ask the server who we are, then pull.
     async boot() {
       try {
-        const me = await api('/api/me')
-        get().setUser(me.user)
+        get().setUser(await backend.me())
         await get().pullState()
         // Re-stamp the reminder's timezone on every load — keeps it correct if you're travelling,
         // without needing to revisit Settings.

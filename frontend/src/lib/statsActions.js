@@ -58,7 +58,7 @@ export function muscleGaps(S, now = new Date()) {
   const coming = {}
   left.forEach(l => { const ld = loadOfRoutine(l.routine); for (const m in ld) coming[m] = (coming[m] || 0) + ld[m] })
   return weekGoals(S.workouts, now).rows
-    .map(r => ({ m: r.m, done: r.done, projected: r.done + (coming[r.m] || 0), goal: r.goal }))
+    .map(r => ({ m: r.m, done: r.done, projected: r.done + (coming[r.m] || 0), goal: r.goal, why: r.why }))
     .map(g => ({ ...g, short: Math.ceil(g.goal - g.projected - 1e-9) }))
     .filter(g => g.short >= 1)
     .sort((a, b) => b.short - a.short)
@@ -162,7 +162,7 @@ export function weighAction(S, now = new Date()) {
  */
 export function weekActions(S, now = new Date()) {
   const ahead = weekAhead(S, now)
-  const streak = streakWeeks(S)
+  const streak = streakWeeks(S, now)
   const next = ahead.left[0] || null
   const hero = {
     done: ahead.done, planned: ahead.planned, streak,

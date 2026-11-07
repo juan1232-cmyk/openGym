@@ -350,7 +350,7 @@ export function ExerciseScreen({ ex, onBack, tab: tab0 = 'summary' }) {
   const [tab, setTab] = useState(TABS.some(([k]) => k === tab0) ? tab0 : 'summary')
   const root = useRef(null)
   // back to the top of the new tab — the page's, or the full-screen sheet's when it is one
-  const pick = k => { setTab(k); (root.current?.closest('.fullsheet') || window).scrollTo(0, 0) }
+  const pick = k => { setTab(k); (root.current?.closest('.fullsheet') || document.getElementById('app')).scrollTo(0, 0) }
   return <div className="exs" ref={root}>
     <div className="exs-top">
       <div className="exs-bar">

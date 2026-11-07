@@ -25,11 +25,12 @@ const WEEKDAY = wd => new Date(2026, 0, 5 + wd).toLocaleDateString(dateLocale(),
 const dayName = iso => new Date(iso + 'T12:00:00').toLocaleDateString(dateLocale(), { weekday: 'long' })
 const plural = (n, one, many) => t(n === 1 ? one : many, n)
 
-function Card({ tone, icon, why, what, done, children }) {
+function Card({ tone, icon, why, because, what, done, children }) {
   return <div className={'sx-act' + (done ? ' done' : '')}>
     <span className={'ic' + (tone ? ' ' + tone : '')}><Icon name={done ? 'check' : icon} /></span>
     <div className="bd">
       {why && <span className="why">{why}</span>}
+      {because && <span className="because">{because}</span>}
       <span className="what">{what}</span>
       {children && <div className="acts">{children}</div>}
     </div>
@@ -92,6 +93,7 @@ export default function StatsActions({ switcher }) {
     const sets = act.sets === 1 ? t('1 set of {0}', ex) : t('{0} sets of {1}', act.sets, ex)
     return <Card key={i.key} icon="dumbbell"
       why={t('At this plan {0} ends the week at {1} of {2} sets.', m, fmtNum(Math.round(gap.projected * 10) / 10), gap.goal)}
+      because={gap.why && t(gap.why)}
       what={t('Add {0} to {1}’s {2}.', sets, dayName(act.iso), act.routine)}>
       <Button size="sm" variant="tinted" onClick={() => accept(i.key, act, applyMuscle, t('Added {0} to {1}', ex, act.routine))}>{plural(act.sets, 'Add {0} set', 'Add {0} sets')}</Button>
     </Card>
