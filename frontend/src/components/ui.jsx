@@ -15,6 +15,7 @@
 
 import { useRef, useState, useEffect, useCallback, forwardRef } from 'react'
 import Icon from './Icon.jsx'
+import Glyph from './Glyph.jsx'
 
 /* ============================ text ============================ */
 
@@ -225,11 +226,11 @@ export function Section({ title, footer, children, className = '' }) {
   )
 }
 
-export function Row({ icon, iconTint, title, subtitle, value, accessory = 'none', onClick, danger, children, className = '' }) {
+export function Row({ icon, glyph, iconTint, title, subtitle, value, accessory = 'none', onClick, danger, children, className = '' }) {
   const Tag = onClick ? 'button' : 'div'
   return (
     <Tag className={'lrow' + (onClick ? ' tap' : '') + (danger ? ' danger' : '') + ' ' + className} onClick={onClick}>
-      {icon && <span className="lrow-i" style={iconTint ? { '--tint': iconTint } : null}><Icon name={icon} /></span>}
+      {icon && <span className="lrow-i" style={iconTint ? { '--tint': iconTint } : null}>{glyph ? <Glyph name={icon} /> : <Icon name={icon} />}</span>}
       <span className="lrow-m">
         <span className="lrow-t">{title}</span>
         {subtitle && <span className="lrow-s">{subtitle}</span>}

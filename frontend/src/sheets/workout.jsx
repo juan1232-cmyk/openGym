@@ -11,6 +11,7 @@ import { t, dateLocale } from '../lib/i18n.js'
 import { nav } from '../lib/nav.js'
 import { glyphOf } from '../lib/glyphs.js'
 import Icon from '../components/Icon.jsx'
+import Glyph from '../components/Glyph.jsx'
 import { Thumb } from '../components/Media.jsx'
 import Orb from '../components/Orb.jsx'
 import { Button } from '../components/ui.jsx'
@@ -184,7 +185,7 @@ export function WorkoutRow({ w, onClick }) {
   const st = useStore(s => s.S)
   const glyph = glyphOf((st.routines.find(r => r.id === w.routineId) || {}).emoji)
   return <div className="item" onClick={onClick}>
-    <span className="lrow-i" style={{ width: 34, height: 34, borderRadius: 8, fontSize: 19 }}><Icon name={glyph} /></span>
+    <span className="lrow-i" style={{ width: 34, height: 34, borderRadius: 8, fontSize: 19 }}><Glyph name={glyph} /></span>
     <div className="grow"><div className="tt">{w.name}</div>
       <div className="ss">{[fmtDate(w.d, true), ...durPart(w.end - w.start), t('{0} sets', setsDone(w)), fmtVol(w.vol, st.unit)].join(' · ')}</div></div>
     {w.prs && w.prs.length > 0 && <span className="pr"><Icon name="trophy" />{w.prs.length} PR</span>}
