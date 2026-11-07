@@ -6,6 +6,7 @@ import { uid } from '../lib/format.js'
 import { t } from '../lib/i18n.js'
 import { supersetUnits, cleanupSg, moveItem, exLine, modeOf, sideSplit } from '../lib/history.js'
 import { followsSuggestion, applySuggestion } from '../lib/scheme.js'
+import { swapConfig } from '../lib/pick.js'
 import { SchemePills } from '../components/Scheme.jsx'
 import Orb from '../components/Orb.jsx'
 import { Thumb } from '../components/Media.jsx'
@@ -141,10 +142,9 @@ export default function RoutineEdit() {
     const e = r.ex[i], ex = exOr(e.id)
     exConfigSheet(ex, e, cfg => edit(x => { x[i] = { id: x[i].id, sg: x[i].sg, ...cfg } }), () => edit(x => { x.splice(i, 1); cleanupSg(x) }), r, {
       list: r.ex,
-      // Sets, reps and progression carry over; the load does not — 60 kg on a barbell
-      // means nothing on dumbbells — and bodyweight re-derives from the new exercise.
+      // What carries over, and what doesn't, is swapConfig's call.
       swap: alt => {
-        edit(x => { const { weight, bodyweight, ...keep } = x[i]; x[i] = { ...keep, id: alt.id, weight: 0 } })
+        edit(x => { const { sg } = x[i]; x[i] = { ...swapConfig(x[i], ex, alt), ...(sg !== undefined && { sg }) } })
         toast(t('Swapped to “{0}”', alt.n))
       },
     })
