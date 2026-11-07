@@ -12,6 +12,7 @@ import { Thumb } from '../components/Media.jsx'
 import { glyphPicker, exercisePicker, exConfigSheet, confirmSheet, muscleLine } from '../sheets.jsx'
 import { toast, ui } from '../sheets/common.jsx'
 import Icon from '../components/Icon.jsx'
+import Glyph from '../components/Glyph.jsx'
 import { glyphOf } from '../lib/glyphs.js'
 import { Button, Row, SelectRow } from '../components/ui.jsx'
 import { POLICIES_FOR, POLICY_NAME, POLICY_DESC } from '../lib/progression.js'
@@ -110,7 +111,7 @@ function RoutineSettings({ id, close, onDeleted }) {
   return <>
     <h3>{t('Routine settings')}</h3>
     <div className="sect-b">
-      <Row icon={glyphOf(r.emoji)} title={t('Icon')} accessory="chevron"
+      <Row glyph icon={glyphOf(r.emoji)} title={t('Icon')} accessory="chevron"
         onClick={() => glyphPicker(r.emoji, g => updateRoutine(id, x => { x.emoji = g }))} />
       <SelectRow icon="chartLine" title={t('Progression')} sheetTitle={t('Progression')}
         value={r.prog || 'linear'} onChange={v => updateRoutine(id, x => { x.prog = v })}
@@ -186,7 +187,7 @@ export default function RoutineEdit() {
       <button className="iconbtn" onClick={() => routineSettings(id, () => nav('/plan'))} aria-label={t('Routine settings')}><Icon name="gear" /></button>
     </div>
 
-    <div className="rt-kicker"><Icon name={glyphOf(r.emoji)} />{t('Routine')}</div>
+    <div className="rt-kicker"><Glyph name={glyphOf(r.emoji)} />{t('Routine')}</div>
     {/* the name is the page title, edited in place; a fresh "New routine" is selected on
         focus so typing replaces it */}
     <input className="rt-title" defaultValue={r.name} aria-label={t('Routine name')} enterKeyHint="done"

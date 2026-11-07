@@ -1,8 +1,8 @@
 import { create } from 'zustand'
-import { backend } from '../lib/backend.js'
+import { backend, SIGNING_IN } from '../lib/backend.js'
 import { localTZ } from '../lib/format.js'
 import { registerCustom } from '../lib/exercises.js'
-import { hasData, syncAction } from '../lib/sync.js'
+import { hasData, syncAction, signInAction } from '../lib/sync.js'
 
 const KEY = 'gym_state_v1'
 export const DEF = {
@@ -53,6 +53,7 @@ const needsGoals = (st, ready, pulling) => ready && !pulling && !st.goal && !(st
 
 export const useStore = create((set, get) => {
   let pushTm = null
+  let booting = null   // React StrictMode runs the boot effect twice; the second run must not race the first
 
   const persist = (S, push = true) => {
     S._ts = Date.now()
@@ -116,6 +117,21 @@ export const useStore = create((set, get) => {
       persist(next, false)
     },
 
+    // The last step of an explicit sign-in, whichever way it came (a code typed in, or a provider's
+    // redirect landing back): `act` is signInAction's answer, or the person's pick when it was 'choose'.
+    // 'keep' with no account copy still pushes, so the first account row exists even if the only
+    // thing this device holds is what the onboarding just asked (a goal, no workouts yet).
+    async finishSignIn(user, act, remote) {
+      get().setUser(user)
+      if (act === 'adopt') get().adopt(remote)
+      else if (act === 'push' || (act === 'keep' && !remote)) await get().pushState()
+    },
+    // Both sides hold real data after a provider's redirect: boot parks the answer here and App
+    // asks the person (components/ChooseData.jsx). `{ user, remote }`, or null.
+    pendingChoice: null,
+    // What the last redirect-return came to, for App to say out loud once: { name } or { failed }.
+    signInResult: null,
+
     async pushState() {
       if (!get().user) return
       clearTimeout(pushTm)
@@ -154,21 +170,34 @@ export const useStore = create((set, get) => {
       clearLocalSession()
     },
 
-    // Boot: ask the server who we are, then pull.
-    async boot() {
-      try {
-        get().setUser(await backend.me())
-        await get().pullState()
-        // Re-stamp the reminder's timezone on every load — keeps it correct if you're travelling,
-        // without needing to revisit Settings.
-        const tz = localTZ()
-        if (get().S.reminder?.on && get().S.reminder.tz !== tz) {
-          get().update(s => { s.reminder = { ...s.reminder, tz } })
+    // Boot: ask the server who we are, then pull. Coming back from a provider's sign-in page is
+    // different: that is an explicit sign-in, so it is settled like a typed-in code, not pulled.
+    boot() {
+      return booting ||= (async () => {
+        const signingIn = localStorage.getItem(SIGNING_IN) === '1'
+        localStorage.removeItem(SIGNING_IN)
+        try {
+          const user = await backend.me()
+          if (signingIn) {
+            const remote = await backend.getState()
+            const act = signInAction(remote, get().S)
+            if (act === 'choose') set({ pendingChoice: { user, remote } })
+            else { await get().finishSignIn(user, act, remote); set({ signInResult: { name: user.name } }) }
+          } else {
+            get().setUser(user)
+            await get().pullState()
+          }
+          // Re-stamp the reminder's timezone on every load — keeps it correct if you're travelling,
+          // without needing to revisit Settings.
+          const tz = localTZ()
+          if (get().user && get().S.reminder?.on && get().S.reminder.tz !== tz) {
+            get().update(s => { s.reminder = { ...s.reminder, tz } })
+          }
+        } catch (e) {
+          if (e.status === 401) { get().setUser(null); if (signingIn) set({ signInResult: { failed: true } }) }
         }
-      } catch (e) {
-        if (e.status === 401) get().setUser(null)
-      }
-      set({ ready: true })
+        set({ ready: true })
+      })()
     }
   }
 })

@@ -4,6 +4,7 @@ import { DAYN, uid, exCount } from '../lib/format.js'
 import { t } from '../lib/i18n.js'
 import { dayAssignSheet, loadStarterPlan, planToolsSheet } from '../sheets.jsx'
 import Icon from '../components/Icon.jsx'
+import Glyph from '../components/Glyph.jsx'
 import { Button } from '../components/ui.jsx'
 import { glyphOf, DEFAULT_GLYPH } from '../lib/glyphs.js'
 import { exOr } from '../lib/exercises.js'
@@ -32,7 +33,7 @@ export default function Plan() {
     const { shown, more } = previewList(r.ex.map(e => exOr(e.id).n))
     return <div key={r.id} className="pl-rt" onClick={() => nav('/plan/r/' + r.id)}>
       <div className="pl-rh">
-        <span className="lrow-i"><Icon name={glyphOf(r.emoji)} /></span>
+        <span className="lrow-i"><Glyph name={glyphOf(r.emoji)} /></span>
         <div className="grow"><div className="tt">{r.name}</div><div className="ss">{exCount(r.ex.length)}</div></div>
         <Icon name="chevronRight" className="chev" />
       </div>

@@ -15,6 +15,7 @@ import { nav } from '../lib/nav.js'
 import { Thumb } from '../components/Media.jsx'
 import Stepper from '../components/Stepper.jsx'
 import Icon from '../components/Icon.jsx'
+import Glyph from '../components/Glyph.jsx'
 import { Button, Switch, Segmented, SelectRow, Row, Section } from '../components/ui.jsx'
 import { glyphOf, DEFAULT_GLYPH } from '../lib/glyphs.js'
 import { policyFor, defaultIncrement, nextPrescription, POLICIES_FOR, POLICY_NAME, POLICY_DESC } from '../lib/progression.js'
@@ -54,7 +55,7 @@ function AddToRoutine({ ex, close }) {
     <div className="muted small" style={{ marginBottom: 12 }}>{t('Pick a routine — sets, reps & weight come next.')}</div>
     <div className="list">
       {st.routines.map(r => <div key={r.id} className="item" onClick={() => pick(r.id)}>
-        <span className="lrow-i"><Icon name={glyphOf(r.emoji)} /></span>
+        <span className="lrow-i"><Glyph name={glyphOf(r.emoji)} /></span>
         <div className="grow"><div className="tt">{r.name}</div><div className="ss">{exCount(r.ex.length)}</div></div>
         {r.ex.some(e => e.id === ex.id) && <span className="tag">{t('already in')}</span>}<Icon name="plus" className="chev" />
       </div>)}

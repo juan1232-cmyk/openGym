@@ -141,6 +141,26 @@ button,.chip,.tile,.item,.wday,.cal-d,.swatch,.hm-c,.lrow,.seg button,.stp butto
   stroke-linecap:round;stroke-linejoin:round;
 }
 
+/* routine glyphs (components/Glyph.jsx): solid Peek shapes. .t is the quiet second tone; .e is
+   a knockout (Peek's eyes) painted in --glyph-eye, which each tile below sets to its own
+   background so the eyes read as holes wherever the glyph sits. */
+.glyph{width:1em;height:1em;flex:none;display:block;fill:currentColor;stroke:none}
+.glyph .t{opacity:.4}
+.glyph .e{fill:var(--glyph-eye,var(--bg))}
+.glyph .es{fill:none;stroke:var(--glyph-eye,var(--bg));stroke-linecap:round}
+.glyph .sep{stroke:var(--glyph-eye,var(--bg));stroke-width:1.8;stroke-linejoin:round}
+.glyph .s1,.glyph .s2,.glyph .s3,.glyph .s4{
+  fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;
+}
+.glyph .r{stroke:currentColor;stroke-width:1.6;stroke-linejoin:round}
+.glyph .s1{stroke-width:2}
+.glyph .s2{stroke-width:2.6}
+.glyph .s3{stroke-width:3.4}
+.glyph .s4{stroke-width:4.4}
+.lrow-i{--glyph-eye:var(--tint,var(--acc))}
+.glyph-cell{--glyph-eye:var(--surface)}
+.glyph-cell.on{--glyph-eye:var(--acc)}
+
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 
 /* ------------------------------------------------------------ type scale -- */
