@@ -5,7 +5,7 @@ import { useStore, needsGoals } from './store/useStore.js'
 import { useUI } from './store/useUI.js'
 import { bindUI } from './components/ui.jsx'
 import { ACCENTS } from './lib/format.js'
-import { setLang, useLang } from './lib/i18n.js'
+import { setLang, useLang, t } from './lib/i18n.js'
 import { setNav } from './lib/nav.js'
 import { routeDir } from './lib/transition.js'
 import { useWakeLock } from './lib/wakelock.js'
@@ -15,6 +15,7 @@ import TabBar from './components/TabBar.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import Modals from './components/Modals.jsx'
 import Toast from './components/Toast.jsx'
+import { ChooseSheet } from './components/ChooseData.jsx'
 import RestTimer from './components/RestTimer.jsx'
 import Onboarding from './views/Onboarding.jsx'
 import Tour from './components/Tour.jsx'
@@ -133,9 +134,27 @@ function Shell() {
   )
 }
 
+// What came of coming back from a provider's sign-in page. boot() settles it; this is the part that
+// needs the screen: say how it went, or ask which copy of the data to keep.
+function useSignInReturn() {
+  const result = useStore(s => s.signInResult)
+  const pending = useStore(s => s.pendingChoice)
+  useEffect(() => {
+    if (!result) return
+    useUI.getState().toast(result.failed ? t('Sign-in didn’t finish. Try again.') : t('Welcome, {0}', result.name))
+    useStore.setState({ signInResult: null })
+  }, [result])
+  useEffect(() => {
+    if (!pending) return
+    const sheet = useUI.getState().openSheet(close => <ChooseSheet close={close} />, { locked: true })
+    return () => sheet.close()
+  }, [pending])
+}
+
 export default function App() {
   const boot = useStore(s => s.boot)
   useEffect(() => { boot() }, [boot])
+  useSignInReturn()
   return (
     <HashRouter>
       <Shell />

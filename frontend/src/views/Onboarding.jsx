@@ -10,7 +10,7 @@ import { DAYN } from '../lib/format.js'
 import Orb from '../components/Orb.jsx'
 import Say from '../components/Say.jsx'
 import Icon from '../components/Icon.jsx'
-import CodeSignIn from '../components/CodeSignIn.jsx'
+import SignIn from '../components/SignIn.jsx'
 import { Button } from '../components/ui.jsx'
 
 const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -176,7 +176,7 @@ function Welcome({ onStart }) {
   if (emailing) return <div className="pk-step ob-welcome">
     <div className="grow" />
     <div className="pk-hero"><h1>{t('Welcome back.')}</h1></div>
-    <CodeSignIn />
+    <SignIn mode="in" />
     <button className="pk-link" onClick={() => setEmailing(false)}>{t('Back')}</button>
   </div>
   return <div className="pk-step ob-welcome">
@@ -328,7 +328,7 @@ function SaveStep({ name, orb, say, setUser, setGuest, pushState, pullState }) {
   }
   if (AUTH === 'code') return <div className="pk-step ob-save">
     <div className="grow" />
-    <CodeSignIn name={name} />
+    <SignIn name={name} />
     <div className="pk-actions" style={{ marginTop: 10 }}>
       <Button variant="soft" onClick={() => setGuest(true)}>{t('Not now, keep it on this device')}</Button>
     </div>
