@@ -46,26 +46,6 @@ const P = {
   sparkles: <><path d="m8.4 3.8 1.1 2.9 2.9 1.1-2.9 1.1-1.1 2.9-1.1-2.9L4.4 7.8l2.9-1.1Z" /><path d="m16.2 12.4.8 2.1 2.1.8-2.1.8-.8 2.1-.8-2.1-2.1-.8 2.1-.8Z" /></>,
   lightbulb: <><path d="M9.2 16.4a5.6 5.6 0 1 1 5.6 0v1.8H9.2Z" /><path d="M10 20.6h4" /></>,
 
-  /* ---- routine glyphs: what a training day actually is ---- */
-  // Named after the split or the kit, because that's how people name routines
-  // ("Push Day", "Leg Day", "Kettlebell") — an award icon says nothing about it.
-  arm: <><circle cx="7" cy="5.8" r="1.9" /><path d="M7 8.8v4.6l-1.2 6.2M7 11.4l4.4 1.9" /><rect x="12.2" y="10.8" width="2.3" height="5" rx=".9" /><rect x="15.9" y="10.8" width="2.3" height="5" rx=".9" /><path d="M14.5 13.3h1.4" /></>,
-  // Six-pack, not a grid: the centre seam runs down the gap between the crease
-  // pairs and every crease stops short of the outline, so no stroke crosses another
-  // (the old version drew full-width lines through a centre line — a see-through #).
-  abs: <><path d="M7.8 4.4h8.4v10.4a4.2 4.2 0 0 1-8.4 0Z" /><path d="M12 6.2v9M9 8.9h2.2M12.8 8.9h2.2M9 11.6h2.2M12.8 11.6h2.2M9.3 14.2h1.9M12.9 14.2h1.9" /></>,
-  legs: <><path d="M8.4 4.2h7.2" /><path d="M9.9 4.2v4.9l-1.3 4.4.9 6.3M14.1 4.2v4.9l1.3 4.4-.9 6.3" /><path d="M7.7 19.8h2.6M13.7 19.8h2.6" /></>,
-  // Head lifted clear of the arm-V apex (was cy 10.5, right where the arm strokes
-  // meet) so the body no longer reads as tangled lines behind a transparent head.
-  pullup: <><path d="M3.6 5.1h16.8M8.5 5.5v2.3M15.5 5.5v2.3" /><circle cx="12" cy="9.6" r="1.8" /><path d="m8.5 7.8 3.5 5 3.5-5M12 13.3v3.9M12 17.2l-2.1 3.2M12 17.2l2.1 3.2" /></>,
-  kettlebell: <><path d="M9.5 11V9.6a2.5 2.5 0 0 1 5 0V11" /><path d="M14.9 11.8c2.2 1.5 3.6 3.9 3.6 6.4a1.6 1.6 0 0 1-1.6 1.6H7.1a1.6 1.6 0 0 1-1.6-1.6c0-2.5 1.4-4.9 3.6-6.4Z" /></>,
-  plate: <><circle cx="12" cy="12" r="8.2" /><circle cx="12" cy="12" r="2.7" /></>,
-  machine: <><path d="M12 3.6v3.1" /><rect x="6.6" y="6.7" width="10.8" height="12.9" rx="1.9" /><path d="M9 10.1h6M9 13.2h6M9 16.3h6" /></>,
-  bike: <><circle cx="6.2" cy="16.2" r="3.5" /><circle cx="17.8" cy="16.2" r="3.5" /><path d="m6.2 16.2 4.3-7.4h4.9l2.4 7.4M9.3 8.8h4.5M13.8 8.8l-2.6 7.4" /></>,
-  swim: <><circle cx="8.8" cy="8.2" r="1.8" /><path d="m10.9 10 4.6-2.2 3.3 3.4" /><path d="M3.5 15.6c1.6-1.3 3.1-1.3 4.7 0s3.1 1.3 4.7 0 3.1-1.3 4.7 0c.9.7 1.7.9 2.6.5" /></>,
-  boxing: <><path d="M7.6 8.6A4.6 4.6 0 0 1 12.2 4h1.6a5.4 5.4 0 0 1 5.4 5.4v2.4a3 3 0 0 1-3 3H7.6Z" /><path d="M7.6 14.8v2.3a2.6 2.6 0 0 0 2.6 2.6h5.2a2.6 2.6 0 0 0 2.6-2.6v-2.3" /><path d="M7.6 9.8H6.3a1.8 1.8 0 0 0 0 3.6h1.3" /></>,
-  stretch: <><circle cx="14.4" cy="5.4" r="1.9" /><path d="M14.4 8.2c-3 1.4-5 4-5.8 7.4" /><path d="M8.6 15.6 6.2 20M8.6 15.6l4.6 4.4" /><path d="M12.6 9.6 18 12" /></>,
-
   /* ---- actions ---- */
   plus: <path d="M12 5.2v13.6M5.2 12h13.6" />,
   minus: <path d="M5.2 12h13.6" />,

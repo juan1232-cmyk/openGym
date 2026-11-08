@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { exOr } from '../lib/exercises.js'
+import { swapConfig } from '../lib/pick.js'
 import { effectiveRoutine, lastEntryFor, buildSets, setsDoneActive, supersetUnits, unitOf, setLabel, modeOf, isBw, isPerSide, sideReps, EFFORT, effortOf, capEffort, RIR_CHIPS, rirChip, fmtSec, nextUp, nextSetLabel, isLoadPR, workSets, workIndexOf, addWarmup, removeWarmup } from '../lib/history.js'
 import { fmtNum, fmtVol, todayISO, exCount, DAYN } from '../lib/format.js'
 import { beep, vibrate } from '../lib/sound.js'
@@ -15,7 +16,6 @@ import Icon from '../components/Icon.jsx'
 import Orb from '../components/Orb.jsx'
 import { Button, Check, NumberField } from '../components/ui.jsx'
 import { nextPrescription, applyPrescription, defaultIncrement } from '../lib/progression.js'
-import { glyphOf } from '../lib/glyphs.js'
 import { setVsLast } from '../lib/verdict.js'
 import { overSessionCap, MUSCLE_NAME } from '../lib/muscles.js'
 import { SESSION_CAP } from '../lib/engine-config.js'
@@ -31,15 +31,13 @@ function StartChooser() {
     <div className="hdr"><div><h1>{t('Start workout')}</h1><div className="sub">{t(DAYN[new Date().getDay()])} — {todayR ? t('today is {0}', todayR.name) : t('rest day, but no one’s stopping you')}</div></div></div>
     {todayR && <div className="card" style={{ borderColor: 'var(--acc)' }}>
       <h2 className="accent">{t("Today's plan")}{todayOvr ? ' · ' + t('rescheduled') : ''}</h2>
-      <div className="row between" style={{ marginBottom: 12 }}>
-        <div><div className="big">{todayR.name}</div><div className="muted small">{exCount(todayR.ex.length)}</div></div>
-        <span className="lrow-i" style={{ width: 38, height: 38, borderRadius: 9, fontSize: 22 }}><Icon name={glyphOf(todayR.emoji)} /></span>
+      <div style={{ marginBottom: 12 }}>
+        <div className="big">{todayR.name}</div><div className="muted small">{exCount(todayR.ex.length)}</div>
       </div>
       <Button variant="primary" icon="play" onClick={() => startFlow(todayR.id)}>{t('Start {0}', todayR.name)}</Button>
     </div>}
     {others.length > 0 && <><h4 className="sec">{t('Other routines')}</h4>
       <div className="list">{others.map(r => <div key={r.id} className="item" onClick={() => startFlow(r.id)}>
-        <span className="lrow-i"><Icon name={glyphOf(r.emoji)} /></span>
         <div className="grow"><div className="tt">{r.name}</div><div className="ss">{exCount(r.ex.length)}</div></div>
         <span className="tag acc">{t('Start')}</span></div>)}</div></>}
     <div style={{ height: 14 }} />
@@ -161,8 +159,7 @@ function ExerciseBody({ entryIdx, inSuperset, onToggle, onField, onAddSet, onRem
   const update = useStore(s => s.update)
   const swap = () => swapSheet(ex, S.active.entries.map(e => e.id), alt => update(s => {
     const e = s.active.entries[entryIdx]
-    const { weight, bodyweight, ...keep } = e.target || {}
-    s.active.entries[entryIdx] = { ...entryFor(s, alt.id, { ...keep, id: alt.id, weight: 0 }), sg: e.sg }
+    s.active.entries[entryIdx] = { ...entryFor(s, alt.id, swapConfig(e.target, ex, alt)), sg: e.sg }
   }))
   return <div className="pk-ex-part">
     {inSuperset && <div className="pk-ex-sub">{ex.n}</div>}

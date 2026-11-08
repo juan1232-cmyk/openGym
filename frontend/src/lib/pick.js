@@ -3,7 +3,7 @@
 // only render what comes out of here, so the ranking can be tested without clicking.
 import { MUSCLES, musclesOf, loadOf } from './muscles.js'
 import { EXIDX, EXDB } from './exercises.js'
-import { defaultConfig, lastEntryFor } from './history.js'
+import { defaultConfig, lastEntryFor, modeOf } from './history.js'
 import { applySuggestion, defaultModeFor } from './scheme.js'
 
 /* ---------------- what you use ---------------- */
@@ -449,6 +449,20 @@ export function similarTo(ex, all, { exclude = [], gymEq = null, usage = {} } = 
     .map(e => ({ e, s: score(e) }))
     .sort((a, b) => b.s - a.s || a.e.n.length - b.e.n.length || (a.e.n < b.e.n ? -1 : 1))
     .map(x => x.e)
+}
+
+/**
+ * The config an exercise takes over when `from` is swapped for `to`. Within the same kind of
+ * work (reps for reps) sets, reps and progression carry over and the load does not — 60 kg on a
+ * barbell means nothing on dumbbells — and bodyweight re-derives from the new exercise. Across
+ * kinds (a press for a plank, a squat for a run) nothing carries: "3 × 10" is not a plan for a
+ * hold or for cardio. The whole library is swappable, so this happens.
+ */
+export function swapConfig(cfg, from, to) {
+  const fresh = defaultConfig(to.id, defaultModeFor(to))
+  const { weight, bodyweight, ...keep } = cfg || {}
+  if (modeOf({ ...keep, id: from.id }) !== modeOf({ ...fresh, id: to.id })) return { ...fresh, id: to.id, weight: 0 }
+  return { ...keep, id: to.id, weight: 0 }
 }
 
 /* ---------------- one-tap add ---------------- */
