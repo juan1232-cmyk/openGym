@@ -117,7 +117,7 @@ export const TOUR = [
     line: 'Your week. Tap any day to give it a routine, or open one to change it.',
     own: 'Your plan lives here. Tap New routine to make your first one.' },
   { kind: 'do', seg: 2, target: 'tab-stats', to: '/stats', line: 'Now Stats.' },
-  { kind: 'look', seg: 2, target: 'stats-main', at: '/stats', line: 'Every PR and every set you log ends up here.' },
+  { kind: 'look', seg: 2, target: 'stats-main', at: '/stats', line: 'Your week, checked. I flag what to fix, and every set you log feeds it.' },
   { kind: 'do', seg: 3, target: 'tab-start', to: '/workout', line: 'Last one. At the gym, tap Start.' },
   { kind: 'end', seg: 3, at: '/workout', line: 'That’s it. Go lift, {0}.' }
 ]

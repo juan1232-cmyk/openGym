@@ -719,7 +719,7 @@ export default {
   'Your week. Tap any day to give it a routine, or open one to change it.': 'Tu semana. Toca un día para darle una rutina, o abre una para cambiarla.',
   'Your plan lives here. Tap New routine to make your first one.': 'Aquí vive tu plan. Toca Nueva rutina para crear la primera.',
   'Now Stats.': 'Ahora Progreso.',
-  'Every PR and every set you log ends up here.': 'Cada récord y cada serie que registres acaba aquí.',
+  'Your week, checked. I flag what to fix, and every set you log feeds it.': 'Tu semana, revisada. Te marco lo que arreglar, y cada serie que registres la alimenta.',
   'Last one. At the gym, tap Start.': 'La última. En el gimnasio, toca Empezar.',
   'That’s it. Go lift, {0}.': 'Eso es todo. A entrenar, {0}.',
   'Over here.': 'Aquí.',
