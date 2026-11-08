@@ -133,9 +133,13 @@ export default function StatsActions({ switcher }) {
     <div className="hdr"><div><h1>{t('Stats')}</h1><div className="sub">{t('What to do this week')}</div></div>
       <button className="iconbtn" onClick={() => nav('/history')} aria-label={t('History')}><Icon name="history" /></button></div>
     {switcher}
-    <Hero S={S} hero={hero} />
-    <div className="sx-head"><b>{t('Worth doing')}</b><span>{rows.length ? plural(rows.length, '{0} thing', '{0} things') : ''}</span></div>
-    {rows.length ? rows : <Card done what={t('Nothing to fix. No lift is stuck and the plan covers every muscle you train.')} />}
-    {more > 0 && <div className="sx-more">{t('+{0} more once these are done', more)}</div>}
+    {/* the tour's Stats stop lights this; it used to exist only in the Numbers view, so on
+        this one (the default) the stop dimmed the whole screen and lit nothing */}
+    <div data-tour="stats-main">
+      <Hero S={S} hero={hero} />
+      <div className="sx-head"><b>{t('Worth doing')}</b><span>{rows.length ? plural(rows.length, '{0} thing', '{0} things') : ''}</span></div>
+      {rows.length ? rows : <Card done what={t('Nothing to fix. No lift is stuck and the plan covers every muscle you train.')} />}
+      {more > 0 && <div className="sx-more">{t('+{0} more once these are done', more)}</div>}
+    </div>
   </>
 }

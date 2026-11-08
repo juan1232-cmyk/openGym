@@ -29,7 +29,11 @@ const SLOTS = {
   centre: (w, sat) => ({ x: w / 2 - 48, y: sat + 64, size: 96 }),
   save: (w, sat) => ({ x: w / 2 - 84, y: sat + 110, size: 168 })
 }
-const slotOf = step => (step === 'hello' ? 'hello' : step === 'reveal' ? 'centre' : step === 'save' ? 'save' : 'ask')
+// The account step with a passkey is two buttons and a note, so Peek can sit big in the middle.
+// The hosted app's username + password form, a provider button and "not now" are about 460px —
+// more than is left under a 168px Peek and its bubble, so the bubble landed on the username
+// field. There Peek takes the small corner slot the questions use, and the form starts below it.
+const slotOf = step => (step === 'hello' ? 'hello' : step === 'reveal' ? 'centre' : step === 'save' ? (AUTH === 'code' ? 'ask' : 'save') : 'ask')
 
 // The new-profile flow, replacing the old welcome → create account → goals screens. Peek gets
 // to know you and says what each answer does in the app (lib/onboard.js keeps those lines next
@@ -326,7 +330,7 @@ function SaveStep({ name, orb, say, setUser, setGuest, pushState, pullState }) {
       setBusy(false)
     }
   }
-  if (AUTH === 'code') return <div className="pk-step ob-save">
+  if (AUTH === 'code') return <div className="pk-step ob-save ob-q">
     <div className="grow" />
     <SignIn name={name} />
     <div className="pk-actions" style={{ marginTop: 10 }}>

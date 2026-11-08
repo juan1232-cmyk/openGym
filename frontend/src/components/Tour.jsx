@@ -44,18 +44,23 @@ export default function Tour() {
     if (!stop) return
     setRect(null); setHint(false); setLine(null)
     if (stop.at && loc.pathname !== stop.at) return
-    let tm = 0
+    let tm = 0, retry = 0
     const measure = () => {
       const el = stop.target && document.querySelector(`[data-tour="${stop.target}"]`)
       // a look stop's target goes to the top, under the progress bar, so the bottom of the
-      // screen stays free for Peek and its bubble
+      // screen stays free for Peek and its bubble. #app is the scroller, not the window
+      // (index.css), so scrollBy(0, …) here moved nothing.
       const top = (document.querySelector('.tour-top')?.getBoundingClientRect().bottom || 50) + 16
-      if (el && stop.kind === 'look') scrollBy(0, el.getBoundingClientRect().top - top)
+      if (el && stop.kind === 'look') document.getElementById('app')?.scrollBy(0, el.getBoundingClientRect().top - top)
       const r = el && el.getBoundingClientRect()
       setRect(r ? { x: r.left, y: r.top, w: r.width, h: r.height } : null)
+      return !!r
     }
+    // a screen that is slow to draw (or still sliding in) isn't there yet at SETTLE: look again a
+    // few times rather than leave the stop with nothing lit
+    const settle = () => { if (!measure() && stop.target && retry++ < 8) tm = setTimeout(settle, 150) }
     tm = setTimeout(() => {
-      measure()
+      settle()
       const text = stop.kind === 'end' ? t(stop.line, name) : t(own && stop.own ? stop.own : stop.line)
       setLine({ text, key: idx })
       if (stop.kind === 'do') orb.current?.react('downward-gaze', 1600)
