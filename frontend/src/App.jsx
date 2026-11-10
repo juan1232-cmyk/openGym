@@ -5,7 +5,7 @@ import { useStore, needsGoals } from './store/useStore.js'
 import { useUI } from './store/useUI.js'
 import { bindUI } from './components/ui.jsx'
 import { ACCENTS } from './lib/format.js'
-import { setLang, useLang } from './lib/i18n.js'
+import { setLang, useLang, t } from './lib/i18n.js'
 import { setNav } from './lib/nav.js'
 import { routeDir } from './lib/transition.js'
 import { useWakeLock } from './lib/wakelock.js'
@@ -15,6 +15,7 @@ import TabBar from './components/TabBar.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import Modals from './components/Modals.jsx'
 import Toast from './components/Toast.jsx'
+import { ChooseSheet } from './components/ChooseData.jsx'
 import RestTimer from './components/RestTimer.jsx'
 import Onboarding from './views/Onboarding.jsx'
 import Tour from './components/Tour.jsx'
@@ -82,8 +83,8 @@ function Shell() {
   }, [S.appearance, S.accent, skin, hideTabs])
   useEffect(() => { setLang(S.lang || 'en') }, [S.lang])
   useEffect(() => { document.documentElement.lang = S.lang || 'en' }, [langV, S.lang])
-  // every tab/route change starts at the top of the page
-  useEffect(() => { window.scrollTo(0, 0) }, [loc.pathname])
+  // no scroll reset needed on route change: #app is the scroller and is keyed on the
+  // pathname below, so every tab/route gets a fresh one that starts at the top
   // worked out during render so the re-keyed #app mounts with the right class; idempotent
   // per pathname, so StrictMode's second render reads back the same direction
   const last = useRef({ path: null, dir: 'fade' })
@@ -133,9 +134,27 @@ function Shell() {
   )
 }
 
+// What came of coming back from a provider's sign-in page. boot() settles it; this is the part that
+// needs the screen: say how it went, or ask which copy of the data to keep.
+function useSignInReturn() {
+  const result = useStore(s => s.signInResult)
+  const pending = useStore(s => s.pendingChoice)
+  useEffect(() => {
+    if (!result) return
+    useUI.getState().toast(result.failed ? t('Sign-in didn’t finish. Try again.') : t('Welcome, {0}', result.name))
+    useStore.setState({ signInResult: null })
+  }, [result])
+  useEffect(() => {
+    if (!pending) return
+    const sheet = useUI.getState().openSheet(close => <ChooseSheet close={close} />, { locked: true })
+    return () => sheet.close()
+  }, [pending])
+}
+
 export default function App() {
   const boot = useStore(s => s.boot)
   useEffect(() => { boot() }, [boot])
+  useSignInReturn()
   return (
     <HashRouter>
       <Shell />

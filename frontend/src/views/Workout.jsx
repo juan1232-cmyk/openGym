@@ -3,18 +3,19 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { exOr } from '../lib/exercises.js'
+import { swapConfig } from '../lib/pick.js'
 import { effectiveRoutine, lastEntryFor, buildSets, setsDoneActive, supersetUnits, unitOf, setLabel, modeOf, isBw, isPerSide, sideReps, EFFORT, effortOf, capEffort, RIR_CHIPS, rirChip, fmtSec, nextUp, nextSetLabel, isLoadPR } from '../lib/history.js'
 import { fmtNum, fmtVol, todayISO, exCount, DAYN } from '../lib/format.js'
 import { beep, vibrate } from '../lib/sound.js'
 import { t } from '../lib/i18n.js'
 import { api } from '../lib/api.js'
+import { SERVER_EXTRAS } from '../lib/backend.js'
 import { Thumb } from '../components/Media.jsx'
 import { startFlow, exercisePicker, exConfigSheet, swapSheet, exerciseDetailSheet, finishWorkout, workoutCompleteSheet, confirmSheet } from '../sheets.jsx'
 import Icon from '../components/Icon.jsx'
 import Orb from '../components/Orb.jsx'
 import { Button, Check, NumberField } from '../components/ui.jsx'
 import { nextPrescription, applyPrescription } from '../lib/progression.js'
-import { glyphOf } from '../lib/glyphs.js'
 import { setVsLast } from '../lib/verdict.js'
 import { overSessionCap, MUSCLE_NAME } from '../lib/muscles.js'
 import { SESSION_CAP } from '../lib/engine-config.js'
@@ -30,15 +31,13 @@ function StartChooser() {
     <div className="hdr"><div><h1>{t('Start workout')}</h1><div className="sub">{t(DAYN[new Date().getDay()])} — {todayR ? t('today is {0}', todayR.name) : t('rest day, but no one’s stopping you')}</div></div></div>
     {todayR && <div className="card" style={{ borderColor: 'var(--acc)' }}>
       <h2 className="accent">{t("Today's plan")}{todayOvr ? ' · ' + t('rescheduled') : ''}</h2>
-      <div className="row between" style={{ marginBottom: 12 }}>
-        <div><div className="big">{todayR.name}</div><div className="muted small">{exCount(todayR.ex.length)}</div></div>
-        <span className="lrow-i" style={{ width: 38, height: 38, borderRadius: 9, fontSize: 22 }}><Icon name={glyphOf(todayR.emoji)} /></span>
+      <div style={{ marginBottom: 12 }}>
+        <div className="big">{todayR.name}</div><div className="muted small">{exCount(todayR.ex.length)}</div>
       </div>
       <Button variant="primary" icon="play" onClick={() => startFlow(todayR.id)}>{t('Start {0}', todayR.name)}</Button>
     </div>}
     {others.length > 0 && <><h4 className="sec">{t('Other routines')}</h4>
       <div className="list">{others.map(r => <div key={r.id} className="item" onClick={() => startFlow(r.id)}>
-        <span className="lrow-i"><Icon name={glyphOf(r.emoji)} /></span>
         <div className="grow"><div className="tt">{r.name}</div><div className="ss">{exCount(r.ex.length)}</div></div>
         <span className="tag acc">{t('Start')}</span></div>)}</div></>}
     <div style={{ height: 14 }} />
@@ -62,7 +61,7 @@ function Elapsed({ start }) {
 // read back as text; open rows are plain inputs, the way the design draws them, instead of
 // the +/- steppers the old layout used — with "last time" beside every set there is no room
 // for three buttons a column, and the prescription already fills the numbers in.
-function SetGrid({ entryIdx, onToggle, onField, onStartTimed }) {
+function SetGrid({ entryIdx, onToggle, onField, onStartTimed, onRated }) {
   const S = useStore(s => s.S)
   const working = useUI(s => s.work)
   const entry = S.active.entries[entryIdx]
@@ -97,7 +96,9 @@ function SetGrid({ entryIdx, onToggle, onField, onStartTimed }) {
     setRirAt(chips && willBeDone && entry.sets[i].rir == null ? i : null)
   }
   // tapping the lit chip clears it again — empty is not 0, and a mistap has to be undoable
-  const rate = (i, v) => { onField(i, 'rir', rirChip(entry.sets[i].rir) === v ? null : v); setRirAt(null) }
+  // `onRated` lets the workout move on from a finished exercise it held open for this rating
+  const rate = (i, v) => { onField(i, 'rir', rirChip(entry.sets[i].rir) === v ? null : v); setRirAt(null); onRated() }
+  const toggleRir = i => { if (rirAt === i) { setRirAt(null); onRated() } else setRirAt(i) }
   const grid = { gridTemplateColumns: ['26px', 'minmax(0,1fr)', ...cols.map(c => c.w), ...(timed ? ['36px'] : []), '36px'].join(' ') }
   const shown = (c, v) => (v == null || v === '' ? '—' : c.f === 'sec' ? fmtSec(v) : fmtNum(v))
 
@@ -110,7 +111,7 @@ function SetGrid({ entryIdx, onToggle, onField, onStartTimed }) {
         <span className="prev">{prev}</span>
         {cols.map(c => chips && c.eff
           ? <button key={c.f} className={'rirc' + (rirAt === i ? ' on' : '')} aria-label={c.hd} aria-expanded={rirAt === i}
-            onClick={() => setRirAt(rirAt === i ? null : i)}>{shown(c, s[c.f])}</button>
+            onClick={() => toggleRir(i)}>{shown(c, s[c.f])}</button>
           : s.done
           ? <span key={c.f} className="v">{shown(c, s[c.f])}</span>
           : <NumberField key={c.f} decimal={c.dec} nullable={c.opt} value={s[c.f] ?? ''} aria-label={c.hd}
@@ -141,7 +142,7 @@ function entryFor(s, id, cfg) {
 }
 
 /* ---------- one exercise inside an open card ---------- */
-function ExerciseBody({ entryIdx, inSuperset, onToggle, onField, onAddSet, onRemoveSet, onStartTimed }) {
+function ExerciseBody({ entryIdx, inSuperset, onToggle, onField, onAddSet, onRemoveSet, onStartTimed, onRated }) {
   const S = useStore(s => s.S)
   const entry = S.active.entries[entryIdx]
   const ex = exOr(entry.id)
@@ -154,8 +155,7 @@ function ExerciseBody({ entryIdx, inSuperset, onToggle, onField, onAddSet, onRem
   const update = useStore(s => s.update)
   const swap = () => swapSheet(ex, S.active.entries.map(e => e.id), alt => update(s => {
     const e = s.active.entries[entryIdx]
-    const { weight, bodyweight, ...keep } = e.target || {}
-    s.active.entries[entryIdx] = { ...entryFor(s, alt.id, { ...keep, id: alt.id, weight: 0 }), sg: e.sg }
+    s.active.entries[entryIdx] = { ...entryFor(s, alt.id, swapConfig(e.target, ex, alt)), sg: e.sg }
   }))
   return <div className="pk-ex-part">
     {inSuperset && <div className="pk-ex-sub">{ex.n}</div>}
@@ -176,7 +176,7 @@ function ExerciseBody({ entryIdx, inSuperset, onToggle, onField, onAddSet, onRem
       <Icon name={plan.kind === 'up' ? 'arrowUp' : plan.kind === 'deload' ? 'arrowDown' : 'lightbulb'} />
       <span>{t(...plan.why)}</span>
     </div>}
-    <SetGrid entryIdx={entryIdx} onToggle={onToggle} onField={onField} onStartTimed={onStartTimed} />
+    <SetGrid entryIdx={entryIdx} onToggle={onToggle} onField={onField} onStartTimed={onStartTimed} onRated={onRated} />
     {note && <div className="progline warn capnote" role="status">
       <Icon name="lightbulb" />
       <span><b>{t('{0}: past {1} sets today.', t(MUSCLE_NAME[note.m]), SESSION_CAP)}</b> {t('More sets here mostly add tiredness. Move them to another day.')}</span>
@@ -270,6 +270,8 @@ function ActiveWorkout() {
   const orb = useRef(null)
   const listRef = useRef(null)
   const advance = useRef(null)
+  const held = useRef(null)            // the advance that is waiting on a last-set RIR rating
+  const release = () => { const h = held.current; held.current = null; h?.() }
   const [collapsed, setCollapsed] = useState(false)
   const [cheer, setCheer] = useState(null)
   const A = S.active
@@ -316,10 +318,12 @@ function ActiveWorkout() {
     const m = modeAt(idx)
     const cardioEntry = m === 'cardio'
     const isLastUnit = unitIdx >= units.length - 1
-    let exJustDone = false, workoutDone = false, unitJustDone = false
+    let exJustDone = false, workoutDone = false, unitJustDone = false, needsRate = false
+    held.current = null          // a set unticked while the card was held open must not move on later
     mutEntry(idx, e => {
       e.sets[i].done = !e.sets[i].done
       if (e.sets[i].done) {
+        needsRate = m === 'reps' && effortOf(S) === 'rir' && e.sets[i].rir == null
         beep(S.sound, 1040, 0.12); vibrate(30)
         const isLastExInUnit = idx === unit[unit.length - 1]
         const unitDone = unit.every(ui => (ui === idx ? e : A.entries[ui]).sets.every(x => x.done))
@@ -334,7 +338,8 @@ function ActiveWorkout() {
         if (vs) orb.current?.bump(VS_BUMP[vs])
         // a whole exercise done gets more than a set: a triple pulse you feel in the hand (three
         // ticks on an iPhone) instead of the single one a set gets — no extra sound, on purpose
-        if (unitDone) {
+        // (held back until the RIR is in when one is owed — see `finish` below)
+        if (unitDone && !needsRate) {
           vibrate([40, 70, 40, 70, 120])
           orb.current?.react('joyful-down-right', 1800)
         } else orb.current?.react(vs ? VS_FACE[vs] : 'joyful-wide', 1100)
@@ -345,22 +350,38 @@ function ActiveWorkout() {
         if (e.sets.every(x => x.done)) exJustDone = true
       }
     })
-    if (unitJustDone) {
+    // the exercise-finished celebration: the burst and ring, plus the triple pulse and orb cheer
+    // that the set handler above skips when the RIR is still owed
+    const celebrate = () => {
       burst(listRef.current?.querySelector(`[data-set="${idx}-${i}"] .chk`))
       setCheer(unit.join('-'))
       clearTimeout(advance.current?.id)
     }
     // the last set of the session asks finish-or-continue — after the same beat, so the
     // celebration isn't hidden behind the sheet; otherwise the next unfinished card opens
-    if (workoutDone) {
-      const go = () => { advance.current = null; setCheer(null) }
-      advance.current = { go, id: setTimeout(() => { go(); workoutCompleteSheet() }, CHEER_MS) }
-    } else {
-      if (unitJustDone) {
+    const queueAdvance = () => {
+      if (workoutDone) {
+        const go = () => { advance.current = null; setCheer(null) }
+        advance.current = { go, id: setTimeout(() => { go(); workoutCompleteSheet() }, CHEER_MS) }
+      } else {
         // nextUp is read when the beat ends, not now: a set unchecked meanwhile keeps you here
         const go = () => { advance.current = null; setCheer(null); update(s => { const n = s.active && nextUp(s.active); if (n) s.active.cur = n.entry }) }
         advance.current = { go, id: setTimeout(go, CHEER_MS) }
       }
+    }
+    const finish = () => { celebrate(); queueAdvance() }
+    // A finishing set still owes its RIR, and its chip row lives in the card that moving on would
+    // fold shut — so the exercise waits for the rating (or for the row to be closed), and only then
+    // gets its celebration and moves on.
+    if (unitJustDone) {
+      if (!needsRate) finish()
+      else held.current = () => {
+        vibrate([40, 70, 40, 70, 120])
+        orb.current?.react('joyful-down-right', 1800)
+        finish()
+      }
+    }
+    if (!workoutDone) {
       if (exJustDone && cardioEntry) useUI.getState().toast(t('Cardio logged'))
       else if (exJustDone && m === 'time') useUI.getState().toast(t('Hold logged'))
     }
@@ -378,6 +399,7 @@ function ActiveWorkout() {
   useEffect(() => () => { if (advance.current) { clearTimeout(advance.current.id); advance.current.go() } }, [])
 
   const openUnit = k => {
+    held.current = null
     if (advance.current) { clearTimeout(advance.current.id); advance.current = null; setCheer(null) }
     if (k === unitIdx) { setCollapsed(c => !c); return }
     setCollapsed(false)
@@ -398,7 +420,8 @@ function ActiveWorkout() {
     const top = cards[unitIdx].getBoundingClientRect().top - shift
     if (top >= 8 && top <= innerHeight * 0.4) return
     const still = matchMedia('(prefers-reduced-motion: reduce)').matches
-    scrollTo({ top: scrollY + top - 16, behavior: still ? 'auto' : 'smooth' })
+    const page = document.getElementById('app')   // the scroller; the window itself never moves
+    page.scrollTo({ top: page.scrollTop + top - 16, behavior: still ? 'auto' : 'smooth' })
   }, [unitIdx])
 
   const discard = () => confirmSheet({
@@ -409,7 +432,7 @@ function ActiveWorkout() {
   // Live-presence heartbeat so the admin dashboard can show who's training now. Signed-in only —
   // guests have no server session. Reads fresh state each tick so progress stays current.
   useEffect(() => {
-    if (!useStore.getState().user) return
+    if (!useStore.getState().user || !SERVER_EXTRAS) return
     let stopped = false
     const ping = active => {
       const A2 = useStore.getState().S.active
@@ -464,7 +487,8 @@ function ActiveWorkout() {
           <Fold open={open}><div className="pk-ex-b">
             {u.map(idx => <ExerciseBody key={idx} entryIdx={idx} inSuperset={u.length > 1}
               onToggle={i => toggle(idx, i)} onField={(i, f, v) => setField(idx, i, f, v)}
-              onAddSet={() => addSet(idx)} onRemoveSet={() => removeSet(idx)} onStartTimed={i => startTimed(idx, i)} />)}
+              onAddSet={() => addSet(idx)} onRemoveSet={() => removeSet(idx)} onStartTimed={i => startTimed(idx, i)}
+              onRated={release} />)}
           </div></Fold>
         </div>
       })}

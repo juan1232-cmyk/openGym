@@ -4,15 +4,15 @@ import { useStore } from '../store/useStore.js'
 import { exOr } from '../lib/exercises.js'
 import { uid } from '../lib/format.js'
 import { t } from '../lib/i18n.js'
-import { supersetUnits, cleanupSg, moveItem, exLine, modeOf } from '../lib/history.js'
+import { supersetUnits, cleanupSg, moveItem, exLine, modeOf, sideSplit } from '../lib/history.js'
 import { followsSuggestion, applySuggestion } from '../lib/scheme.js'
+import { swapConfig } from '../lib/pick.js'
 import { SchemePills } from '../components/Scheme.jsx'
 import Orb from '../components/Orb.jsx'
 import { Thumb } from '../components/Media.jsx'
-import { glyphPicker, exercisePicker, exConfigSheet, confirmSheet, muscleLine } from '../sheets.jsx'
+import { exercisePicker, exConfigSheet, confirmSheet, muscleLine } from '../sheets.jsx'
 import { toast, ui } from '../sheets/common.jsx'
 import Icon from '../components/Icon.jsx'
-import { glyphOf } from '../lib/glyphs.js'
 import { Button, Row, SelectRow } from '../components/ui.jsx'
 import { POLICIES_FOR, POLICY_NAME, POLICY_DESC } from '../lib/progression.js'
 import BodyMap from '../components/BodyMap.jsx'
@@ -110,8 +110,6 @@ function RoutineSettings({ id, close, onDeleted }) {
   return <>
     <h3>{t('Routine settings')}</h3>
     <div className="sect-b">
-      <Row icon={glyphOf(r.emoji)} title={t('Icon')} accessory="chevron"
-        onClick={() => glyphPicker(r.emoji, g => updateRoutine(id, x => { x.emoji = g }))} />
       <SelectRow icon="chartLine" title={t('Progression')} sheetTitle={t('Progression')}
         value={r.prog || 'linear'} onChange={v => updateRoutine(id, x => { x.prog = v })}
         options={POLICIES_FOR.reps.map(p => ({ value: p, label: t(POLICY_NAME[p]), subtitle: t(POLICY_DESC[p]) }))} />
@@ -144,10 +142,9 @@ export default function RoutineEdit() {
     const e = r.ex[i], ex = exOr(e.id)
     exConfigSheet(ex, e, cfg => edit(x => { x[i] = { id: x[i].id, sg: x[i].sg, ...cfg } }), () => edit(x => { x.splice(i, 1); cleanupSg(x) }), r, {
       list: r.ex,
-      // Sets, reps and progression carry over; the load does not — 60 kg on a barbell
-      // means nothing on dumbbells — and bodyweight re-derives from the new exercise.
+      // What carries over, and what doesn't, is swapConfig's call.
       swap: alt => {
-        edit(x => { const { weight, bodyweight, ...keep } = x[i]; x[i] = { ...keep, id: alt.id, weight: 0 } })
+        edit(x => { const { sg } = x[i]; x[i] = { ...swapConfig(x[i], ex, alt), ...(sg !== undefined && { sg }) } })
         toast(t('Swapped to “{0}”', alt.n))
       },
     })
@@ -165,7 +162,7 @@ export default function RoutineEdit() {
       <Thumb ex={ex} />
       <div className="grow rt-main">
         <div className="tt capitalize">{ex.n}</div>
-        <div className="ss">{pills ? muscleLine(ex) : exLine(e, S.unit)}</div>
+        <div className="ss">{pills ? muscleLine(ex) + (sideSplit(e) && ' · ' + sideSplit(e)) : exLine(e, S.unit)}</div>
       </div>
       {/* drag to reorder; a tap opens the same moves as a menu */}
       <button className="rt-grip" aria-label={t('Move')} {...drag.handle(i, r.ex.length)}
@@ -186,7 +183,7 @@ export default function RoutineEdit() {
       <button className="iconbtn" onClick={() => routineSettings(id, () => nav('/plan'))} aria-label={t('Routine settings')}><Icon name="gear" /></button>
     </div>
 
-    <div className="rt-kicker"><Icon name={glyphOf(r.emoji)} />{t('Routine')}</div>
+    <div className="rt-kicker">{t('Routine')}</div>
     {/* the name is the page title, edited in place; a fresh "New routine" is selected on
         focus so typing replaces it */}
     <input className="rt-title" defaultValue={r.name} aria-label={t('Routine name')} enterKeyHint="done"

@@ -10,8 +10,8 @@ import { nav } from '../lib/nav.js'
 import { starterRoutines } from '../lib/starter.js'
 import Icon from '../components/Icon.jsx'
 import { Button, Switch } from '../components/ui.jsx'
-import { glyphOf, GLYPH_GROUPS } from '../lib/glyphs.js'
 import { buildPlanBundle, parsePlan, mergePlan, printPlan } from '../lib/plan-share.js'
+import { PROGRAMS } from '../lib/programs.js'
 import { update, ui, toast } from './common.jsx'
 
 /* ============================ starter plan ============================ */
@@ -22,30 +22,6 @@ export function loadStarterPlan() {
     st.week[1] = push.id; st.week[3] = pull.id; st.week[5] = legs.id
   })
   toast(t('Starter plan loaded — Mon Push · Wed Pull · Fri Legs'))
-}
-
-/* ============================ glyph picker ============================ */
-// Grouped by what the glyph means for a training day, so picking one is a scan
-// of four short rows rather than a hunt through twenty loose icons.
-export const glyphPicker = (current, onPick) => {
-  const cur = glyphOf(current)
-  return ui().openSheet(close => <>
-    <h3>{t('Pick an icon')}</h3>
-    {GLYPH_GROUPS.map(g => (
-      <div key={g.key} style={{ marginBottom: 14 }}>
-        <div className="sect-t" style={{ padding: '0 2px 7px' }}>{t(g.key)}</div>
-        <div className="glyph-grid">
-          {g.items.map(n => (
-            <button key={n} className={'glyph-cell' + (n === cur ? ' on' : '')}
-              onClick={() => { close(); onPick(n) }} aria-label={n}>
-              <Icon name={n} />
-            </button>
-          ))}
-        </div>
-      </div>
-    ))}
-    <div style={{ height: 4 }} />
-  </>)
 }
 
 /* ============================ share / print / import a plan ============================ */
@@ -84,6 +60,14 @@ function PlanTools({ close }) {
     <Button variant="tinted" icon="download" onClick={() => { close(); printPlan(st, user?.name || '') }} disabled={!hasRoutines}>{t('Print / Save as PDF')}</Button>
     <div className="dim small" style={{ margin: '7px 2px 0', lineHeight: 1.4 }}>{t('A clean one-page-per-plan printout — no exercise ever splits across a page.')}</div>
     {!hasRoutines && <div className="dim small" style={{ margin: '12px 2px 0' }}>{t('Add an exercise to a routine first — an empty plan has nothing to share.')}</div>}
+    <h4 className="sec">{t('Programs')}</h4>
+    <div className="list">
+      {PROGRAMS.map(p => <div key={p.name} className="item" onClick={() => { close(); planImportSheet(parsePlan(p)) }}>
+        <span className="lrow-i"><Icon name="sparkles" /></span>
+        <div className="grow"><div className="tt">{p.name}</div><div className="ss">{t(p.routines.length === 1 ? '{0} routine' : '{0} routines', p.routines.length)}</div></div>
+        <Icon name="chevronRight" className="chev" />
+      </div>)}
+    </div>
     <h4 className="sec">{t('Got a plan from a friend?')}</h4>
     <Button variant="ghost" icon="folder" onClick={() => fileRef.current?.click()}>{t('Import a plan file')}</Button>
     <input ref={fileRef} type="file" accept="application/json,.json" onChange={pickFile} hidden />
@@ -109,6 +93,7 @@ function PlanImport({ bundle, close }) {
         ? ' · ' + t(bundle.scheduledDays === 1 ? 'scheduled on {0} day' : 'scheduled on {0} days', bundle.scheduledDays)
         : ''}
     </div>
+    {bundle.note && <div className="small" style={{ marginBottom: 14, lineHeight: 1.45, whiteSpace: 'pre-line' }}>{bundle.note}</div>}
     <div className="dim small" style={{ marginBottom: 14, lineHeight: 1.4 }}>{t('These are added as new routines — nothing you already have is changed.')}</div>
     {bundle.dropped > 0 && <div className="small" style={{ color: 'var(--yellow)', marginBottom: 14, lineHeight: 1.4 }}>
       {t(bundle.dropped === 1
@@ -142,11 +127,10 @@ function DayOverride({ iso, close }) {
     <div className="muted small" style={{ marginBottom: 12 }}>{t('Weekly plan:')} {weeklyR ? weeklyR.name : t('Rest')}{hasOvr && <span style={{ color: 'var(--orange)' }}> · {t('changed for this day')}</span>}<br />{t('Sick, missed a day or want a different session? Pick what to train instead.')}</div>
     <div className="list">
       {st.routines.map(r => <div key={r.id} className="item" onClick={() => set(r.id)}>
-        <span className="lrow-i"><Icon name={glyphOf(r.emoji)} /></span>
         <div className="grow"><div className="tt">{r.name}</div><div className="ss">{exCount(r.ex.length)}</div></div>
         {effId === r.id && <Icon name="check" className="accent" />}</div>)}
-      <div className="item" onClick={() => set('rest')}><span className="lrow-i" style={{ background: 'var(--surface-3)' }}><Icon name="moon" /></span><div className="grow"><div className="tt">{t('Rest / skip this day')}</div></div>{effId === null && <Icon name="check" className="accent" />}</div>
-      {hasOvr && <div className="item" onClick={() => set('')}><span className="lrow-i" style={{ background: 'var(--surface-3)' }}><Icon name="reset" /></span><div className="grow"><div className="tt">{t('Back to weekly plan')}</div></div></div>}
+      <div className="item" onClick={() => set('rest')}><div className="grow"><div className="tt">{t('Rest / skip this day')}</div></div>{effId === null && <Icon name="check" className="accent" />}</div>
+      {hasOvr && <div className="item" onClick={() => set('')}><div className="grow"><div className="tt">{t('Back to weekly plan')}</div></div></div>}
     </div>
   </>
 }
@@ -158,9 +142,8 @@ function DayAssign({ day, close }) {
   return <>
     <h3>{t(DAYN[day])}</h3>
     <div className="list">
-      <div className="item" onClick={() => set('')}><span className="lrow-i" style={{ background: 'var(--surface-3)' }}><Icon name="moon" /></span><div className="grow"><div className="tt">{t('Rest day')}</div></div>{!st.week[day] && <Icon name="check" className="accent" />}</div>
+      <div className="item" onClick={() => set('')}><div className="grow"><div className="tt">{t('Rest day')}</div></div>{!st.week[day] && <Icon name="check" className="accent" />}</div>
       {st.routines.map(r => <div key={r.id} className="item" onClick={() => set(r.id)}>
-        <span className="lrow-i"><Icon name={glyphOf(r.emoji)} /></span>
         <div className="grow"><div className="tt">{r.name}</div><div className="ss">{exCount(r.ex.length)}</div></div>
         {st.week[day] === r.id && <Icon name="check" className="accent" />}</div>)}
     </div>

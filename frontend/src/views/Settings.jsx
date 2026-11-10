@@ -6,6 +6,8 @@ import { todayISO, localTZ } from '../lib/format.js'
 import { effortOf } from '../lib/history.js'
 import { api, webauthnOK, passkeyLogin, passkeyRegister, IS_ANDROID } from '../lib/api.js'
 import { pushSupported, enablePush, disablePush, sendTestPush } from '../lib/push.js'
+import { AUTH, SERVER_EXTRAS, EMAIL_CODE } from '../lib/backend.js'
+import SignIn from '../components/SignIn.jsx'
 import { wakeLockSupported } from '../lib/wakelock.js'
 import { t, LANGS, INSTR_LANGS } from '../lib/i18n.js'
 import { loadStarterPlan, confirmSheet, importFromApp, gymEquipmentSheet, gymEqLabel } from '../sheets.jsx'
@@ -46,13 +48,21 @@ export default function Settings() {
     try { const u = await passkeyLogin(); setUser(u); await pullState(); toast(t('Welcome back, {0}', u.name)) }
     catch (e) { if (e.name !== 'NotAllowedError' && e.name !== 'AbortError') toast(e.message || t('Sign-in failed')) }
   }
+  const emailHere = () => useUI.getState().openSheet(close => <>
+    <h3>{t('Sign in or create account')}</h3>
+    <SignIn name={S.name || ''} onDone={close} />
+  </>)
   const registerHere = () => useUI.getState().openSheet(close => <RegisterInline close={close} setUser={setUser} pushState={pushState} pullState={pullState} toast={toast} />)
   // Ends the profile's sessions on every device — this one included, so on success it lands in
   // the same place as the plain sign-out above (home, local data cleared). On failure nothing
   // local is touched: still signed in here, and say so rather than leaving a half-signed-out app.
   const signOutEverywhere = () => confirmSheet({
     title: t('Sign out everywhere?'),
-    message: t('Signs this profile out on every device, including this one. Your passkeys keep working — sign in with them again anytime.'),
+    message: AUTH === 'code'
+      ? (EMAIL_CODE
+        ? t('Signs this account out on every device, including this one. Sign back in anytime with an emailed code.')
+        : t('Signs this account out on every device, including this one. Sign back in anytime.'))
+      : t('Signs this profile out on every device, including this one. Your passkeys keep working — sign in with them again anytime.'),
     confirmText: t('Sign out everywhere'), danger: true,
     onConfirm: async () => {
       try { await signOutAll(); nav('/home'); toast(t('Signed out on all devices')) }
@@ -69,10 +79,12 @@ export default function Settings() {
     {/* ---------- account ---------- */}
     <Section title={t('Account')}>
       {user ? <>
-        <Row icon="personCircle" iconTint="var(--grey)" title={user.name} subtitle={t('Signed in with passkey — data syncs to this profile.')} />
+        <Row icon="personCircle" iconTint="var(--grey)" title={user.name} subtitle={AUTH === 'code' ? t('Signed in — data syncs to this account.') : t('Signed in with passkey — data syncs to this profile.')} />
         {user.admin && <Row icon="wrench" iconTint="var(--indigo)" title={t('Admin dashboard')} accessory="chevron" onClick={() => nav('/admin')} />}
         <Row icon="signOut" iconTint="var(--red)" title={t('Sign out')} danger onClick={() => confirmSheet({ title: t('Sign out?'), message: t('Your data is synced to your profile first, then cleared from this device.'), confirmText: t('Sign out'), danger: true, onConfirm: () => { signOut(); nav('/home') } })} />
         <Row icon="shield" iconTint="var(--red)" title={t('Sign out everywhere')} subtitle={t('Ends this profile’s sessions on all your devices.')} danger onClick={signOutEverywhere} />
+      </> : AUTH === 'code' ? <>
+        <Row icon="person" iconTint="var(--acc)" title={t('Sign in or create account')} subtitle={EMAIL_CODE ? t('Syncs your data across devices. We email you a code — no password.') : t('Syncs your data across devices.')} accessory="chevron" onClick={emailHere} />
       </> : webauthnOK() ? <>
         <Row icon="sparkles" iconTint="var(--acc)" title={t('Create passkey profile')} subtitle={t('Keeps your data safe and separate per person.')} accessory="chevron" onClick={registerHere} />
         <Row icon="person" iconTint="var(--blue)" title={t('Sign in with passkey')} accessory="chevron" onClick={signInHere} />
@@ -127,7 +139,7 @@ export default function Settings() {
       </Row>
     </Section>
 
-    {user && <PushCard S={S} update={update} toast={toast} />}
+    {user && SERVER_EXTRAS && <PushCard S={S} update={update} toast={toast} />}
 
     {/* ---------- appearance ---------- */}
     {/* Accent colour stays gone: the Peek design is one green. Light/dark is back as the

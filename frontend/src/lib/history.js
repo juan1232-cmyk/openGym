@@ -48,6 +48,13 @@ export function repRangeOf(cfg) {
   return { lo: reps, hi: reps }
 }
 const rangeText = (lo, hi) => (lo === hi ? fmtNum(lo) : fmtNum(lo) + '–' + fmtNum(hi))
+// "8–10/side" for unilateral reps work, '' otherwise — wherever a total is shown, the split
+// beside it keeps 16–20 on a one-arm row from reading as 16–20 an arm.
+export function sideSplit(cfg) {
+  if (!isPerSide(cfg) || modeOf(cfg) !== 'reps') return ''
+  const { lo, hi } = repRangeOf(cfg)
+  return t('{0}/side', rangeText(sideReps(lo), sideReps(hi)))
+}
 
 // Unilateral work moves in pairs, so its rep target steps by two — 16, 18, 20 — and a total
 // that stayed odd would put a rep on one side and not the other.
@@ -147,8 +154,8 @@ export function exLine(cfg, unit) {
   if (mode === 'time') return `${n} × ${fmtSec(cfg.sec || 45)}${load}`
   // This is the line with room for it, so the split is spelled out: "3 × 16 · 8/side".
   const { lo, hi } = repRangeOf(cfg)
-  const split = isPerSide(cfg) ? ' · ' + t('{0}/side', rangeText(sideReps(lo), sideReps(hi))) : ''
-  return `${n} × ${rangeText(lo, hi)}${load}${split}`
+  const split = sideSplit(cfg)
+  return `${n} × ${rangeText(lo, hi)}${load}${split && ' · ' + split}`
 }
 
 /**
