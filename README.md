@@ -1,49 +1,30 @@
 <div align="center">
 
-<img src="assets/icons/icon-dark-1024.png" alt="openGym icon: Peek looking up at a peak" width="128">
+<a href="https://open-gym-lac.vercel.app"><img src="assets/readme/hero.png" alt="openGym: the gym tracker that tells you what to do next. Three phone screens show Peek's verdict on Home, this week's suggested actions in Stats, and a rising bench press trend." width="100%"></a>
 
-# openGym
+<br><br>
 
-**A gym tracker with a coach that reads your training and tells you what to do next.**
-
-Log your sets and Peek, the little orb on the Home screen, tells you whether you're
-actually getting stronger, which lift has gone flat and which muscle your plan leaves short.
+**Log your sets. Peek, the orb on the Home screen, reads them and tells you whether you're
+getting stronger, which lift has gone flat and which muscle your plan leaves short.**
 Every suggestion comes with its reason and one button to act on it.
-Free, open source, no ads, no tracking.
+
+### [Open the app →](https://open-gym-lac.vercel.app)
+
+<sub>Nothing to install and no sign-up to try it. Make an account when you want it on a second device.</sub>
 
 <br>
 
-### [▶ Try it in your browser](https://open-gym-lac.vercel.app)
-
-<sub>No sign-up. Your data stays in that browser. Add it to your home screen and it works like an app.</sub>
-
-<br>
-
-[![Live demo](https://img.shields.io/badge/demo-live-16b86a?style=flat-square)](https://open-gym-lac.vercel.app)
-[![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0-16b86a?style=flat-square)](LICENSE)
-![PWA](https://img.shields.io/badge/PWA-installable-a78bfa?style=flat-square)
-![No tracking](https://img.shields.io/badge/telemetry-none-f472b6?style=flat-square)
-[![GitHub last commit](https://img.shields.io/github/last-commit/juan1232-cmyk/openGym?style=flat-square)](https://github.com/juan1232-cmyk/openGym/commits/main)
-[![GitHub stars](https://img.shields.io/github/stars/juan1232-cmyk/openGym?style=flat-square)](https://github.com/juan1232-cmyk/openGym/stargazers)
+[![Live app](https://img.shields.io/badge/app-live-1db36b?style=flat-square)](https://open-gym-lac.vercel.app)
+[![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0-1db36b?style=flat-square)](LICENSE)
+![PWA](https://img.shields.io/badge/PWA-installable-f1f0ec?style=flat-square)
+![No tracking](https://img.shields.io/badge/telemetry-none-f1f0ec?style=flat-square)
+[![GitHub stars](https://img.shields.io/github/stars/juan1232-cmyk/openGym?style=flat-square&color=1db36b)](https://github.com/juan1232-cmyk/openGym/stargazers)
 
 </div>
 
 <br>
 
-<div align="center">
-<table>
-<tr>
-<td align="center"><img src="assets/screenshots/home.png" alt="Home screen: Peek says 8 lifts are going up, with this week's sets per muscle" width="250"><br><sub><b>Home</b>: Peek's verdict and your sets this week</sub></td>
-<td align="center"><img src="assets/screenshots/stats.png" alt="Stats, Actions tab: a flat overhead press with a suggestion to add a set" width="250"><br><sub><b>Stats</b>: what's worth doing this week</sub></td>
-<td align="center"><img src="assets/screenshots/exercise.png" alt="Bench press page: illustration, Peek's coach line and a rising progress chart" width="250"><br><sub><b>Exercise</b>: your trend and the next weight</sub></td>
-</tr>
-<tr>
-<td align="center"><img src="assets/screenshots/workout.png" alt="A workout in progress: bench press sets with last time's numbers beside them" width="250"><br><sub><b>Workout</b>: last time's numbers beside each set</sub></td>
-<td align="center"><img src="assets/screenshots/plan.png" alt="Plan: Push, Pull and Legs routines, each on its weekday" width="250"><br><sub><b>Plan</b>: routines and your week</sub></td>
-<td></td>
-</tr>
-</table>
-</div>
+<img src="assets/readme/screens.png" alt="Four screens, four answers. Home: am I getting stronger? Stats: what should I change this week? Exercise: what weight do I try next? Workout: what did I lift last time?" width="100%">
 
 ## Why another gym app
 
@@ -76,55 +57,59 @@ Try 80 kg next time."), and at the end of a workout to celebrate what went up.
 
 ## What it does for your progress
 
-- 🎯 **Sets per muscle, every week.** Each muscle has a weekly goal (10 sets for chest, upper back
+- **Sets per muscle, every week.** Each muscle has a weekly goal (10 sets for chest, upper back
   and quads, 8 for most others, 6 for abs) along with the reason for that number. Squats and
   hinges count half toward hamstrings and glutes, and an easy set counts less than one taken near
   failure.
-- ✅ **Stats that tell you what to do.** The *Actions* tab lists what's worth doing this week. A
+- **Stats that tell you what to do.** The *Actions* tab lists what's worth doing this week. A
   lift with no progress in 7 sessions gets "add one more set". A muscle the plan leaves short gets
   "add 3 sets of leg curls to Friday's Legs". A skipped day gets moved somewhere it fits. One tap
   applies the suggestion. The *Numbers* tab still has the charts, heatmap and PRs.
-- 📈 **Progression that follows a rule.** Pick one per routine, override it per exercise: linear,
+- **Progression that follows a rule.** Pick one per routine, override it per exercise: linear,
   **Greyskull LP** (AMRAP top set, 10% resets), double progression through a rep range, or adding
   time. Your weights are already set when the session opens, and every target says *why* it's
   that number. Missed reps never add weight, stalls lead to a deload, and bodyweight exercises
   progress in reps.
-- 💪 **Estimated 1RM and PRs.** Per exercise, worked out from your best eligible set (it shows
+- **Estimated 1RM and PRs.** Per exercise, worked out from your best eligible set (it shows
   which one), with a PR badge on every set that beat your previous best.
-- 🧍 **Two clear poses per exercise.** 1,324 exercises, each showing its two key positions as
+- **Two clear poses per exercise.** 1,324 exercises, each showing its two key positions as
   sharp upscaled illustrations, plus step-by-step instructions.
 
 <details>
 <summary><b>Everything else it does</b></summary>
 <br>
 
-- ▶️ **Guided workouts.** Starts today's session from your weekly plan, pre-fills last time's
+- **Guided workouts.** Starts today's session from your weekly plan, pre-fills last time's
   numbers, and has a rest timer. The screen stays awake while you train.
-- 🗓️ **Reschedule a day** without touching your weekly plan.
-- 🔗 **Supersets**, ⏱️ **timed exercises** (planks, hangs, carries) and 🏃 **cardio** (time + speed).
-- ↔️ **Reps per side** for lunges and single-arm work. Bodyweight exercises have no weight
+- **Reschedule a day** without touching your weekly plan.
+- **Supersets**, **timed exercises** (planks, hangs, carries) and **cardio** (time + speed).
+- **Reps per side** for lunges and single-arm work. Bodyweight exercises have no weight
   column, and a dip belt counts as added weight.
-- 🎚️ **Effort per set (optional)** as RIR or RPE, read back in Stats as an effort card and a
+- **Effort per set (optional)** as RIR or RPE, read back in Stats as an effort card and a
   hard-sets view of the muscle map.
-- 🧠 **Muscle map.** Front and back, shaded by the work each muscle got this week, month or all
+- **Muscle map.** Front and back, shaded by the work each muscle got this week, month or all
   time. It also previews what a routine hits while you build it.
-- ⚖️ **Body weight** with a goal line, and a 🟩 GitHub-style **activity heatmap**.
-- 🔧 **Filter the library by the equipment you own**, and add ✨ **your own exercises**.
-- 📥 **Import** from FitNotes, Strong and Hevy, or body weight from Apple Health.
-  📤 **Share a plan** as a small file or a printable PDF.
-- 🌍 **12 languages** for the UI, with exercise instructions in 10 of them.
-- 🎨 Light/dark theme and 8 accent colours.
-- 📦 **Yours to keep.** One-tap JSON export/import and no telemetry.
-- Self-hosted extras: 🔑 passkey sign-in synced across devices, 🔔 push notifications for rest
-  timers and missed days, and an optional 🛠️ admin dashboard with invite-only signup.
+- **Body weight** with a goal line, and a GitHub-style **activity heatmap**.
+- **Filter the library by the equipment you own**, and add **your own exercises**.
+- **Import** from FitNotes, Strong and Hevy, or body weight from Apple Health.
+  **Share a plan** as a small file or a printable PDF.
+- **12 languages** for the UI, with exercise instructions in 10 of them.
+- Light/dark theme and 8 accent colours.
+- **Yours to keep.** One-tap JSON export/import and no telemetry.
+- Self-hosted extras: passkey sign-in synced across devices, push notifications for rest
+  timers and missed days, and an optional admin dashboard with invite-only signup.
 
 </details>
 
 ## Try it
 
-**In the browser:** [open-gym-lac.vercel.app](https://open-gym-lac.vercel.app). It runs in guest
-mode, so everything is saved in that browser only. To keep it on your phone: **iPhone**, Safari →
-Share → Add to Home Screen. **Android**, Chrome → ⋮ → Add to Home screen.
+**In the browser:** [open-gym-lac.vercel.app](https://open-gym-lac.vercel.app). Start as a guest,
+which keeps everything in that browser, or make an account with a username and password (no email
+needed) and your training follows you to every device you sign in on. If a device already holds
+workouts when you sign in, the app asks which copy to keep. It never overwrites one silently.
+
+**On your phone:** it installs like an app. **iPhone**, Safari → Share → Add to Home Screen.
+**Android**, Chrome → ⋮ → Add to Home screen.
 
 **With demo data:** [open-gym-lac.vercel.app/device.html](https://open-gym-lac.vercel.app/device.html)
 shows the app inside a drawn iPhone, with buttons that load made-up training histories (Progressing,
@@ -133,8 +118,9 @@ without logging a month of sessions. It replaces whatever that browser has saved
 
 ## Run it yourself
 
-The hosted demo has no server, so it can't sync. Running your own copy adds the backend: passkey
-sign-in, sync across your phone and laptop, and push notifications.
+The hosted app keeps accounts on Supabase. If you'd rather own the server, the repo has a small
+backend of its own: passkey sign-in, sync across your phone and laptop, push notifications for rest
+timers and missed days, and nothing leaving your machine.
 
 **With Node** (20.19+ or 22.12+), in two terminals:
 
@@ -186,14 +172,18 @@ never leave your device.
 ## How it's built
 
 ```
- phone / laptop ──▶  web (nginx)  ── serves the React app
-                        │
-                        └─ /api ──▶  api (Node + WebAuthn) ──▶ data/*.json
+                     ┌─ hosted ───────▶  Supabase (accounts, one row of state per user)
+ React app (PWA) ────┤
+                     └─ self-hosted ──▶  api/ (Node + passkeys) ──▶ data/*.json
 ```
 
 - **frontend/**: React 19 + Vite, React Router and Zustand. That's the whole runtime. The full
   app state is one object in one store, saved to `localStorage` and synced to the server a moment
   after each change.
+- **One seam for the server.** [`frontend/src/lib/backend.js`](frontend/src/lib/backend.js) is the
+  only file that talks to an account server. Built with a Supabase URL it uses Supabase, and
+  without one it uses `api/`. The rest of the app can't tell which it has. On Supabase each
+  account is one row, and row-level security means a signed-in user can only read or write their own.
 - **api/**: plain `node:http` with no framework and no database, just JSON files. Two dependencies
   (`@simplewebauthn/server` for passkeys, `web-push`).
 - **The coaching is pure functions** in [`frontend/src/lib/`](frontend/src/lib): progression,
@@ -206,15 +196,15 @@ never leave your device.
 - [x] Peek's progress verdict, weekly sets per muscle, Stats → Actions
 - [x] Progression rules (linear, Greyskull LP, double progression) with stalls and deloads
 - [x] Estimated 1RM, PR badges, importers from FitNotes / Strong / Hevy
-- [ ] **Coming soon:** accounts + sync on the hosted version, so the browser demo stops being
-      device-only
+- [x] Accounts and sync on the hosted app (username and password, no email)
+- [ ] Sign in with Google
 - [ ] Percentage / training-max programs (5/3/1-style) on top of the progression engine
 - [ ] More starter plans (upper/lower, full-body, 5×5)
 - [ ] Body measurements (waist, arms…) alongside weight
 - [ ] Plate calculator and per-exercise notes
 
 Found a bug or have an idea? [Open an issue](https://github.com/juan1232-cmyk/openGym/issues).
-**And if you like where this is going, a ⭐ helps more people find it.**
+**And if you like where this is going, a star helps more people find it.**
 
 ## Credits
 

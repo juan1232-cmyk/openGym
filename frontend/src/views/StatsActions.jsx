@@ -25,12 +25,12 @@ const WEEKDAY = wd => new Date(2026, 0, 5 + wd).toLocaleDateString(dateLocale(),
 const dayName = iso => new Date(iso + 'T12:00:00').toLocaleDateString(dateLocale(), { weekday: 'long' })
 const plural = (n, one, many) => t(n === 1 ? one : many, n)
 
-function Card({ tone, icon, why, because, what, done, children }) {
+// Two lines at most: `why` is the reason to act with its number, `what` is the thing to do.
+function Card({ tone, icon, why, what, done, children }) {
   return <div className={'sx-act' + (done ? ' done' : '')}>
     <span className={'ic' + (tone ? ' ' + tone : '')}><Icon name={done ? 'check' : icon} /></span>
     <div className="bd">
       {why && <span className="why">{why}</span>}
-      {because && <span className="because">{because}</span>}
       <span className="what">{what}</span>
       {children && <div className="acts">{children}</div>}
     </div>
@@ -91,10 +91,12 @@ export default function StatsActions({ switcher }) {
     const m = t(MUSCLE_NAME[gap.m])
     const ex = nameOf(act.ex)
     const sets = act.sets === 1 ? t('1 set of {0}', ex) : t('{0} sets of {1}', act.sets, ex)
+    // The gap, not "5.5 of 8": how far short the week ends is the reason to act, and it's the
+    // number the suggestion under it answers. Why the goal is 8 isn't this card's job.
+    const short = Math.round((gap.goal - gap.projected) * 10) / 10
     return <Card key={i.key} icon="dumbbell"
-      why={t('At this plan {0} ends the week at {1} of {2} sets.', m, fmtNum(Math.round(gap.projected * 10) / 10), gap.goal)}
-      because={gap.why && t(gap.why)}
-      what={t('Add {0} to {1}’s {2}.', sets, dayName(act.iso), act.routine)}>
+      why={short === 1 ? t('{0}: 1 set short this week.', m) : t('{0}: {1} sets short this week.', m, fmtNum(short))}
+      what={t('Add {0} on {1}.', sets, dayName(act.iso))}>
       <Button size="sm" variant="tinted" onClick={() => accept(i.key, act, applyMuscle, t('Added {0} to {1}', ex, act.routine))}>{plural(act.sets, 'Add {0} set', 'Add {0} sets')}</Button>
     </Card>
   }
