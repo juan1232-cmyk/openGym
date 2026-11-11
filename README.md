@@ -1,20 +1,16 @@
 <div align="center">
 
-<a href="https://open-gym-lac.vercel.app"><img src="assets/readme/hero.png" alt="openGym: the gym tracker that tells you what to do next. Three phone screens show Peek's verdict on Home, this week's suggested actions in Stats, and a rising bench press trend." width="100%"></a>
+<a href="https://open-gym-lac.vercel.app/demo"><img src="assets/readme/hero.png" alt="openGym: the gym tracker that tells you what to do next. Three phone screens show Peek's verdict on Home, this week's suggestions in Stats, and a rising bench press trend." width="100%"></a>
 
 <br><br>
 
-**Log your sets. Peek, the orb on the Home screen, reads them and tells you whether you're
-getting stronger, which lift has gone flat and which muscle your plan leaves short.**
-Every suggestion comes with its reason and one button to act on it.
+### [Try the live demo →](https://open-gym-lac.vercel.app/demo) &nbsp;&nbsp;·&nbsp;&nbsp; [Open the app](https://open-gym-lac.vercel.app)
 
-### [Open the app →](https://open-gym-lac.vercel.app)
+<sub>Free and open source. No ads, no tracking, no sign-up to try it.</sub>
 
-<sub>Nothing to install and no sign-up to try it. Make an account when you want it on a second device.</sub>
+<br><br>
 
-<br>
-
-[![Live app](https://img.shields.io/badge/app-live-1db36b?style=flat-square)](https://open-gym-lac.vercel.app)
+[![Live demo](https://img.shields.io/badge/demo-live-1db36b?style=flat-square)](https://open-gym-lac.vercel.app/demo)
 [![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0-1db36b?style=flat-square)](LICENSE)
 ![PWA](https://img.shields.io/badge/PWA-installable-f1f0ec?style=flat-square)
 ![No tracking](https://img.shields.io/badge/telemetry-none-f1f0ec?style=flat-square)
@@ -24,97 +20,78 @@ Every suggestion comes with its reason and one button to act on it.
 
 <br>
 
-<img src="assets/readme/screens.png" alt="Four screens, four answers. Home: am I getting stronger? Stats: what should I change this week? Exercise: what weight do I try next? Workout: what did I lift last time?" width="100%">
+<a href="https://open-gym-lac.vercel.app/demo?demo=busy"><img src="assets/readme/see-it-work.webp" alt="A clip of the app: Home says lifts are going up, Stats lists what's worth doing this week, and one tap adds a set to a stuck overhead press and leg curls to Friday's Legs." width="100%"></a>
 
-## Why another gym app
+## Most gym apps are notebooks
 
-Most trackers are notebooks: they store what you lifted and leave you to work out whether
-it's working. openGym tries to answer that question for you. It works through your log the way a
-coach would, decides whether you're progressing, holding, slipping or stuck, and turns that
-into something you can do this week, such as adding a set, swapping a lift, deloading or moving
-a missed session.
+They remember what you lifted and leave the rest to you. openGym reads your log the way a coach
+would and tells you what it means: whether you're getting stronger, which lift has gone flat,
+which muscle your plan leaves short, and the one change worth making this week.
 
-It's also mine to learn on: this is my first real project, forked from an open-source tracker
-and rebuilt around that coaching idea. More on that under [Credits](#credits).
+Every suggestion shows its reason. Every one comes with a button that does it, and another that
+takes it back.
 
-## Meet Peek
-
-Peek is the orb at the top of Home. It looks at the lifts you've trained in the last four weeks
-and settles on one verdict:
-
-| Verdict | When |
-|---|---|
-| **Progressing** | your main lifts are trending up |
-| **Holding** | they're steady, within about 1% over two weeks |
-| **Slipping** | they're trending down |
-| **Stalled** | two or more planned lifts have missed their targets session after session |
-| **Away** | nothing logged for 10+ days, so there's nothing to judge |
-
-The verdict is deliberately boring: the same log always gives the same answer, and it reads the
-same trend line the exercise page draws, so Home and the chart can't disagree. Peek only picks
-*how* to say it. It also shows up on each exercise ("You've added about 10.5 kg every two weeks.
-Try 80 kg next time."), and at the end of a workout to celebrate what went up.
-
-## What it does for your progress
-
-- **Sets per muscle, every week.** Each muscle has a weekly goal (10 sets for chest, upper back
-  and quads, 8 for most others, 6 for abs) along with the reason for that number. Squats and
-  hinges count half toward hamstrings and glutes, and an easy set counts less than one taken near
-  failure.
-- **Stats that tell you what to do.** The *Actions* tab lists what's worth doing this week. A
-  lift with no progress in 7 sessions gets "add one more set". A muscle the plan leaves short gets
-  "add 3 sets of leg curls to Friday's Legs". A skipped day gets moved somewhere it fits. One tap
-  applies the suggestion. The *Numbers* tab still has the charts, heatmap and PRs.
-- **Progression that follows a rule.** Pick one per routine, override it per exercise: linear,
-  **Greyskull LP** (AMRAP top set, 10% resets), double progression through a rep range, or adding
-  time. Your weights are already set when the session opens, and every target says *why* it's
-  that number. Missed reps never add weight, stalls lead to a deload, and bodyweight exercises
-  progress in reps.
-- **Estimated 1RM and PRs.** Per exercise, worked out from your best eligible set (it shows
-  which one), with a PR badge on every set that beat your previous best.
-- **Two clear poses per exercise.** 1,324 exercises, each showing its two key positions as
-  sharp upscaled illustrations, plus step-by-step instructions.
-
-<details>
-<summary><b>Everything else it does</b></summary>
 <br>
 
-- **Guided workouts.** Starts today's session from your weekly plan, pre-fills last time's
-  numbers, and has a rest timer. The screen stays awake while you train.
-- **Reschedule a day** without touching your weekly plan.
-- **Supersets**, **timed exercises** (planks, hangs, carries) and **cardio** (time + speed).
-- **Reps per side** for lunges and single-arm work. Bodyweight exercises have no weight
-  column, and a dip belt counts as added weight.
-- **Effort per set (optional)** as RIR or RPE, read back in Stats as an effort card and a
-  hard-sets view of the muscle map.
-- **Muscle map.** Front and back, shaded by the work each muscle got this week, month or all
-  time. It also previews what a routine hits while you build it.
-- **Body weight** with a goal line, and a GitHub-style **activity heatmap**.
-- **Filter the library by the equipment you own**, and add **your own exercises**.
-- **Import** from FitNotes, Strong and Hevy, or body weight from Apple Health.
-  **Share a plan** as a small file or a printable PDF.
-- **12 languages** for the UI, with exercise instructions in 10 of them.
-- Light/dark theme and 8 accent colours.
-- **Yours to keep.** One-tap JSON export/import and no telemetry.
-- Self-hosted extras: passkey sign-in synced across devices, push notifications for rest
-  timers and missed days, and an optional admin dashboard with invite-only signup.
+<img src="assets/readme/peek.png" alt="Meet Peek. Five verdicts, each with Peek's face and what it says: Progressing (lifts trending up), Holding (steady within about 1% over two weeks), Slipping (trending down), Stalled (lifts keep missing their targets) and Away (nothing logged for 10 days or more)." width="100%">
 
-</details>
+**Same log, same answer.** The verdict comes from the same trend line the exercise page draws, so
+Home and the chart never disagree. Peek only picks how to say it, and it has opinions. It also
+turns up on every exercise ("You've added about 10.5 kg every two weeks. Try 80 kg next time.")
+and at the end of a workout, to point out what went up.
+
+<br>
+
+<img src="assets/readme/screens.png" alt="Four screens, four answers. Home: am I getting stronger? Stats: what should I change this week? Exercise: what weight do I try next? Workout: what did I lift last time?" width="100%">
+
+## What's inside
+
+<table>
+<tr>
+<th align="left" width="33%">Coaching</th>
+<th align="left" width="33%">Training</th>
+<th align="left" width="33%">Your data</th>
+</tr>
+<tr valign="top">
+<td>
+
+- Peek's verdict on Home
+- **Stats → Actions**: a set to add, a lift to swap, a day to move. One tap applies it
+- Weekly sets per muscle, with the reason behind each goal
+- The next weight on every exercise, and why
+
+</td>
+<td>
+
+- Progression rules: linear, **Greyskull LP**, double progression
+- Stalls lead to a deload. Missed reps never add weight
+- Supersets, timed holds, cardio, reps per side
+- 1,324 exercises, each shown in its two key positions
+- Rest timer, PR badges, estimated 1RM
+
+</td>
+<td>
+
+- Try it as a guest, or make an account (username and password, no email) to sync devices
+- Import from Strong, Hevy and FitNotes
+- JSON export any time. No telemetry
+- 12 languages
+- Installs on your phone like an app
+
+</td>
+</tr>
+</table>
 
 ## Try it
 
-**In the browser:** [open-gym-lac.vercel.app](https://open-gym-lac.vercel.app). Start as a guest,
-which keeps everything in that browser, or make an account with a username and password (no email
-needed) and your training follows you to every device you sign in on. If a device already holds
-workouts when you sign in, the app asks which copy to keep. It never overwrites one silently.
+<a href="https://open-gym-lac.vercel.app/demo"><img src="assets/readme/demo.png" alt="Try it in your browser. Pick a lifter with weeks of training already logged and see what Peek tells them. Open the live demo." width="100%"></a>
 
-**On your phone:** it installs like an app. **iPhone**, Safari → Share → Add to Home Screen.
-**Android**, Chrome → ⋮ → Add to Home screen.
+Or go straight to one lifter: [Progressing](https://open-gym-lac.vercel.app/demo?demo=progressing) · [Holding](https://open-gym-lac.vercel.app/demo?demo=holding) · [Slipping](https://open-gym-lac.vercel.app/demo?demo=slipping) · [Stalled](https://open-gym-lac.vercel.app/demo?demo=stalled) · [Away](https://open-gym-lac.vercel.app/demo?demo=away) · [Busy week](https://open-gym-lac.vercel.app/demo?demo=busy) · [Mid-workout](https://open-gym-lac.vercel.app/demo?demo=workout)
 
-**With demo data:** [open-gym-lac.vercel.app/device.html](https://open-gym-lac.vercel.app/device.html)
-shows the app inside a drawn iPhone, with buttons that load made-up training histories (Progressing,
-Stalled, Away, a busy week, a workout in progress). It's the quickest way to see what Peek says
-without logging a month of sessions. It replaces whatever that browser has saved.
+The demo's lifters are made up and live only in your browser. To start your own log, open
+[the app](https://open-gym-lac.vercel.app). It installs like any other: on iPhone, Safari → Share → Add to Home Screen; on
+Android, Chrome → ⋮ → Add to Home screen. If you sign in on a device that already holds workouts,
+the app asks which copy to keep instead of overwriting one.
 
 ## Run it yourself
 
@@ -204,7 +181,7 @@ never leave your device.
 - [ ] Plate calculator and per-exercise notes
 
 Found a bug or have an idea? [Open an issue](https://github.com/juan1232-cmyk/openGym/issues).
-**And if you like where this is going, a star helps more people find it.**
+**If you like where this is going, a star helps more people find it.**
 
 ## Credits
 

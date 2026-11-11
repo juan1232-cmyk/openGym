@@ -56,7 +56,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .dv-scenes button[data-verdict=slipping]::before,.dv-scenes button[data-verdict=stalled]::before{background:#e08600}
 .dv-scenes button[data-verdict=away]::before{background:#e5372b}
 .dv-note{font-size:13px;color:#a9a8a1}
-.dv-links{display:flex;align-items:center;gap:16px;margin-top:4px;font-size:14px}
+.dv-lede{font-size:15px;line-height:1.45;color:#d7d6cf}
+.dv-links{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-top:4px;font-size:14px;white-space:nowrap}
 .dv-links button{border:0;padding:8px 14px;border-radius:99px;background:#f3f2ee;color:#0b0b0b;font-weight:600}
 .dv-links a{color:#f3f2ee}
 .dv-fab,.dv-close{display:none}

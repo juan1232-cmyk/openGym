@@ -76,6 +76,8 @@ const load = key => {
     } catch { /* private mode without storage: the app still opens, just without the demo */ }
   }, sc.path || '/home')
   document.querySelectorAll('.dv-scenes button').forEach(el => el.classList.toggle('on', el.dataset.key === key))
+  // the address names the lifter, so the page can be shared or linked to as it is
+  try { history.replaceState(null, '', '?demo=' + key) } catch { /* sandboxed: the link just won't update */ }
   panel(false)
 }
 
@@ -87,6 +89,10 @@ Object.entries(SCENARIOS).forEach(([key, sc]) => {
   el.addEventListener('click', () => load(key))
   scenes.appendChild(el)
 })
+// ?demo=stalled (from the README, or a shared link) opens straight onto that lifter
+const asked = new URLSearchParams(location.search).get('demo')
+if (asked && SCENARIOS[asked]) load(asked)
+
 document.getElementById('reload').addEventListener('click', () => frame.contentWindow.location.reload())
 
 // on a phone there's no frame — the app is the page — and the panel is a sheet behind a button

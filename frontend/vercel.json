@@ -4,5 +4,6 @@
   "installCommand": "npm ci",
   "buildCommand": "VITE_SUPABASE_URL=https://bewrbpbbpbeahrzybvxv.supabase.co VITE_SUPABASE_ANON_KEY=sb_publishable_QLvje0gwd9xrUmDgTVHXNQ_Fzs9p20G npm run build",
   "outputDirectory": "dist",
+  "rewrites": [{ "source": "/demo", "destination": "/device.html" }],
   "ignoreCommand": "if git cat-file -e HEAD^ 2>/dev/null && git diff --quiet HEAD^ HEAD -- ':/frontend'; then exit 0; else exit 1; fi"
 }
