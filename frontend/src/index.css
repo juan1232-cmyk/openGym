@@ -1576,7 +1576,10 @@ button.pk-tile:active{background:var(--surface-2)}
   box-shadow:inset 0 0 0 1.5px var(--line);transition:background var(--fast),color var(--fast);
 }
 .pk-rir button.on{background:var(--ink);color:var(--on-ink);box-shadow:none}
-.pk-ex-acts{display:flex;gap:8px;padding:10px 6px 0}
+.pk-ex-acts{display:flex;flex-wrap:wrap;gap:8px;padding:10px 6px 0}
+/* a warm-up row: same grid, quieter — its "W" stands where the set number would */
+.pk-set.warm .n{color:var(--label-3)}
+.pk-set.warm:not(.done){color:var(--label-2)}
 .pk-discard{display:block;margin:10px auto 0;color:var(--red)}
 
 /* the dock: what's next, and Finish — a dark slab floating over the list */

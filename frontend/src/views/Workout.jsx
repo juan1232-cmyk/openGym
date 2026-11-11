@@ -4,7 +4,7 @@ import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { exOr } from '../lib/exercises.js'
 import { swapConfig } from '../lib/pick.js'
-import { effectiveRoutine, lastEntryFor, buildSets, setsDoneActive, supersetUnits, unitOf, setLabel, modeOf, isBw, isPerSide, sideReps, EFFORT, effortOf, capEffort, RIR_CHIPS, rirChip, fmtSec, nextUp, nextSetLabel, isLoadPR } from '../lib/history.js'
+import { effectiveRoutine, lastEntryFor, buildSets, setsDoneActive, supersetUnits, unitOf, setLabel, modeOf, isBw, isPerSide, sideReps, EFFORT, effortOf, capEffort, RIR_CHIPS, rirChip, fmtSec, nextUp, nextSetLabel, isLoadPR, workSets, workIndexOf, addWarmup, removeWarmup } from '../lib/history.js'
 import { fmtNum, fmtVol, todayISO, exCount, DAYN } from '../lib/format.js'
 import { beep, vibrate } from '../lib/sound.js'
 import { t } from '../lib/i18n.js'
@@ -15,7 +15,7 @@ import { startFlow, exercisePicker, exConfigSheet, swapSheet, exerciseDetailShee
 import Icon from '../components/Icon.jsx'
 import Orb from '../components/Orb.jsx'
 import { Button, Check, NumberField } from '../components/ui.jsx'
-import { nextPrescription, applyPrescription } from '../lib/progression.js'
+import { nextPrescription, applyPrescription, defaultIncrement } from '../lib/progression.js'
 import { setVsLast } from '../lib/verdict.js'
 import { overSessionCap, MUSCLE_NAME } from '../lib/muscles.js'
 import { SESSION_CAP } from '../lib/engine-config.js'
@@ -93,7 +93,8 @@ function SetGrid({ entryIdx, onToggle, onField, onStartTimed, onRated }) {
   const tick = i => {
     const willBeDone = !entry.sets[i].done
     onToggle(i)
-    setRirAt(chips && willBeDone && entry.sets[i].rir == null ? i : null)
+    // a warm-up is not rated: how many reps were left on a ramp set is not a question worth a tap
+    setRirAt(chips && willBeDone && !entry.sets[i].warmup && entry.sets[i].rir == null ? i : null)
   }
   // tapping the lit chip clears it again — empty is not 0, and a mistap has to be undoable
   // `onRated` lets the workout move on from a finished exercise it held open for this rating
@@ -105,11 +106,14 @@ function SetGrid({ entryIdx, onToggle, onField, onStartTimed, onRated }) {
   return <div className="pk-sets">
     <div className="pk-set hd" style={grid}><span>{t('Set')}</span><span>{t('Last time')}</span>{cols.map(c => <span key={c.f}>{c.hd}</span>)}{timed && <span />}<span /></div>
     {entry.sets.map((s, i) => {
-      const prev = last && last.sets[i] ? setLabel(entry.id, last.sets[i], last.target) : '—'
-      return <Fragment key={i}><div className={'pk-set' + (s.done ? ' done' : '')} style={{ ...grid, '--i': i }} data-set={entryIdx + '-' + i}>
-        <span className="n">{i + 1}</span>
+      // "Last time" holds last session's work sets, so a row is compared by its place among
+      // the work rows: warm-ups added today don't shift every set one down.
+      const wi = workIndexOf(entry.sets, i)
+      const prev = wi != null && last && last.sets[wi] ? setLabel(entry.id, last.sets[wi], last.target) : '—'
+      return <Fragment key={i}><div className={'pk-set' + (s.done ? ' done' : '') + (s.warmup ? ' warm' : '')} style={{ ...grid, '--i': i }} data-set={entryIdx + '-' + i}>
+        <span className="n">{s.warmup ? 'W' : wi + 1}</span>
         <span className="prev">{prev}</span>
-        {cols.map(c => chips && c.eff
+        {cols.map(c => s.warmup && c.eff ? <span key={c.f} /> : chips && c.eff
           ? <button key={c.f} className={'rirc' + (rirAt === i ? ' on' : '')} aria-label={c.hd} aria-expanded={rirAt === i}
             onClick={() => toggleRir(i)}>{shown(c, s[c.f])}</button>
           : s.done
@@ -142,7 +146,7 @@ function entryFor(s, id, cfg) {
 }
 
 /* ---------- one exercise inside an open card ---------- */
-function ExerciseBody({ entryIdx, inSuperset, onToggle, onField, onAddSet, onRemoveSet, onStartTimed, onRated }) {
+function ExerciseBody({ entryIdx, inSuperset, onToggle, onField, onAddSet, onRemoveSet, onAddWarmup, onRemoveWarmup, onStartTimed, onRated }) {
   const S = useStore(s => s.S)
   const entry = S.active.entries[entryIdx]
   const ex = exOr(entry.id)
@@ -183,8 +187,10 @@ function ExerciseBody({ entryIdx, inSuperset, onToggle, onField, onAddSet, onRem
       <button className="x" aria-label={t('Dismiss')} onClick={() => update(s => { s.active.capNote = null })}><Icon name="xmark" /></button>
     </div>}
     <div className="pk-ex-acts">
-      <Button size="sm" variant="soft" icon="minus" disabled={entry.sets.length <= 1} onClick={onRemoveSet}>{t('Remove set')}</Button>
+      <Button size="sm" variant="soft" icon="minus" disabled={workSets(entry.sets).length <= 1} onClick={onRemoveSet}>{t('Remove set')}</Button>
       <Button size="sm" variant="soft" icon="plus" onClick={onAddSet}>{t('Add set')}</Button>
+      {mode !== 'cardio' && <Button size="sm" variant="soft" icon="plus" onClick={onAddWarmup}>{t('Add warm-up set')}</Button>}
+      {entry.sets.some(s => s.warmup) && <Button size="sm" variant="soft" icon="minus" onClick={onRemoveWarmup}>{t('Remove warm-up set')}</Button>}
     </div>
   </div>
 }
@@ -215,7 +221,7 @@ function doneSummary(es, unit) {
     const m = modeOf(cfg)
     if (m !== 'reps' || !isBw(cfg)) bw = false
     e.sets.forEach(s => {
-      if (!s.done) return
+      if (!s.done || s.warmup) return
       sets++
       if (m === 'cardio') min += s.min || 0
       else if (m === 'time') sec += s.sec || 0
@@ -300,7 +306,13 @@ function ActiveWorkout() {
     else if (m === 'time') e.sets.push({ sec: l ? l.sec : (e.target.sec || 45), w: l ? (l.w || 0) : (e.target.weight || 0), done: false })
     else e.sets.push({ w: l ? l.w : 0, r: l ? l.r : e.target.reps, done: false })
   })
-  const removeSet = idx => mutEntry(idx, e => { if (e.sets.length > 1) e.sets.pop() })
+  // Warm-ups always sit in front of the work rows, so the last row is a work row to drop.
+  const removeSet = idx => mutEntry(idx, e => { if (workSets(e.sets).length > 1) e.sets.pop() })
+  const addWarm = idx => mutEntry(idx, e => {
+    const m = modeOf({ ...(e.target || {}), id: e.id })
+    e.sets = addWarmup(e.sets, m, e.target || {}, e.target?.inc > 0 ? e.target.inc : defaultIncrement(e.id, S.unit))
+  })
+  const removeWarm = idx => mutEntry(idx, e => { e.sets = removeWarmup(e.sets) })
 
   // A timed set is held, not typed. The work timer records what was actually held — an early
   // finish logs 0:38 of a 0:45 target rather than crediting the full prescription — and then
@@ -323,18 +335,21 @@ function ActiveWorkout() {
     mutEntry(idx, e => {
       e.sets[i].done = !e.sets[i].done
       if (e.sets[i].done) {
-        needsRate = m === 'reps' && effortOf(S) === 'rir' && e.sets[i].rir == null
+        needsRate = m === 'reps' && effortOf(S) === 'rir' && !e.sets[i].warmup && e.sets[i].rir == null
         beep(S.sound, 1040, 0.12); vibrate(30)
         const isLastExInUnit = idx === unit[unit.length - 1]
         const unitDone = unit.every(ui => (ui === idx ? e : A.entries[ui]).sets.every(x => x.done))
-        if (isLastExInUnit && !unitDone) startRest(S.restSec)
+        // no full rest after a warm-up: a two-minute wait between 40 and 60 kg is just waiting
+        if (isLastExInUnit && !unitDone && !e.sets[i].warmup) startRest(S.restSec)
         else if (unitDone) stopRest()
         unitJustDone = unitDone
         // The orb judges each set against the same set last time — a hop for beating it, a nod
         // for matching it, a small sink for falling short — so it's tracking you, not just
         // clapping. No history to compare with and it cheers like before.
+        // a warm-up has no "same set last time" to beat
         const prev = lastEntryFor(S, e.id)
-        const vs = setVsLast(e.sets[i], prev && prev.sets[i])
+        const wi = workIndexOf(e.sets, i)
+        const vs = wi == null ? null : setVsLast(e.sets[i], prev && prev.sets[wi])
         if (vs) orb.current?.bump(VS_BUMP[vs])
         // a whole exercise done gets more than a set: a triple pulse you feel in the hand (three
         // ticks on an iPhone) instead of the single one a set gets — no extra sound, on purpose
@@ -487,7 +502,8 @@ function ActiveWorkout() {
           <Fold open={open}><div className="pk-ex-b">
             {u.map(idx => <ExerciseBody key={idx} entryIdx={idx} inSuperset={u.length > 1}
               onToggle={i => toggle(idx, i)} onField={(i, f, v) => setField(idx, i, f, v)}
-              onAddSet={() => addSet(idx)} onRemoveSet={() => removeSet(idx)} onStartTimed={i => startTimed(idx, i)}
+              onAddSet={() => addSet(idx)} onRemoveSet={() => removeSet(idx)}
+              onAddWarmup={() => addWarm(idx)} onRemoveWarmup={() => removeWarm(idx)} onStartTimed={i => startTimed(idx, i)}
               onRated={release} />)}
           </div></Fold>
         </div>
@@ -506,7 +522,7 @@ function ActiveWorkout() {
       {/* keyed on the set it points at, so the line visibly turns over when it changes */}
       <div className="txt" key={nx ? nx.entry + ':' + nx.set : 'end'}>
         {/* exercise names arrive lowercase from the dataset — capitalised on their own, not the whole line */}
-        <span>{nx ? <>{t('Up next')} · <i className="capitalize">{exOr(nxEntry.id).n}</i>, {t('set {0}', nx.set + 1)}</> : t('Up next · finish when ready')}</span>
+        <span>{nx ? <>{t('Up next')} · <i className="capitalize">{exOr(nxEntry.id).n}</i>, {nxEntry.sets[nx.set].warmup ? t('Warm-up') : t('set {0}', workIndexOf(nxEntry.sets, nx.set) + 1)}</> : t('Up next · finish when ready')}</span>
         <b>{nx ? nextSetLabel(nxEntry, nxEntry.sets[nx.set], S.unit) : t('All sets done')}</b>
       </div>
       <button className="go" onClick={finishWorkout}>{t('Finish')}</button>

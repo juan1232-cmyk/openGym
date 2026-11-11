@@ -187,7 +187,7 @@ export function sessionPlan(routine, now = new Date()) {
 export function spendSwaps(S, w) {
   const r = (S.routines || []).find(x => x.id === w.routineId)
   if (!r) return
-  const did = new Set((w.entries || []).filter(e => (e.sets || []).some(s => s.done)).map(e => e.id))
+  const did = new Set((w.entries || []).filter(e => (e.sets || []).some(s => s.done && !s.warmup)).map(e => e.id))
   r.ex.forEach(c => {
     if (!c.swap) return
     if (c.swap.until && w.d > c.swap.until) delete c.swap

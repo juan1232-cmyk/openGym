@@ -105,7 +105,7 @@ export function loadOf(items, floor = 0) {
 // Effective sets in a list of logged sets: each done set counts by its effort and rep count
 // (effort.js setCredit), so three sets left at RIR 2 weigh 2.7, not 3.
 const credit = (sets, pick) =>
-  (sets || []).reduce((n, s) => n + (s.done && (!pick || pick(s)) ? setCredit(s) : 0), 0)
+  (sets || []).reduce((n, s) => n + (s.done && !s.warmup && (!pick || pick(s)) ? setCredit(s) : 0), 0)
 
 /**
  * Load for finished workouts (only sets actually ticked off count). `pick` narrows that
