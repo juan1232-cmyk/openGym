@@ -11,6 +11,7 @@
 <br><br>
 
 [![Live demo](https://img.shields.io/badge/demo-live-1db36b?style=flat-square)](https://open-gym-lac.vercel.app/demo)
+[![CI](https://img.shields.io/github/actions/workflow/status/juan1232-cmyk/openGym/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/juan1232-cmyk/openGym/actions/workflows/ci.yml)
 [![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0-1db36b?style=flat-square)](LICENSE)
 ![PWA](https://img.shields.io/badge/PWA-installable-f1f0ec?style=flat-square)
 ![No tracking](https://img.shields.io/badge/telemetry-none-f1f0ec?style=flat-square)
@@ -180,7 +181,11 @@ never leave your device.
 - [ ] Body measurements (waist, arms…) alongside weight
 - [ ] Plate calculator and per-exercise notes
 
-Found a bug or have an idea? [Open an issue](https://github.com/juan1232-cmyk/openGym/issues).
+Found a bug or have an idea? [Open an issue](https://github.com/juan1232-cmyk/openGym/issues/new/choose).
+Want to build something? [CONTRIBUTING.md](CONTRIBUTING.md) is a one-page tour, and the
+[good first issues](https://github.com/juan1232-cmyk/openGym/labels/good%20first%20issue) are
+the place to start.
+
 **If you like where this is going, a star helps more people find it.**
 
 ## Credits
