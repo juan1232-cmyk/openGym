@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Try the live demo first
+    url: https://open-gym-lac.vercel.app/demo
+    about: Pick a lifter with weeks of training logged and see what Peek says. No sign-up.
