@@ -25,7 +25,7 @@ export function progressSeries(S, exId) {
   for (const w of S.workouts || []) {
     const en = w.entries.find(e => e.id === exId)
     if (!en) continue
-    const sets = en.sets.filter(s => s.done)
+    const sets = en.sets.filter(s => s.done && !s.warmup)
     if (sets.length) rows.push({ t: w.start || new Date(w.d + 'T12:00:00').getTime(), d: w.d, sets, target: en.target })
   }
   const top = rows.map(r => ({ t: r.t, d: r.d, y: Math.max(0, ...r.sets.map(s => s.w || 0)) })).filter(p => p.y > 0)

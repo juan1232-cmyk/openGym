@@ -5,7 +5,9 @@
 // a record is only reported for the fields the log actually has — a bodyweight exercise has no
 // heaviest weight to show, a hold has no reps.
 
-const done = en => (en.sets || []).filter(s => s.done)
+// Warm-ups are logged but are not records or history (see history.js, isWork); this file is a
+// leaf, so the flag is read here directly.
+const done = en => (en.sets || []).filter(s => s.done && !s.warmup)
 
 // Every session in which the exercise was logged, newest first — the History tab. `name` is the
 // workout it was part of (older workouts may have none), `target` what was prescribed, which
